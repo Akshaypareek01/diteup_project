@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+
+# Editor / OS
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log

@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --forest: #1f3d2e;
+  --sage: #3e5c46;
+  --olive: #6b7f4e;
+  --cream: #f5f0e6;
+  --beige: #e8dfc8;
+  --paper: #faf7ef;
+  --gold: #c8a24a;
+  --gold-soft: #d9b968;
+  --gold-deep: #a8852e;
+  --ink: #0f1f18;
+  --ink-soft: #3a4a41;
+  --ink-muted: #6b7b72;
+  --line: #d9cfb8;
+  --line-dark: #2a4636;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--forest);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
