@@ -1,8 +1,17 @@
+import type { Metadata } from "next";
+import { PrivacyPolicyContent } from "@/components/legal/PrivacyPolicyContent";
+import { SiteShell } from "@/components/layout/SiteShell";
+
+export const metadata: Metadata = {
+  title: "Privacy policy · DiteUp",
+  description:
+    "How DiteUp collects, uses, and protects personal data — including cookies, orders, and your rights under Indian privacy law.",
+};
+
 export default function PrivacyPage() {
   return (
-    <article className="mx-auto max-w-[1080px] px-5 py-12">
-      <h1 className="font-display text-display-lg font-semibold text-forest">Privacy policy</h1>
-      <p className="mt-6 text-body text-ink-soft">DPDP-aligned policy placeholder.</p>
-    </article>
+    <SiteShell headerVariant="compact">
+      <PrivacyPolicyContent />
+    </SiteShell>
   );
 }

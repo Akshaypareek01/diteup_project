@@ -9,7 +9,11 @@ const faqs = [
  */
 export function FaqSection() {
   return (
-    <section id="faq" className="bg-cream py-14 md:py-20" aria-labelledby="faq-heading">
+    <section
+      id="faq"
+      className="scroll-mt-[104px] bg-cream py-14 md:py-20"
+      aria-labelledby="faq-heading"
+    >
       <div className="mx-auto max-w-[680px] px-5 md:px-8 lg:px-12">
         <h2
           id="faq-heading"

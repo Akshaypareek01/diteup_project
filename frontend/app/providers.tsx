@@ -4,6 +4,7 @@ import { MotionConfig } from "framer-motion";
 import type { ReactNode } from "react";
 import { CartStateProvider } from "@/components/cart/CartStateProvider";
 import { CartDrawerProvider } from "@/components/cart/CartDrawerProvider";
+import { HeroBannerVariantProvider } from "@/components/home/HeroBannerVariantProvider";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 
 /**
@@ -14,7 +15,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <MotionConfig reducedMotion="user">
       <ToastProvider>
         <CartStateProvider>
-          <CartDrawerProvider>{children}</CartDrawerProvider>
+          <CartDrawerProvider>
+            <HeroBannerVariantProvider>{children}</HeroBannerVariantProvider>
+          </CartDrawerProvider>
         </CartStateProvider>
       </ToastProvider>
     </MotionConfig>

@@ -96,7 +96,7 @@ export function CheckoutShippingPanel({
   const showManualBlock = !addressesLoading && (!useSavedUi || manualMode);
 
   return (
-    <section className="rounded-lg border border-line bg-paper p-5" aria-labelledby="co-ship">
+    <section className="rounded-lg border border-line bg-paper p-5 lg:rounded-2xl lg:p-6" aria-labelledby="co-ship">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <h2 id="co-ship" className="font-semibold text-forest">
           Shipping

@@ -152,14 +152,14 @@ export function AddressesBookClient({ initialAddresses }: AddressesBookClientPro
           ) : (
             <ul className="mt-4 space-y-3">
               {rows.map((a) => (
-                <li key={a.id} className="rounded-lg border border-line bg-paper p-4 text-body-sm shadow-sm">
+                <li key={a.id} className="rounded-lg border border-line bg-paper p-4 text-body-sm shadow-sm sm:p-5">
                   {a.isDefault ? (
                     <span className="mb-2 inline-block rounded-full bg-gold/30 px-2 py-0.5 font-mono text-eyebrow text-forest">
                       Default
                     </span>
                   ) : null}
-                  <p className="font-semibold text-forest">{a.name}</p>
-                  <p className="text-ink-muted">
+                  <p className="break-words font-semibold text-forest">{a.name}</p>
+                  <p className="break-words text-ink-muted">
                     {a.line1}
                     {a.line2 ? `, ${a.line2}` : ""}, {a.city}, {a.state} {a.pincode}
                   </p>
@@ -193,7 +193,7 @@ export function AddressesBookClient({ initialAddresses }: AddressesBookClientPro
           )}
         </section>
 
-        <section className="rounded-xl border border-line bg-paper p-6" aria-labelledby="addr-form-heading">
+        <section className="rounded-xl border border-line bg-paper p-4 sm:p-6" aria-labelledby="addr-form-heading">
           <h2 id="addr-form-heading" className="font-semibold text-forest">
             {editingId === "new" ? "Add address" : "Edit address"}
           </h2>

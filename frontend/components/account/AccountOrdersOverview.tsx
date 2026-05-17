@@ -91,9 +91,9 @@ export function AccountOrdersOverview({ orders }: AccountOrdersOverviewProps) {
                   <h3 className="font-mono text-eyebrow font-semibold uppercase text-ink-muted">Items</h3>
                   <ul className="mt-2 space-y-2 text-body-sm text-forest">
                     {o.items.map((it, idx) => (
-                      <li key={`${o.id}-${idx}`} className="flex justify-between gap-4 border-b border-line/70 pb-2 last:border-0">
-                        <span>
-                          <span className="font-medium">{it.productName}</span>
+                      <li key={`${o.id}-${idx}`} className="flex min-w-0 justify-between gap-4 border-b border-line/70 pb-2 last:border-0">
+                        <span className="min-w-0">
+                          <span className="break-words font-medium">{it.productName}</span>
                           {it.variantName ? (
                             <span className="block text-body-sm text-ink-muted">{it.variantName}</span>
                           ) : null}

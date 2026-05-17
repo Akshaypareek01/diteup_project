@@ -28,7 +28,7 @@ export function TestimonialsSection({ reviewsPayload }: TestimonialsSectionProps
   return (
     <section
       id="reviews"
-      className="bg-forest py-14 text-cream md:py-20"
+      className="scroll-mt-[104px] bg-forest py-14 text-cream md:py-20"
       aria-labelledby="reviews-heading"
     >
       <div className="mx-auto max-w-[1320px] px-5 md:px-8 lg:px-12">

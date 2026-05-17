@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Montserrat, Playfair_Display } from "next/font/google";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { CookieBanner } from "@/components/legal/CookieBanner";
 import { AppProviders } from "./providers";
 import "./globals.css";
 
@@ -47,6 +48,7 @@ export default function RootLayout({
         <AppProviders>
           {children}
           <MetaPixel />
+          <CookieBanner />
         </AppProviders>
       </body>
     </html>

@@ -1,8 +1,20 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { OrderTrackingShell, type OrderDetailInitial } from "@/components/order/OrderTrackingShell";
 import { serverApiFetch, tryGetServerApiBase } from "@/lib/server-api";
 
 type Props = { params: { orderNumber: string }; searchParams: { token?: string } };
+
+/**
+ * Locks the browser tab title to brand for the tracking experience.
+ */
+export async function generateMetadata({ params }: Pick<Props, "params">): Promise<Metadata> {
+  return {
+    title: "DiteUp",
+    description: `Track order ${params.orderNumber} on DiteUp.`,
+    robots: { index: false, follow: false },
+  };
+}
 
 /**
  * Order tracking — SSR snapshot + client polling via `OrderTrackingShell`.

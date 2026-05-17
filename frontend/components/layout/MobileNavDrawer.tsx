@@ -2,18 +2,12 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { SiteNavHashLink } from "@/components/layout/SiteNavHashLink";
+import type { SiteNavLink } from "@/components/layout/site-nav-links";
 import { slideInFromRight } from "@/lib/motion";
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/#about", label: "About Us" },
-  { href: "/#ingredients", label: "Ingredients" },
-  { href: "/#benefits", label: "Benefits" },
-  { href: "/#reviews", label: "Reviews" },
-  { href: "/#faq", label: "FAQ" },
-];
-
 export type MobileNavDrawerProps = {
+  navLinks: SiteNavLink[];
   open: boolean;
   onClose: () => void;
 };
@@ -21,7 +15,7 @@ export type MobileNavDrawerProps = {
 /**
  * Full-height nav drawer from the right — DESIGN-SYSTEM §7.9.
  */
-export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
+export function MobileNavDrawer({ navLinks, open, onClose }: MobileNavDrawerProps) {
   return (
     <AnimatePresence>
       {open ? (
@@ -55,21 +49,28 @@ export function MobileNavDrawer({ open, onClose }: MobileNavDrawerProps) {
             <ul className="flex flex-1 flex-col gap-1 p-4">
               {navLinks.map((item, i) => (
                 <motion.li
-                  key={item.href}
+                  key={`${item.label}-${item.href}`}
                   initial={{ opacity: 0, x: 16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.05 * i }}
                 >
-                  <Link
-                    href={item.href}
+                  <SiteNavHashLink
+                    nav={item}
                     className="block rounded-lg px-4 py-3 text-body font-medium text-forest hover:bg-beige/80"
-                    onClick={onClose}
-                  >
-                    {item.label}
-                  </Link>
+                    onNavigate={onClose}
+                  />
                 </motion.li>
               ))}
             </ul>
+            <div className="border-t border-line px-4 py-3" role="group" aria-label="Account">
+              <Link
+                href="/account"
+                className="block rounded-lg px-4 py-2.5 text-body font-medium text-forest hover:bg-beige/80"
+                onClick={onClose}
+              >
+                Account
+              </Link>
+            </div>
           </motion.nav>
         </>
       ) : null}

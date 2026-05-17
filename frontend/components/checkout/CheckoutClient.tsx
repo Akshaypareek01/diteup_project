@@ -4,14 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FlowHeader } from "@/components/layout/FlowHeader";
 import { RazorpayCheckoutScript } from "@/components/payments/RazorpayCheckoutScript";
-import { Input } from "@/components/ui/Input";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { ApiError, clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
 import type { PincodeCheckPayload } from "@/lib/types/pincode";
-import { formatInr } from "@/lib/format-money";
 import { pixelAddPaymentInfo, pixelInitiateCheckout } from "@/lib/meta-pixel-events";
-import { CheckoutShippingPanel, type CheckoutAddressRow } from "@/components/checkout/CheckoutShippingPanel";
+import { CheckoutFormSections } from "@/components/checkout/CheckoutFormSections";
+import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
+import type { CheckoutAddressRow } from "@/components/checkout/CheckoutShippingPanel";
 
 type PaymentMethod = "RAZORPAY" | "COD";
 
@@ -441,179 +441,140 @@ export function CheckoutClient() {
 
   if (lines.length === 0) {
     return (
-      <div className="min-h-screen bg-cream px-4 py-16 text-center">
-        <FlowHeader backHref="/" />
-        <p className="mt-8 text-body text-forest">Add something to your cart before checkout.</p>
+      <div className="min-h-screen bg-cream px-4 py-16 text-center lg:px-8">
+        <FlowHeader backHref="/cart" />
+        <p className="mx-auto mt-8 max-w-md text-body text-forest">
+          Add something to your cart before checkout.
+        </p>
       </div>
     );
   }
 
+  const checkoutHeading = (
+    <>
+      <h1 className="font-display text-display-md font-semibold text-forest lg:text-display-lg">Checkout</h1>
+      <ol
+        className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 text-body-sm font-medium text-ink-muted lg:gap-x-4"
+        aria-label="Checkout steps"
+      >
+        {["Contact", "Shipping", "Payment"].map((s, i) => (
+          <li key={s} className="flex items-center gap-2">
+            <span
+              className={`flex size-8 shrink-0 items-center justify-center rounded-full text-xs lg:size-9 lg:text-sm ${
+                i === 0 ? "bg-gold text-forest" : "bg-beige text-ink-muted"
+              }`}
+            >
+              {i + 1}
+            </span>
+            <span className="whitespace-nowrap">{s}</span>
+            {i < 2 ? <span aria-hidden>→</span> : null}
+          </li>
+        ))}
+      </ol>
+    </>
+  );
+
+  const formSectionsEl = (
+    <CheckoutFormSections
+      guestEmail={guestEmail}
+      onGuestEmailChange={(v) => setGuestEmail(v)}
+      userEmail={userEmail}
+      guestPhone={guestPhone}
+      onGuestPhoneChange={(v) => setGuestPhone(v)}
+      savedAddresses={savedAddresses}
+      loadingSavedAddresses={loadingSavedAddresses}
+      selectedSavedAddressId={selectedSavedAddressId}
+      onSelectSaved={(row) => void handleSelectSavedAddress(row)}
+      onSelectManualEntry={handleManualShippingChoice}
+      shipName={shipName}
+      shipPhone={shipPhone}
+      line1={line1}
+      line2={line2}
+      city={city}
+      stateField={stateField}
+      pincode={pincode}
+      country={country}
+      onShipNameChange={(v) => setShipName(v)}
+      onShipPhoneChange={(v) => setShipPhone(v)}
+      onLine1Change={(v) => setLine1(v)}
+      onLine2Change={(v) => setLine2(v)}
+      onCityChange={(v) => setCity(v)}
+      onStateChange={(v) => setStateField(v)}
+      onPincodeChange={(v) => {
+        setPincode(v);
+        lastValidatedProductPin.current = null;
+        setPinErr(null);
+        setPinStatus(null);
+      }}
+      onCountryChange={(v) => setCountry(v)}
+      onPincodeBlur={() => void validatePinForCart()}
+      pinStatusSummary={pinStatusSummary}
+      checkingPin={checkingPin}
+      pinErr={pinErr}
+      paymentMethod={paymentMethod}
+      onPaymentMethodChange={(m) => setPaymentMethod(m)}
+      codSelectable={codSelectable}
+      couponCode={couponCode}
+      onCouponCodeChange={(v) => setCouponCode(v)}
+      preview={preview}
+    />
+  );
+
+  const placeOrderBtnClass =
+    "flex h-14 w-full items-center justify-center rounded-2xl bg-gold font-sans text-button font-semibold uppercase tracking-wide text-forest shadow-lg transition hover:bg-gold-soft disabled:opacity-50";
+
   return (
-    <div className="min-h-screen bg-cream pb-16">
+    <div className="min-h-screen bg-cream pb-28 lg:pb-12">
       <RazorpayCheckoutScript />
       <FlowHeader backHref="/cart" />
-      <div className="mx-auto max-w-[680px] px-4 py-8">
-        <h1 className="font-display text-display-md font-semibold text-forest">Checkout</h1>
-        <ol className="mt-6 flex gap-2 text-body-sm font-medium text-ink-muted" aria-label="Checkout steps">
-          {["Contact", "Shipping", "Payment"].map((s, i) => (
-            <li key={s} className="flex items-center gap-2">
-              <span
-                className={`flex size-8 items-center justify-center rounded-full ${
-                  i === 0 ? "bg-gold text-forest" : "bg-beige text-ink-muted"
-                }`}
-              >
-                {i + 1}
-              </span>
-              {s}
-              {i < 2 ? <span aria-hidden>→</span> : null}
-            </li>
-          ))}
-        </ol>
+      <div className="mx-auto max-w-[1320px] px-4 py-8 sm:px-5 lg:px-8 lg:py-10 xl:px-12">
+        <div className="mb-6 lg:mb-8">{checkoutHeading}</div>
 
-        {preview ? (
-          <section className="mt-8 rounded-lg border border-line bg-cream p-5" aria-label="Order summary">
-            <h2 className="font-mono text-eyebrow text-ink-muted">Order summary</h2>
-            <dl className="mt-3 space-y-2 text-body-sm text-forest">
-              <div className="flex justify-between">
-                <dt>Subtotal</dt>
-                <dd>{formatInr(preview.subtotal)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Discount</dt>
-                <dd>{formatInr(preview.discountOnSubtotal)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt>Shipping</dt>
-                <dd>{formatInr(preview.shippingAfterCoupon)}</dd>
-              </div>
-              {paymentMethod === "COD" ? (
-                <div className="flex justify-between">
-                  <dt>COD fee</dt>
-                  <dd>{formatInr(preview.codCharge)}</dd>
-                </div>
-              ) : null}
-              <div className="flex justify-between border-t border-line pt-2 text-base font-semibold">
-                <dt>Pay now</dt>
-                <dd>{formatInr(preview.total)}</dd>
-              </div>
-            </dl>
-          </section>
-        ) : previewErr ? (
-          <p className="mt-6 text-body-sm text-error" role="alert">
-            {previewErr}
-          </p>
-        ) : (
-          <p className="mt-6 text-body-sm text-ink-muted">Loading totals…</p>
-        )}
-
-        <div className="mt-10 space-y-8">
-          <section className="rounded-lg border border-line bg-paper p-5" aria-labelledby="co-contact">
-            <h2 id="co-contact" className="font-semibold text-forest">
-              Contact
-            </h2>
-            <div className="mt-4 space-y-3">
-              <Input
-                label="Email"
-                type="email"
-                autoComplete="email"
-                name="email"
-                value={guestEmail}
-                onChange={(e) => setGuestEmail(e.target.value)}
-                disabled={Boolean(userEmail)}
-                required
-              />
-              <Input
-                label="Phone"
-                type="tel"
-                autoComplete="tel"
-                name="phone"
-                value={guestPhone}
-                onChange={(e) => setGuestPhone(e.target.value)}
-              />
-            </div>
-          </section>
-
-          <CheckoutShippingPanel
-            addresses={savedAddresses}
-            useSavedUi={Boolean(userEmail && savedAddresses.length > 0)}
-            addressesLoading={Boolean(userEmail && loadingSavedAddresses)}
-            selectedSavedAddressId={selectedSavedAddressId}
-            onSelectSaved={(row) => void handleSelectSavedAddress(row)}
-            onSelectManualEntry={handleManualShippingChoice}
-            shipName={shipName}
-            shipPhone={shipPhone}
-            line1={line1}
-            line2={line2}
-            city={city}
-            stateField={stateField}
-            pincode={pincode}
-            country={country}
-            onShipNameChange={(v) => setShipName(v)}
-            onShipPhoneChange={(v) => setShipPhone(v)}
-            onLine1Change={(v) => setLine1(v)}
-            onLine2Change={(v) => setLine2(v)}
-            onCityChange={(v) => setCity(v)}
-            onStateChange={(v) => setStateField(v)}
-            onPincodeChange={(v) => {
-              setPincode(v);
-              lastValidatedProductPin.current = null;
-              setPinErr(null);
-              setPinStatus(null);
-            }}
-            onCountryChange={(v) => setCountry(v)}
-            onPincodeBlur={() => void validatePinForCart()}
-            pinStatusSummary={pinStatusSummary}
-            checkingPin={checkingPin}
-            pinErr={pinErr}
+        <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-10 xl:gap-12">
+          <CheckoutOrderSummary
+            preview={preview}
+            previewErr={previewErr}
+            lines={lines}
+            paymentMethod={paymentMethod}
+            className="lg:hidden"
           />
 
-          <section className="rounded-lg border border-line bg-paper p-5" aria-labelledby="co-pay">
-            <h2 id="co-pay" className="font-semibold text-forest">
-              Payment
-            </h2>
-            <div className="mt-4 space-y-3">
-              <label className="flex items-center gap-2 text-body-sm">
-                <input type="radio" name="pay" checked={paymentMethod === "RAZORPAY"} onChange={() => setPaymentMethod("RAZORPAY")} />
-                Pay online (Razorpay)
-              </label>
-              <label className={`flex items-center gap-2 text-body-sm ${!codSelectable ? "text-ink-muted" : ""}`}>
-                <input
-                  type="radio"
-                  name="pay"
-                  checked={paymentMethod === "COD"}
-                  disabled={!codSelectable}
-                  onChange={() => setPaymentMethod("COD")}
-                />
-                Cash on delivery
-                {!codSelectable ? " (validate PIN · COD-eligible zones only)" : ""}
-              </label>
-            </div>
-            <div className="mt-4">
-              <Input label="Coupon (optional)" name="coupon" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} />
-              {preview?.coupon?.message ? (
-                <p className="mt-2 text-body-sm text-ink-muted" role="status">
-                  {preview.coupon.message}
-                </p>
-              ) : null}
-            </div>
-          </section>
+          <div className="space-y-8 lg:col-span-7 xl:col-span-8">
+            {formSectionsEl}
+            {err ? (
+              <p className="text-body-sm text-error" role="alert">
+                {err}
+              </p>
+            ) : null}
+          </div>
+
+          <aside className="hidden space-y-5 lg:sticky lg:top-24 lg:z-10 lg:col-span-5 lg:block lg:self-start xl:col-span-4">
+            <CheckoutOrderSummary
+              preview={preview}
+              previewErr={previewErr}
+              lines={lines}
+              paymentMethod={paymentMethod}
+            />
+            <button
+              type="button"
+              className={placeOrderBtnClass}
+              disabled={busy || !preview}
+              onClick={() => void placeOrder()}
+            >
+              {busy ? "Processing…" : "Place order"}
+            </button>
+          </aside>
+
+          <button
+            type="button"
+            className={`${placeOrderBtnClass} fixed inset-x-4 bottom-4 z-30 lg:hidden`}
+            style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
+            disabled={busy || !preview}
+            onClick={() => void placeOrder()}
+          >
+            {busy ? "Processing…" : "Place order"}
+          </button>
         </div>
-
-        {err ? (
-          <p className="mt-6 text-body-sm text-error" role="alert">
-            {err}
-          </p>
-        ) : null}
-
-        <button
-          type="button"
-          className="fixed inset-x-4 bottom-4 z-30 flex h-14 items-center justify-center rounded-lg bg-gold font-sans text-button font-semibold uppercase tracking-wide text-forest shadow-lg md:static md:mt-10 md:w-full disabled:opacity-50"
-          style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
-          disabled={busy || !preview}
-          onClick={() => void placeOrder()}
-        >
-          {busy ? "Processing…" : "Place order"}
-        </button>
       </div>
     </div>
   );

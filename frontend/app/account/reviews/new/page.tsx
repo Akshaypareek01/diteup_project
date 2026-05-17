@@ -28,7 +28,7 @@ export default async function NewReviewPage({ searchParams }: Props) {
   return (
     <>
       <h1 className="font-display text-display-md font-semibold text-forest">Write a review</h1>
-      <p className="mt-2 text-body-sm text-ink-muted">Verified buyers only — PRD §6.7. Submissions are moderated.</p>
+      <p className="mt-2 text-body-sm text-ink-muted">Verified buyers only — PRD 6.7. Submissions are moderated.</p>
       <NewReviewForm orderId={orderId} productId={productId} productLabel={productLabel} />
     </>
   );

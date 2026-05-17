@@ -18,6 +18,9 @@ export type CartLineMeta = {
   slug: string;
   productName: string;
   variantName: string;
+  /** Resolved thumbnail URL (CMS or `/public` path). Optional for carts saved before this field existed. */
+  imageSrc?: string;
+  imageAlt?: string;
 };
 
 const STORAGE_KEY = "diteup_cart_v1";
@@ -43,13 +46,26 @@ function readStorage(): CartLineMeta[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (x): x is CartLineMeta =>
-        x &&
-        typeof x === "object" &&
-        typeof (x as CartLineMeta).variantId === "string" &&
-        typeof (x as CartLineMeta).quantity === "number",
-    );
+    return parsed
+      .filter(
+        (x): x is Record<string, unknown> =>
+          x !== null &&
+          typeof x === "object" &&
+          typeof (x as { variantId?: unknown }).variantId === "string" &&
+          typeof (x as { quantity?: unknown }).quantity === "number",
+      )
+      .map((raw) => {
+        const x = raw as Partial<CartLineMeta>;
+        return {
+          variantId: x.variantId as string,
+          quantity: x.quantity as number,
+          slug: typeof x.slug === "string" ? x.slug : "",
+          productName: typeof x.productName === "string" ? x.productName : "Product",
+          variantName: typeof x.variantName === "string" ? x.variantName : "",
+          imageSrc: typeof x.imageSrc === "string" ? x.imageSrc : undefined,
+          imageAlt: typeof x.imageAlt === "string" ? x.imageAlt : undefined,
+        };
+      });
   } catch {
     return [];
   }
@@ -89,6 +105,8 @@ export function CartStateProvider({ children }: { children: ReactNode }) {
             slug: line.slug,
             productName: line.productName,
             variantName: line.variantName,
+            imageSrc: line.imageSrc,
+            imageAlt: line.imageAlt,
           },
         ];
       }
@@ -99,6 +117,8 @@ export function CartStateProvider({ children }: { children: ReactNode }) {
         slug: line.slug,
         productName: line.productName,
         variantName: line.variantName,
+        imageSrc: line.imageSrc ?? next[i].imageSrc,
+        imageAlt: line.imageAlt ?? next[i].imageAlt,
       };
       return next;
     });
