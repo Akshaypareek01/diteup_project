@@ -1,120 +1,76 @@
-import type { ReactNode } from "react";
+import Image from "next/image";
 
-/** Thin circle frame for feature glyph — smaller on phones, full size from `lg`. */
-function IconRing({ children }: { children: ReactNode }) {
-  return (
-    <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-full border border-ink/25 text-ink sm:mb-4 sm:size-12 lg:mb-5 lg:size-[52px]">
-      <span className="flex items-center justify-center [&>svg]:block">{children}</span>
-    </div>
-  );
-}
-
-/** Bowl with steam lines — outline icon. */
-function IconBowlSteam() {
-  return (
-    <svg width={22} height={22} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M6 13h14v2a6 6 0 01-12 0v-2zM8 13V9a4 4 0 018 0v4"
-        stroke="currentColor"
-        strokeWidth={1.35}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10 5c0 1-.5 2-.5 3M12 4v3M14 5c0 1 .5 2 .5 3"
-        stroke="currentColor"
-        strokeWidth={1.35}
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Stopwatch outline icon. */
-function IconStopwatch() {
-  return (
-    <svg width={22} height={22} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx={12} cy={14} r={7} stroke="currentColor" strokeWidth={1.35} />
-      <path d="M12 11v4l2 2" stroke="currentColor" strokeWidth={1.35} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M10 3h4M12 3v3" stroke="currentColor" strokeWidth={1.35} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/** Candy / junk outline with diagonal strike for “no junk”. */
-function IconNoJunk() {
-  return (
-    <svg width={22} height={22} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M10 9l-3 9 10-9-4-6z"
-        stroke="currentColor"
-        strokeWidth={1.35}
-        strokeLinejoin="round"
-      />
-      <circle cx={14} cy={10} r={1} fill="currentColor" />
-      <path d="M5 19L19 5" stroke="currentColor" strokeWidth={1.35} strokeLinecap="round" />
-    </svg>
-  );
-}
-
-/** Sun with rays — sustained energy glyph. */
-function IconSunEnergy() {
-  const rays = [0, 45, 90, 135, 180, 225, 270, 315];
-  return (
-    <svg width={22} height={22} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx={12} cy={12} r={3.5} stroke="currentColor" strokeWidth={1.35} />
-      {rays.map((deg) => (
-        <line
-          key={deg}
-          x1={12}
-          y1={4}
-          x2={12}
-          y2={6.5}
-          stroke="currentColor"
-          strokeWidth={1.35}
-          strokeLinecap="round"
-          transform={`rotate(${deg} 12 12)`}
-        />
-      ))}
-    </svg>
-  );
-}
-
-/** Simplified gut / digestive tract outline. */
-function IconGutFriendly() {
-  return (
-    <svg width={22} height={22} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M8 6c2 0 3 2 3 4s-1 4-3 4-3 2-3 4 1 4 3 4h8c2 0 3-2 3-4s-1-4-3-4-3-2-3-4 1-4 3-4"
-        stroke="currentColor"
-        strokeWidth={1.35}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-type FeatureBlockProps = {
+type FeatureItem = {
   title: string;
   description: string;
-  icon: ReactNode;
+  imageSrc: string;
+  /** Extra classes when asset aspect ratio differs (e.g. square vs portrait). */
+  imageClassName?: string;
   /** Last item in a 2×2 + 1 layout spans full width on small screens. */
   wideOnNarrow?: boolean;
 };
 
-/** Benefit tile: open icon + caption on phones; beige cards from `lg` up. */
-function FeatureCard({ title, description, icon, wideOnNarrow = false }: FeatureBlockProps) {
+/** Order matches design: full → ready → clean → energy → gut. */
+const WHY_CHOOSE_FEATURES: FeatureItem[] = [
+  {
+    title: "Keeps You Full Longer",
+    description: "High protein & fiber keeps hunger away",
+    imageSrc: "/assets/whychooseus/keppyoufull longer.png",
+  },
+  {
+    title: "Ready in 2 Minutes",
+    description: "No cooking. Just soak and eat.",
+    imageSrc: "/assets/whychooseus/readyintwomin.png",
+  },
+  {
+    title: "No Junk, Only Clean",
+    description: "No refined sugar, no preservatives.",
+    imageSrc: "/assets/whychooseus/nojunkonlyclean.png",
+  },
+  {
+    title: "Sustained Energy",
+    description: "Keeps you active & fresh all day.",
+    imageSrc: "/assets/whychooseus/sustained_energy.png",
+    /** Square asset — scaled to align with portrait cards, slightly smaller than 1.5×. */
+    imageClassName: "scale-[1.14] origin-center mt-[-7px]",
+  },
+  {
+    title: "Gut Friendly & Light",
+    description: "Natural ingredients easy on digestion.",
+    imageSrc: "/assets/whychooseus/gutfriendly.png",
+    wideOnNarrow: true,
+  },
+];
+
+type FeatureCardProps = FeatureItem;
+
+/**
+ * Beige card shell with a single artwork PNG (icon + copy baked in).
+ */
+function FeatureCard({
+  title,
+  description,
+  imageSrc,
+  imageClassName = "",
+  wideOnNarrow = false,
+}: FeatureCardProps) {
+  const alt = `${title}. ${description}`;
+
   return (
     <li
-      className={`min-w-0 ${wideOnNarrow ? "col-span-2 flex justify-center lg:col-span-1" : ""}`}
+      className={`flex min-w-0 justify-center ${wideOnNarrow ? "col-span-2 lg:col-span-1" : ""}`}
     >
-      <article className="flex h-full max-w-[13.5rem] flex-col text-center sm:max-w-none lg:max-w-none lg:rounded-xl lg:bg-[#F7F1E9] lg:px-5 lg:py-7 lg:shadow-xs">
-        <IconRing>{icon}</IconRing>
-        <h3 className="font-sans text-[0.8125rem] font-medium leading-snug text-ink sm:text-sm lg:text-base lg:font-bold">
-          {title}
-        </h3>
-        <p className="mt-2 hidden font-sans text-body-sm leading-relaxed text-ink-soft lg:block">{description}</p>
+      <article className="flex w-full max-w-[8.75rem] flex-col overflow-hidden rounded-xl bg-[#F7F1E9] shadow-xs sm:max-w-[9.25rem] lg:max-w-[9.5rem] xl:max-w-[10rem]">
+        <div className="relative aspect-[2/3] w-full">
+          <Image
+            src={imageSrc}
+            alt={alt}
+            fill
+            unoptimized
+            sizes="(min-width: 1024px) 160px, (min-width: 640px) 148px, 140px"
+            className={`object-contain object-center ${imageClassName}`.trim()}
+          />
+        </div>
       </article>
     </li>
   );
@@ -137,41 +93,18 @@ export function WhyChoosePressSection() {
           >
             Why choose DiteUp?
           </h2>
-          <p className="mt-3 hidden font-sans text-body-lg font-normal text-ink-soft lg:block">
+          <p className="mt-3 hidden font-sans text-body-lg font-normal text-ink-soft md:block">
             More than just a breakfast, it&apos;s a smarter lifestyle.
           </p>
         </header>
 
         <ul
-          className="mt-10 grid list-none grid-cols-2 gap-x-6 gap-y-10 sm:gap-x-8 lg:mt-12 lg:grid-cols-5 lg:gap-4 xl:gap-5"
+          className="mx-auto mt-10 grid w-full max-w-[38rem] list-none grid-cols-2 items-stretch gap-x-4 gap-y-5 sm:max-w-[40rem] sm:gap-x-5 lg:mt-12 lg:max-w-[50rem] lg:grid-cols-5 lg:gap-3 xl:max-w-[52rem] xl:gap-4"
           aria-label="Why choose DiteUp highlights"
         >
-          <FeatureCard
-            title="Keeps You Full Longer"
-            description="High protein & fiber keeps hunger away"
-            icon={<IconBowlSteam />}
-          />
-          <FeatureCard
-            title="Ready in 2 Minutes"
-            description="No cooking. Just soak and eat."
-            icon={<IconStopwatch />}
-          />
-          <FeatureCard
-            title="Sustained Energy"
-            description="Keeps you active & fresh all day."
-            icon={<IconSunEnergy />}
-          />
-          <FeatureCard
-            title="Gut Friendly & Light"
-            description="Natural ingredients easy on digestion."
-            icon={<IconGutFriendly />}
-          />
-          <FeatureCard
-            title="No Junk, Only Clean"
-            description="No refined sugar, no preservatives."
-            icon={<IconNoJunk />}
-            wideOnNarrow
-          />
+          {WHY_CHOOSE_FEATURES.map((feature) => (
+            <FeatureCard key={feature.title} {...feature} />
+          ))}
         </ul>
 
         <div className="mt-14 md:mt-18">

@@ -30,29 +30,6 @@ function IconTruck({ className }: { className?: string }) {
   );
 }
 
-/** Shield outline — inherits `currentColor`. */
-function IconShield({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      width={18}
-      height={18}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden
-    >
-      <path
-        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-        stroke="currentColor"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 /** Padlock outline — inherits `currentColor`. */
 function IconLock({ className }: { className?: string }) {
   return (
@@ -86,7 +63,7 @@ function IconLock({ className }: { className?: string }) {
 }
 
 /**
- * Slim evergreen promo strip: shipping, COD, payments — mobile shows stacked shipping line; md+ shows full strip.
+ * Slim evergreen promo strip: shipping + payments — mobile shows stacked shipping line; md+ shows two-message strip.
  */
 export function AnnouncementBar() {
   return (
@@ -104,21 +81,17 @@ export function AnnouncementBar() {
               FREE SHIPPING
             </span>
             <span className="text-[0.6875rem] font-normal normal-case tracking-normal">
-              on orders above ₹499
+              on all orders
             </span>
           </span>
         </p>
       </div>
 
-      {/* Tablet/desktop: full three-message strip */}
+      {/* Tablet/desktop: shipping + secure payments */}
       <div className="mx-auto hidden max-w-[1320px] flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 py-2.5 text-[0.6875rem] font-medium uppercase tracking-[0.06em] text-white sm:justify-between md:flex md:px-8 lg:px-12">
         <p className="flex items-center gap-2">
           <IconTruck className="shrink-0 text-gold" />
-          <span>FREE SHIPPING on orders above ₹499</span>
-        </p>
-        <p className="flex items-center gap-2">
-          <IconShield className="shrink-0 text-gold" />
-          <span>COD Available</span>
+          <span>Free shipping on all orders</span>
         </p>
         <p className="flex items-center gap-2">
           <IconLock className="shrink-0 text-gold" />
