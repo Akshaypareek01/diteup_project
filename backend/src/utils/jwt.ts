@@ -12,6 +12,8 @@ export type AccessPayload = {
   sub: string;        // userId
   role: "CUSTOMER" | "ADMIN";
   emailVerified: boolean;
+  /** Matches `User.tokenVersion` — invalidated on logout / password reset. */
+  tv: number;
 };
 
 export type RefreshPayload = {

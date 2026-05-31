@@ -11,6 +11,7 @@ import { Unauthorized } from "../utils/errors.js";
 import type {
   AdminInventoryListQueryInput,
   AdminOrderListQueryInput,
+  AdminPaymentExportQueryInput,
   AdminPaymentListQueryInput,
   AdminStockNotifyListQueryInput,
 } from "../validators/adminExpanded.js";
@@ -143,6 +144,31 @@ export async function postAdminOrdersImport(req: Request, res: Response, next: N
       req,
     });
     res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /v1/admin/payments/export — XLSX download
+ */
+export async function getAdminPaymentsExport(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.auth) throw Unauthorized();
+    const q = req.query as unknown as AdminPaymentExportQueryInput;
+    const buf = await adminPayments.exportPaymentsXlsx({
+      status: q.status,
+      orderId: q.orderId,
+      q: q.q,
+      createdFrom: q.createdFrom,
+      createdTo: q.createdTo,
+    });
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader("Content-Disposition", 'attachment; filename="payments.xlsx"');
+    res.send(buf);
   } catch (err) {
     next(err);
   }

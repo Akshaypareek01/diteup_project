@@ -76,11 +76,41 @@ export async function getUserAdmin(userId: string) {
   });
   if (!user) throw NotFound("User not found");
 
+  const paidStatuses = ["CONFIRMED", "SHIPPED", "DELIVERED", "RETURNED", "REFUNDED"] as const;
+  const [recentOrders, lifetimeAgg] = await Promise.all([
+    prisma.order.findMany({
+      where: { userId },
+      orderBy: { placedAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        total: true,
+        placedAt: true,
+        paymentMethod: true,
+      },
+    }),
+    prisma.order.aggregate({
+      where: { userId, status: { in: [...paidStatuses] } },
+      _sum: { total: true },
+    }),
+  ]);
+
   const { passwordHash: _ph, ...rest } = user;
   return {
     user: {
       ...rest,
       passwordSet: Boolean(_ph),
+      lifetimeSpend: lifetimeAgg._sum.total != null ? Number(lifetimeAgg._sum.total) : 0,
+      recentOrders: recentOrders.map((o) => ({
+        id: o.id,
+        orderNumber: o.orderNumber,
+        status: o.status,
+        total: Number(o.total),
+        placedAt: o.placedAt,
+        paymentMethod: o.paymentMethod,
+      })),
     },
   };
 }

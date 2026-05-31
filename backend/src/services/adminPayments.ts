@@ -4,6 +4,7 @@
 import { Prisma } from "@prisma/client";
 import type { PaymentStatus } from "@prisma/client";
 import type { Request } from "express";
+import * as XLSX from "xlsx";
 
 import { recordAudit } from "../utils/adminAudit.js";
 import { NotFound, ServiceUnavailable, ValidationError } from "../utils/errors.js";
@@ -240,4 +241,55 @@ export async function paymentReconciliationSummary(days = 14) {
   );
 
   return { since: start.toISOString(), days, byStatus };
+}
+
+/**
+ * Builds an XLSX workbook of payments matching filters (max 5000 rows).
+ */
+export async function exportPaymentsXlsx(
+  input: Omit<AdminPaymentListQuery, "page" | "pageSize">,
+): Promise<Buffer> {
+  const where: Prisma.PaymentWhereInput = {};
+  if (input.status) where.status = input.status;
+  if (input.orderId) where.orderId = input.orderId;
+  if (input.createdFrom || input.createdTo) {
+    where.createdAt = {};
+    if (input.createdFrom) where.createdAt.gte = input.createdFrom;
+    if (input.createdTo) where.createdAt.lte = input.createdTo;
+  }
+  if (input.q?.trim()) {
+    const q = input.q.trim();
+    where.OR = [
+      { id: { equals: q } },
+      { razorpayOrderId: { contains: q, mode: "insensitive" } },
+      { razorpayPaymentId: { contains: q, mode: "insensitive" } },
+    ];
+  }
+
+  const rows = await prisma.payment.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: 5000,
+    include: {
+      order: { select: { orderNumber: true, guestEmail: true, status: true } },
+    },
+  });
+
+  const sheet = rows.map((p) => ({
+    paymentId: p.id,
+    orderNumber: p.order.orderNumber,
+    orderStatus: p.order.status,
+    guestEmail: p.order.guestEmail ?? "",
+    status: p.status,
+    method: p.method,
+    amount: moneyNumber(p.amount),
+    refundedAmount: moneyNumber(p.refundedAmount),
+    razorpayOrderId: p.razorpayOrderId ?? "",
+    razorpayPaymentId: p.razorpayPaymentId ?? "",
+    createdAt: p.createdAt.toISOString(),
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet), "Payments");
+  return XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
 }

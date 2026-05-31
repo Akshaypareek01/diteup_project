@@ -15,6 +15,7 @@ import { prisma } from "./utils/prisma.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { requestContext } from "./middleware/requestContext.js";
 import { requireBrowserOriginForCookieAuth } from "./middleware/originCheck.js";
+import { requireHealthcheckSecret } from "./middleware/healthcheckGate.js";
 import { startBackgroundSchedulers } from "./jobs/scheduler.js";
 import * as webhookController from "./controllers/webhooks.js";
 import * as marketingController from "./controllers/marketing.js";
@@ -42,7 +43,11 @@ function createApp(): express.Application {
   app.disable("x-powered-by");
   app.set("trust proxy", 1);
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    }),
+  );
   app.use(
     cors({
       origin: allowedOrigins,
@@ -56,7 +61,11 @@ function createApp(): express.Application {
     webhookController.postRazorpayWebhook,
   );
 
-  app.post("/v1/webhooks/resend", express.json({ limit: "256kb" }), resendWebhookController.postResendWebhook);
+  app.post(
+    "/v1/webhooks/resend",
+    express.raw({ type: "application/json", limit: "256kb" }),
+    resendWebhookController.postResendWebhook,
+  );
 
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
@@ -69,7 +78,7 @@ function createApp(): express.Application {
     res.json({ ok: true, service: "diteup-api", env: env.NODE_ENV });
   });
 
-  app.get("/health/db", async (_req: Request, res: Response) => {
+  app.get("/health/db", requireHealthcheckSecret, async (_req: Request, res: Response) => {
     try {
       await prisma.$queryRaw`SELECT 1`;
       res.json({ ok: true, db: "up" });

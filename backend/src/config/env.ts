@@ -61,6 +61,9 @@ const EnvSchema = z.object({
   /** When set, distributed rate limiter uses Redis (`redis` package). */
   REDIS_URL: z.string().optional(),
 
+  /** When set, `/health/db` requires `X-Health-Secret` header in production. */
+  HEALTHCHECK_SECRET: z.string().min(16).optional(),
+
   /** Resend webhook signing secret (optional; verifies `Resend`/`Svix` posts). */
   RESEND_WEBHOOK_SECRET: z.string().optional(),
 

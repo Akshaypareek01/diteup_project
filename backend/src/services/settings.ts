@@ -27,6 +27,19 @@ export async function getMetaAdsIntegration(): Promise<{
   return { pixelId, accessToken };
 }
 
+/**
+ * Public Meta Pixel ID for browser-side tracking (no secrets).
+ */
+export async function getPublicMetaPixelId(): Promise<string | null> {
+  const row = await prisma.setting.findUnique({ where: { key: "metaAds" } });
+  const fromDb =
+    row?.value && typeof row.value === "object" && row.value !== null
+      ? (row.value as MetaAdsSettingJson)
+      : {};
+  const pixelId = String(fromDb.pixelId || env.META_PIXEL_ID || "").trim();
+  return pixelId || null;
+}
+
 export type PincodePolicy = {
   /** If non-empty, only these pincodes are serviceable; if empty/omitted = PAN-India minus restrictions. */
   serviceablePincodes?: string[];
@@ -132,4 +145,110 @@ export async function getCheckoutDefaults(): Promise<CheckoutDefaults> {
 function numOr(raw: unknown, fallback: number): number {
   const n = Number(raw);
   return Number.isFinite(n) ? n : fallback;
+}
+
+/** Site-wide storefront mode reasons (PRD §7.10). */
+export type SiteModeReason = "COMING_SOON" | "UNDER_MAINTENANCE" | "SALE";
+
+/** Admin `Setting` key `siteMode` JSON shape. */
+export type SiteModeSetting = {
+  enabled: boolean;
+  reason: SiteModeReason;
+  /** ISO 8601 UTC — required when enabled. */
+  endsAt: string;
+  headline?: string;
+  message?: string;
+};
+
+/** Public storefront payload for banners + checkout gating. */
+export type PublicSiteMode = {
+  active: boolean;
+  reason: SiteModeReason | null;
+  endsAt: string | null;
+  headline: string;
+  message: string | null;
+  blocksCheckout: boolean;
+};
+
+const INACTIVE_SITE_MODE: PublicSiteMode = {
+  active: false,
+  reason: null,
+  endsAt: null,
+  headline: "",
+  message: null,
+  blocksCheckout: false,
+};
+
+/**
+ * Returns true when the site mode reason blocks checkout (Coming soon / Under maintenance).
+ */
+export function blocksCheckoutForReason(reason: SiteModeReason): boolean {
+  return reason === "COMING_SOON" || reason === "UNDER_MAINTENANCE";
+}
+
+/**
+ * Default banner headline when admin omits a custom headline.
+ */
+export function defaultHeadlineForReason(reason: SiteModeReason): string {
+  switch (reason) {
+    case "COMING_SOON":
+      return "Coming soon";
+    case "UNDER_MAINTENANCE":
+      return "Under maintenance";
+    case "SALE":
+      return "Sale ends in";
+  }
+}
+
+/**
+ * Loads raw `siteMode` from DB without expiry evaluation.
+ */
+export async function getSiteModeRaw(): Promise<SiteModeSetting> {
+  const row = await prisma.setting.findUnique({ where: { key: "siteMode" } });
+  const defaults: SiteModeSetting = {
+    enabled: false,
+    reason: "COMING_SOON",
+    endsAt: "",
+  };
+  if (!row?.value || typeof row.value !== "object" || row.value === null) {
+    return defaults;
+  }
+  const v = row.value as Record<string, unknown>;
+  const reason = v.reason;
+  const validReason: SiteModeReason =
+    reason === "COMING_SOON" || reason === "UNDER_MAINTENANCE" || reason === "SALE"
+      ? reason
+      : "COMING_SOON";
+  return {
+    enabled: typeof v.enabled === "boolean" ? v.enabled : false,
+    reason: validReason,
+    endsAt: typeof v.endsAt === "string" ? v.endsAt : "",
+    headline: typeof v.headline === "string" ? v.headline : undefined,
+    message: typeof v.message === "string" ? v.message : undefined,
+  };
+}
+
+/**
+ * Resolves active site mode — auto-expires when `endsAt` is missing, invalid, or in the past.
+ */
+export async function getEffectiveSiteMode(): Promise<PublicSiteMode> {
+  const raw = await getSiteModeRaw();
+  if (!raw.enabled) return INACTIVE_SITE_MODE;
+
+  const endsAtMs = Date.parse(raw.endsAt);
+  if (!raw.endsAt || !Number.isFinite(endsAtMs) || endsAtMs <= Date.now()) {
+    return INACTIVE_SITE_MODE;
+  }
+
+  const headline = (raw.headline?.trim() || defaultHeadlineForReason(raw.reason)).trim();
+  const message = raw.message?.trim() || null;
+
+  return {
+    active: true,
+    reason: raw.reason,
+    endsAt: raw.endsAt,
+    headline,
+    message,
+    blocksCheckout: blocksCheckoutForReason(raw.reason),
+  };
 }

@@ -107,6 +107,14 @@ export const AdminPaymentListQuerySchema = AdminPaginationQuerySchema.extend({
   createdTo: z.coerce.date().optional(),
 });
 
+export const AdminPaymentExportQuerySchema = z.object({
+  status: PaymentStatusZ.optional(),
+  orderId: z.string().min(10).optional(),
+  q: z.string().optional(),
+  createdFrom: z.coerce.date().optional(),
+  createdTo: z.coerce.date().optional(),
+});
+
 export const AdminPaymentRefundBodySchema = z.object({
   amountInr: z.number().positive().optional().nullable(),
   reason: z.string().max(2000).optional().nullable(),
@@ -302,6 +310,37 @@ export const AdminSettingUpsertBodySchema = z.object({
   value: z.unknown(),
 });
 
+export const SiteModeReasonSchema = z.enum(["COMING_SOON", "UNDER_MAINTENANCE", "SALE"]);
+
+/** Validates admin `siteMode` setting payload. */
+export const SiteModeSettingSchema = z
+  .object({
+    enabled: z.boolean(),
+    reason: SiteModeReasonSchema,
+    endsAt: z.string(),
+    headline: z.string().max(200).optional(),
+    message: z.string().max(500).optional(),
+  })
+  .superRefine((val, ctx) => {
+    if (!val.enabled) return;
+    const ms = Date.parse(val.endsAt);
+    if (!val.endsAt || !Number.isFinite(ms)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "endsAt must be a valid ISO datetime when site mode is enabled",
+        path: ["endsAt"],
+      });
+      return;
+    }
+    if (ms <= Date.now()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "endsAt must be in the future when site mode is enabled",
+        path: ["endsAt"],
+      });
+    }
+  });
+
 export const AdminAuditListQuerySchema = AdminPaginationQuerySchema.extend({
   actorId: z.string().min(10).optional(),
   entity: z.string().min(1).max(80).optional(),
@@ -315,6 +354,7 @@ export const AdminStockNotifyListQuerySchema = AdminPaginationQuerySchema.extend
 
 export type AdminOrderListQueryInput = z.infer<typeof AdminOrderListQuerySchema>;
 export type AdminPaymentListQueryInput = z.infer<typeof AdminPaymentListQuerySchema>;
+export type AdminPaymentExportQueryInput = z.infer<typeof AdminPaymentExportQuerySchema>;
 export type AdminUserListQueryInput = z.infer<typeof AdminUserListQuerySchema>;
 export type AdminProductListQueryInput = z.infer<typeof AdminProductListQuerySchema>;
 export type AdminInventoryListQueryInput = z.infer<typeof AdminInventoryListQuerySchema>;

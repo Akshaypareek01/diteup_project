@@ -1,7 +1,7 @@
 /**
  * Authentication + authorization middleware.
  *
- * - authRequired:  verifies access JWT, loads user, checks isActive + tokenVersion,
+ * - authRequired:  verifies access JWT, loads user, checks isActive + tokenVersion (`tv` claim),
  *                  attaches user to req.auth.
  * - optionalAuth:  same as above but doesn't reject if no/invalid token.
  * - roleRequired:  must follow authRequired; checks role.
@@ -55,13 +55,23 @@ async function resolveAuth(req: Parameters<RequestHandler>[0]): Promise<AuthCont
   // may have disabled the account mid-session.
   const user = await prisma.user.findUnique({
     where: { id: payload.sub },
-    select: { id: true, role: true, isActive: true, emailVerified: true, lockedUntil: true },
+    select: {
+      id: true,
+      role: true,
+      isActive: true,
+      emailVerified: true,
+      lockedUntil: true,
+      tokenVersion: true,
+    },
   });
 
   if (!user) throw Unauthorized("Account not found");
   if (!user.isActive) throw Unauthorized("Account is disabled");
   if (user.lockedUntil && user.lockedUntil > new Date()) {
     throw Unauthorized("Account temporarily locked");
+  }
+  if (payload.tv !== user.tokenVersion) {
+    throw Unauthorized("Session expired — please log in again");
   }
 
   return { userId: user.id, role: user.role, emailVerified: user.emailVerified };

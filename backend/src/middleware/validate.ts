@@ -22,12 +22,23 @@ export function validate<
         req.body = schemas.body.parse(req.body) as ZodInfer<TBody>;
       }
       if (schemas.query) {
-        const q = schemas.query.parse(req.query) as ZodInfer<TQuery>;
-        Object.assign(req.query as Record<string, unknown>, q);
+        const parsed = schemas.query.parse(req.query) as ZodInfer<TQuery>;
+        // Express 5: `req.query` is a getter-only property; replace it for downstream handlers.
+        Object.defineProperty(req, "query", {
+          value: parsed,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
       }
       if (schemas.params) {
-        const p = schemas.params.parse(req.params) as ZodInfer<TParams>;
-        Object.assign(req.params as Record<string, unknown>, p);
+        const parsed = schemas.params.parse(req.params) as ZodInfer<TParams>;
+        Object.defineProperty(req, "params", {
+          value: parsed,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        });
       }
       next();
     } catch (err) {

@@ -7,7 +7,7 @@ import type { Product } from "@prisma/client";
 import { prisma } from "../utils/prisma.js";
 import { ValidationError, ProductUnavailable } from "../utils/errors.js";
 import { moneyNumber, roundMoney } from "../utils/money.js";
-import { getCheckoutDefaults, type CheckoutDefaults } from "./settings.js";
+import { getCheckoutDefaults, getEffectiveSiteMode, type CheckoutDefaults } from "./settings.js";
 import { validateCouponPreview, type CouponPreviewResult } from "./coupon.js";
 import { computeEffectiveVisibility, isCustomerBuyable } from "./catalog.js";
 
@@ -75,6 +75,15 @@ export async function resolveCheckoutCart(input: {
 }): Promise<ResolvedCheckout> {
   if (!input.items?.length) {
     throw ValidationError("Cart cannot be empty");
+  }
+
+  const siteMode = await getEffectiveSiteMode();
+  if (siteMode.blocksCheckout) {
+    throw ProductUnavailable(
+      siteMode.message ??
+        `${siteMode.headline} — purchases are temporarily unavailable. Please check back soon.`,
+      "SITE_MODE",
+    );
   }
 
   const merged = mergeCartLines(input.items);

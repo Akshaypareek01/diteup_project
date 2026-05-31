@@ -6,6 +6,7 @@ import type { Request, Response, NextFunction } from "express";
 import { prisma } from "../utils/prisma.js";
 import { logger } from "../utils/logger.js";
 import { normalizeEmail } from "../utils/format.js";
+import { verifyResendWebhookSignature } from "../utils/resendWebhookVerify.js";
 
 type ResendLikePayload = {
   type?: string;
@@ -18,12 +19,34 @@ type ResendLikePayload = {
 };
 
 /**
- * POST /v1/webhooks/resend — JSON body.
- * Configure signing via provider dashboard later; for now rely on secret URL + HTTPS.
+ * POST /v1/webhooks/resend — raw body; Svix signature when `RESEND_WEBHOOK_SECRET` is set.
  */
 export async function postResendWebhook(req: Request, res: Response, next: NextFunction) {
   try {
-    const body = (typeof req.body === "object" && req.body !== null ? req.body : {}) as ResendLikePayload;
+    const raw = req.body as Buffer;
+    if (!Buffer.isBuffer(raw)) {
+      res.status(400).json({ ok: false, error: "Invalid webhook body" });
+      return;
+    }
+
+    const ok = verifyResendWebhookSignature(raw, {
+      svixId: req.get("svix-id"),
+      svixTimestamp: req.get("svix-timestamp"),
+      svixSignature: req.get("svix-signature"),
+    });
+    if (!ok) {
+      res.status(400).json({ ok: false, error: "Invalid signature" });
+      return;
+    }
+
+    let body: ResendLikePayload;
+    try {
+      body = JSON.parse(raw.toString("utf8")) as ResendLikePayload;
+    } catch {
+      res.status(400).json({ ok: false, error: "Invalid JSON" });
+      return;
+    }
+
     const t = String(body.type ?? "").toLowerCase();
     const toRaw = body.data?.to ?? body.data?.email;
     const to = Array.isArray(toRaw) ? toRaw[0] : toRaw;

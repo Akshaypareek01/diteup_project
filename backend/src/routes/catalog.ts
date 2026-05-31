@@ -4,6 +4,7 @@
 import { Router } from "express";
 
 import * as catalogController from "../controllers/catalog.js";
+import * as siteController from "../controllers/site.js";
 import * as reviewsController from "../controllers/reviews.js";
 import { optionalAuth } from "../middleware/auth.js";
 import { rateLimit } from "../middleware/rateLimit.js";
@@ -16,6 +17,9 @@ import {
 import { ProductReviewsQuerySchema } from "../validators/reviews.js";
 
 const router = Router();
+
+router.get("/site/mode", siteController.getSiteMode);
+router.get("/site/integrations", siteController.getSiteIntegrations);
 
 router.get("/products/featured", catalogController.getFeatured);
 

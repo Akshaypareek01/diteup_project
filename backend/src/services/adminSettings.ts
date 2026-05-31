@@ -11,6 +11,7 @@ import {
   encryptSettingsSecret,
   isSettingsEncryptionConfigured,
 } from "../utils/settingsCrypto.js";
+import { SiteModeSettingSchema } from "../validators/adminExpanded.js";
 import { prisma } from "../utils/prisma.js";
 
 /**
@@ -71,6 +72,15 @@ export async function upsertSettingAdmin(input: {
 }): Promise<void> {
   const key = input.key.trim();
   if (!key) throw ValidationError("key required");
+
+  if (key === "siteMode") {
+    const parsed = SiteModeSettingSchema.safeParse(input.value);
+    if (!parsed.success) {
+      const msg = parsed.error.issues.map((i) => i.message).join("; ") || "Invalid siteMode value";
+      throw ValidationError(msg);
+    }
+    input.value = parsed.data;
+  }
 
   let stored: Prisma.InputJsonValue;
 

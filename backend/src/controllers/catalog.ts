@@ -4,6 +4,7 @@
 import type { Request, Response, NextFunction } from "express";
 
 import * as catalogService from "../services/catalog.js";
+import { getEffectiveSiteMode } from "../services/settings.js";
 
 /** GET /v1/products/featured */
 export async function getFeatured(_req: Request, res: Response, next: NextFunction) {
@@ -18,8 +19,11 @@ export async function getFeatured(_req: Request, res: Response, next: NextFuncti
 /** GET /v1/products/:slug */
 export async function getBySlug(req: Request, res: Response, next: NextFunction) {
   try {
-    const product = await catalogService.getProductBySlug(String(req.params.slug));
-    res.status(200).json({ product });
+    const [product, siteMode] = await Promise.all([
+      catalogService.getProductBySlug(String(req.params.slug)),
+      getEffectiveSiteMode(),
+    ]);
+    res.status(200).json({ product, siteMode });
   } catch (err) {
     next(err);
   }

@@ -152,6 +152,7 @@ function buildTokens(user: { id: string; role: "CUSTOMER" | "ADMIN"; emailVerifi
     sub: user.id,
     role: user.role,
     emailVerified: user.emailVerified,
+    tv: user.tokenVersion,
   });
   const refreshToken = signRefreshToken({
     sub: user.id,
@@ -391,6 +392,7 @@ export async function refresh(refreshToken: string): Promise<{ accessToken: stri
     sub: user.id,
     role: user.role,
     emailVerified: user.emailVerified,
+    tv: user.tokenVersion,
   });
   return { accessToken };
 }

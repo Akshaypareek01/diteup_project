@@ -112,7 +112,7 @@ export const ProfileIncomplete = (missing: string[]) =>
 
 export const ProductUnavailable = (
   message: string,
-  reason?: "VISIBILITY" | "PINCODE_RESTRICTED" | "OUT_OF_STOCK"
+  reason?: "VISIBILITY" | "PINCODE_RESTRICTED" | "OUT_OF_STOCK" | "SITE_MODE",
 ) =>
   new AppError({
     statusCode: 422,

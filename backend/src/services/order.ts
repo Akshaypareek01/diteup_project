@@ -9,6 +9,7 @@ import { CouponInvalid, ProductUnavailable, ValidationError } from "../utils/err
 import { normalizeEmail, normalizeIndianPhone } from "../utils/format.js";
 import { roundMoney } from "../utils/money.js";
 import { checkPincode } from "./catalog.js";
+import { getEffectiveSiteMode } from "./settings.js";
 import {
   attachCouponMeta,
   computeCouponBenefit,
@@ -74,6 +75,15 @@ export type PlaceOrderInput = {
  * Creates an order in a single transaction (inventory reserve, coupon redemption, COD confirm inline).
  */
 export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrderResult> {
+  const siteMode = await getEffectiveSiteMode();
+  if (siteMode.blocksCheckout) {
+    throw ProductUnavailable(
+      siteMode.message ??
+        `${siteMode.headline} — purchases are temporarily unavailable. Please check back soon.`,
+      "SITE_MODE",
+    );
+  }
+
   const qtyMap = mergeCartLines(input.items);
   const resolved = await resolveCheckoutCart({ items: input.items });
   const pin = input.shippingAddress.pincode.trim();

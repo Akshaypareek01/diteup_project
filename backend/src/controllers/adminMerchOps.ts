@@ -376,6 +376,7 @@ export async function getAdminReportsHub(_req: Request, res: Response, next: Nex
     res.json({
       exports: [
         { id: "orders", method: "GET", path: "/v1/admin/orders/export" },
+        { id: "payments", method: "GET", path: "/v1/admin/payments/export" },
         { id: "users", method: "GET", path: "/v1/admin/users/export" },
         { id: "inventory", method: "GET", path: "/v1/admin/inventory/export" },
         {

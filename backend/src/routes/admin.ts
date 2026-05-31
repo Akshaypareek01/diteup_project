@@ -37,6 +37,7 @@ import {
   AdminOrderListQuerySchema,
   AdminOrderRefundBodySchema,
   AdminOrderStatusBodySchema,
+  AdminPaymentExportQuerySchema,
   AdminPaymentListQuerySchema,
   AdminPaymentRefundBodySchema,
   AdminProductCreateBodySchema,
@@ -391,6 +392,13 @@ router.get(
   ...adminOnly,
   validate({ query: AdminReconcileQuerySchema }),
   adminFulfillment.getAdminPaymentReconciliation,
+);
+
+router.get(
+  "/admin/payments/export",
+  ...adminOnly,
+  validate({ query: AdminPaymentExportQuerySchema }),
+  adminFulfillment.getAdminPaymentsExport,
 );
 
 router.get(
