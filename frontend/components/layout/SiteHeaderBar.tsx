@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useCartDrawer } from "@/components/cart/CartDrawerProvider";
 import { useCartState } from "@/components/cart/CartStateProvider";
-import { HeroBannerArtworkToggle } from "@/components/home/HeroBannerArtworkToggle";
 import { MobileNavDrawer } from "@/components/layout/MobileNavDrawer";
 import { SiteNavHashLink } from "@/components/layout/SiteNavHashLink";
 import type { SiteNavLink } from "@/components/layout/site-nav-links";
