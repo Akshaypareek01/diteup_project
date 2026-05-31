@@ -1,3 +1,6 @@
+import type { PublicSiteMode } from "@/lib/types/site-mode";
+import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
+
 /** Truck outline — inherits `currentColor`. */
 function IconTruck({ className }: { className?: string }) {
   return (
@@ -62,17 +65,24 @@ function IconLock({ className }: { className?: string }) {
   );
 }
 
+export type AnnouncementBarProps = {
+  siteMode?: PublicSiteMode;
+};
+
 /**
- * Slim evergreen promo strip: shipping + payments — mobile shows stacked shipping line; md+ shows two-message strip.
+ * Slim evergreen promo strip: site mode countdown when active, else shipping + payments.
  */
-export function AnnouncementBar() {
+export function AnnouncementBar({ siteMode }: AnnouncementBarProps) {
+  if (siteMode?.active) {
+    return <SiteModeStrip siteMode={siteMode} withShell />;
+  }
+
   return (
     <div
       className="border-b border-black/15 bg-[#142920]"
       role="region"
       aria-label="Store announcements"
     >
-      {/* Narrow viewports: single centered shipping message (matches mobile storefront header) */}
       <div className="mx-auto flex max-w-[1320px] items-center justify-center px-4 py-2.5 md:hidden">
         <p className="flex items-center gap-2.5 text-white">
           <IconTruck className="size-[18px] shrink-0 text-gold" aria-hidden />
@@ -87,7 +97,6 @@ export function AnnouncementBar() {
         </p>
       </div>
 
-      {/* Tablet/desktop: shipping + secure payments */}
       <div className="mx-auto hidden max-w-[1320px] flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 py-2.5 text-[0.6875rem] font-medium uppercase tracking-[0.06em] text-white sm:justify-between md:flex md:px-8 lg:px-12">
         <p className="flex items-center gap-2">
           <IconTruck className="shrink-0 text-gold" />

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { AdminBroadcastCreateForm } from "@/components/admin/AdminBroadcastCreateForm";
+import { AdminBroadcastRowActions } from "@/components/admin/AdminBroadcastRowActions";
 import { adminGet } from "@/lib/admin-json";
 
 type BroadcastRow = {
@@ -13,7 +14,7 @@ type BroadcastRow = {
 type ListResponse = { total: number; page: number; pageSize: number; broadcasts: BroadcastRow[] };
 
 /**
- * Broadcast drafts — `GET /v1/admin/broadcasts`, `POST /v1/admin/broadcasts`.
+ * Broadcast drafts — create, preview, test, and send.
  */
 export default async function AdminBroadcastsPage() {
   const { data, ok } = await adminGet<ListResponse>("/v1/admin/broadcasts?page=1&pageSize=30");
@@ -37,11 +38,12 @@ export default async function AdminBroadcastsPage() {
         ) : (
           <ul className="mt-4 divide-y divide-line">
             {rows.map((b) => (
-              <li key={b.id} className="py-3">
+              <li key={b.id} className="py-4">
                 <p className="font-medium text-forest">{b.subject}</p>
                 <p className="font-mono text-xs text-ink-muted">
                   {b.status} · {b.id} · {new Date(b.createdAt).toLocaleString()}
                 </p>
+                <AdminBroadcastRowActions broadcastId={b.id} status={b.status} />
               </li>
             ))}
           </ul>

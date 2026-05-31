@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FlowHeader } from "@/components/layout/FlowHeader";
+import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
 import { RazorpayCheckoutScript } from "@/components/payments/RazorpayCheckoutScript";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { ApiError, clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
+import type { PublicSiteMode } from "@/lib/types/site-mode";
 import type { PincodeCheckPayload } from "@/lib/types/pincode";
 import { pixelAddPaymentInfo, pixelInitiateCheckout } from "@/lib/meta-pixel-events";
 import { CheckoutFormSections } from "@/components/checkout/CheckoutFormSections";
@@ -35,7 +37,7 @@ function sumCartQty(lines: Array<{ quantity: number }>): number {
 /**
  * Checkout: cart preview totals, PIN serviceability (`POST /v1/pincode/check`), Razorpay + COD, Pixel funnel events.
  */
-export function CheckoutClient() {
+export function CheckoutClient({ siteMode }: { siteMode: PublicSiteMode }) {
   const router = useRouter();
   const { lines, previewPayload, clear } = useCartState();
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -442,6 +444,7 @@ export function CheckoutClient() {
   if (lines.length === 0) {
     return (
       <div className="min-h-screen bg-cream px-4 py-16 text-center lg:px-8">
+        {siteMode.active ? <SiteModeStrip siteMode={siteMode} withShell /> : null}
         <FlowHeader backHref="/cart" />
         <p className="mx-auto mt-8 max-w-md text-body text-forest">
           Add something to your cart before checkout.
@@ -449,6 +452,8 @@ export function CheckoutClient() {
       </div>
     );
   }
+
+  const checkoutBlocked = siteMode.active && siteMode.blocksCheckout;
 
   const checkoutHeading = (
     <>
@@ -526,9 +531,19 @@ export function CheckoutClient() {
   return (
     <div className="min-h-screen bg-cream pb-28 lg:pb-12">
       <RazorpayCheckoutScript />
+      {siteMode.active ? <SiteModeStrip siteMode={siteMode} withShell /> : null}
       <FlowHeader backHref="/cart" />
       <div className="mx-auto max-w-[1320px] px-4 py-8 sm:px-5 lg:px-8 lg:py-10 xl:px-12">
         <div className="mb-6 lg:mb-8">{checkoutHeading}</div>
+
+        {checkoutBlocked ? (
+          <p
+            className="mb-6 rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-body-sm text-forest"
+            role="alert"
+          >
+            {siteMode.message ?? `${siteMode.headline} — checkout is temporarily unavailable.`}
+          </p>
+        ) : null}
 
         <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-10 xl:gap-12">
           <CheckoutOrderSummary
@@ -558,7 +573,7 @@ export function CheckoutClient() {
             <button
               type="button"
               className={placeOrderBtnClass}
-              disabled={busy || !preview}
+              disabled={busy || !preview || checkoutBlocked}
               onClick={() => void placeOrder()}
             >
               {busy ? "Processing…" : "Place order"}
@@ -569,7 +584,7 @@ export function CheckoutClient() {
             type="button"
             className={`${placeOrderBtnClass} fixed inset-x-4 bottom-4 z-30 lg:hidden`}
             style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
-            disabled={busy || !preview}
+            disabled={busy || !preview || checkoutBlocked}
             onClick={() => void placeOrder()}
           >
             {busy ? "Processing…" : "Place order"}

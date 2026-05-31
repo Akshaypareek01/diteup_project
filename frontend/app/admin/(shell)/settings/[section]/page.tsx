@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AdminSettingJsonEditor } from "@/components/admin/AdminSettingJsonEditor";
+import { AdminSiteModePanel } from "@/components/admin/AdminSiteModePanel";
 import { settingsSections } from "@/lib/admin-nav";
 import { adminReadJson } from "@/lib/admin-json";
 import { SETTINGS_SECTION_KEYS } from "@/lib/settings-section-keys";
 import { serverApiFetch } from "@/lib/server-api";
 import { Card } from "@/components/ui/Card";
+import type { SiteModeSetting } from "@/lib/types/site-mode";
 
 type Props = { params: { section: string } };
 
@@ -53,9 +55,13 @@ export default async function AdminSettingsSectionPage({ params }: Props) {
       </Card>
 
       <div className="space-y-6">
-        {entries.map((e) => (
-          <AdminSettingJsonEditor key={e.key} settingKey={e.key} initialValue={e.value} />
-        ))}
+        {params.section === "site" ? (
+          <AdminSiteModePanel initialValue={(entries.find((e) => e.key === "siteMode")?.value ?? {}) as SiteModeSetting} />
+        ) : (
+          entries.map((e) => (
+            <AdminSettingJsonEditor key={e.key} settingKey={e.key} initialValue={e.value} />
+          ))
+        )}
       </div>
 
       <Link href="/admin/settings" className="text-body-sm text-gold-deep hover:underline">

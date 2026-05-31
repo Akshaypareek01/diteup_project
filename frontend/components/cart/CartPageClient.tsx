@@ -4,10 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlowHeader } from "@/components/layout/FlowHeader";
+import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
 import { CartIconCod, CartIconLock, CartIconStarBadge, CartIconTrash } from "@/components/cart/cart-ui-icons";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
+import type { PublicSiteMode } from "@/lib/types/site-mode";
 import { formatInr, moneyNumber } from "@/lib/format-money";
 import { FREE_SHIPPING_THRESHOLD_INR } from "@/lib/storefront-policy-constants";
 import { cn } from "@/lib/utils";
@@ -85,7 +87,7 @@ function shippingSummaryLabel(shippingAfterCoupon: unknown): string {
 /**
  * Full cart with `POST /v1/cart/preview` totals and optional coupon code.
  */
-export function CartPageClient() {
+export function CartPageClient({ siteMode }: { siteMode: PublicSiteMode }) {
   const { lines, setQty, removeLine, previewPayload } = useCartState();
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
@@ -139,6 +141,7 @@ export function CartPageClient() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] pb-24 lg:pb-16">
+      {siteMode.active ? <SiteModeStrip siteMode={siteMode} withShell /> : null}
       <FlowHeader backHref="/" />
       <div className="mx-auto max-w-[1320px] px-4 py-6 sm:px-5 lg:px-8 lg:py-8 xl:px-12">
         <h1 className="font-sans text-lg font-bold uppercase tracking-[0.12em] text-ink lg:text-xl">
@@ -321,12 +324,27 @@ export function CartPageClient() {
                 </div>
               ) : null}
 
-              <Link
-                href="/checkout"
-                className="flex h-14 w-full items-center justify-center rounded-2xl bg-gold font-sans text-button font-bold uppercase tracking-[0.14em] text-forest shadow-md transition hover:bg-gold-soft"
-              >
-                Proceed to checkout
-              </Link>
+              {siteMode.blocksCheckout ? (
+                <p className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-center text-body-sm text-forest" role="alert">
+                  {siteMode.message ?? `${siteMode.headline} — checkout is temporarily unavailable.`}
+                </p>
+              ) : null}
+
+              {siteMode.blocksCheckout ? (
+                <span
+                  className="flex h-14 w-full cursor-not-allowed items-center justify-center rounded-2xl bg-gold/50 font-sans text-button font-bold uppercase tracking-[0.14em] text-forest/60 shadow-md"
+                  aria-disabled="true"
+                >
+                  Proceed to checkout
+                </span>
+              ) : (
+                <Link
+                  href="/checkout"
+                  className="flex h-14 w-full items-center justify-center rounded-2xl bg-gold font-sans text-button font-bold uppercase tracking-[0.14em] text-forest shadow-md transition hover:bg-gold-soft"
+                >
+                  Proceed to checkout
+                </Link>
+              )}
               <div className="space-y-2.5 text-body-sm text-ink-muted lg:text-left">
                 <p className="flex items-center justify-center gap-2 lg:justify-start">
                   <CartIconLock className="size-4 shrink-0 text-forest" aria-hidden />

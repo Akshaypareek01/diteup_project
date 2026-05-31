@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminOrderStatusPanel } from "@/components/admin/AdminOrderStatusPanel";
 import { Card } from "@/components/ui/Card";
 import { formatInr } from "@/lib/format-money";
 import { serverApiFetch, tryGetServerApiBase } from "@/lib/server-api";
@@ -63,6 +64,13 @@ export default async function AdminOrderDetailPage({ params }: Props) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
+          <h2 className="font-semibold text-forest">Update status</h2>
+          <p className="mt-1 text-body-sm text-ink-muted">Triggers customer emails when shipped or delivered.</p>
+          <div className="mt-4">
+            <AdminOrderStatusPanel orderId={id} currentStatus={order.status} />
+          </div>
+        </Card>
+        <Card>
           <h2 className="font-semibold text-forest">Customer &amp; shipping</h2>
           <p className="mt-3 text-body-sm text-forest">
             {order.user?.email ?? order.guestEmail ?? "—"}
@@ -72,7 +80,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             {JSON.stringify(order.shippingAddress, null, 2)}
           </pre>
         </Card>
-        <Card>
+        <Card className="lg:col-span-2">
           <h2 className="font-semibold text-forest">Line items</h2>
           <ul className="mt-3 space-y-2 text-body-sm">
             {items.map((it) => (

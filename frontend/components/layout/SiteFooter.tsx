@@ -31,20 +31,6 @@ function IconMail({ className }: { className?: string }) {
   );
 }
 
-/** Outline phone handset — inherits `currentColor`. */
-function IconPhone({ className }: { className?: string }) {
-  return (
-    <svg className={className} width={18} height={18} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M6.5 3h3l1.5 4.5-2 1a11 11 0 004 4l1-2 4.5 1.5v3a2 2 0 01-2 2 18 18 0 01-13.5-13.5 2 2 0 012-2z"
-        stroke="currentColor"
-        strokeWidth={1.35}
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 /** Map pin outline — inherits `currentColor`. */
 function IconPin({ className }: { className?: string }) {
   return (
@@ -179,19 +165,13 @@ export async function SiteFooter() {
             <address className="mt-4 space-y-3 font-sans text-body-sm not-italic leading-snug text-ink-soft">
               <p className="flex items-start gap-3">
                 <IconMail className="mt-0.5 shrink-0 text-forest/85" aria-hidden />
-                <a href="mailto:hello@diteup.com" className="transition-colors hover:text-forest">
-                  hello@diteup.com
-                </a>
-              </p>
-              <p className="flex items-start gap-3">
-                <IconPhone className="mt-0.5 shrink-0 text-forest/85" aria-hidden />
-                <a href="tel:+919876543210" className="transition-colors hover:text-forest">
-                  +91 98765 43210
+                <a href="mailto:info@diteup.com" className="transition-colors hover:text-forest">
+                  info@diteup.com
                 </a>
               </p>
               <p className="flex items-start gap-3">
                 <IconPin className="mt-0.5 shrink-0 text-forest/85" aria-hidden />
-                <span>New Delhi, India</span>
+                <span>India</span>
               </p>
             </address>
           </div>

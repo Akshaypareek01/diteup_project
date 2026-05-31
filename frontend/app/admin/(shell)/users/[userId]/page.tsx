@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { UserRestrictionsPanel } from "@/components/admin/UserRestrictionsPanel";
+import { formatInr } from "@/lib/format-money";
 import { adminGet } from "@/lib/admin-json";
 
 type Address = {
@@ -12,6 +14,15 @@ type Address = {
   city: string;
   state: string;
   pincode: string;
+};
+
+type UserOrder = {
+  id: string;
+  orderNumber: string;
+  status: string;
+  total: number;
+  placedAt: string;
+  paymentMethod: string;
 };
 
 type UserDetail = {
@@ -28,6 +39,8 @@ type UserDetail = {
   createdAt: string;
   lastLoginAt: string | null;
   passwordSet: boolean;
+  lifetimeSpend: number;
+  recentOrders: UserOrder[];
   addresses: Address[];
   _count: { orders: number; reviews: number };
 };
@@ -65,16 +78,16 @@ export default async function AdminUserDetailPage({ params }: Props) {
               <dd>{u.phone ?? "—"}</dd>
             </div>
             <div>
+              <dt className="font-mono text-eyebrow text-ink-muted">Lifetime spend</dt>
+              <dd className="font-semibold text-forest">{formatInr(u.lifetimeSpend)}</dd>
+            </div>
+            <div>
               <dt className="font-mono text-eyebrow text-ink-muted">Role</dt>
               <dd className="font-mono">{u.role}</dd>
             </div>
             <div>
               <dt className="font-mono text-eyebrow text-ink-muted">Verified</dt>
               <dd>{u.emailVerified ? "Yes" : "No"}</dd>
-            </div>
-            <div>
-              <dt className="font-mono text-eyebrow text-ink-muted">Password</dt>
-              <dd>{u.passwordSet ? "Set" : "Not set"}</dd>
             </div>
             <div>
               <dt className="font-mono text-eyebrow text-ink-muted">Orders / reviews</dt>
@@ -90,7 +103,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
         </Card>
         <Card>
           <h2 className="font-semibold text-forest">Restrictions &amp; notes</h2>
-          <p className="mt-2 text-body-sm text-ink-muted">Saves to the user row and audit log.</p>
+          <p className="mt-2 text-body-sm text-ink-muted">Enable/disable account, tags, checkout blocks.</p>
           <div className="mt-4">
             <UserRestrictionsPanel
               userId={u.id}
@@ -101,6 +114,41 @@ export default async function AdminUserDetailPage({ params }: Props) {
               initialIsActive={u.isActive}
             />
           </div>
+        </Card>
+        <Card className="lg:col-span-2">
+          <h2 className="font-semibold text-forest">Recent orders</h2>
+          {u.recentOrders.length === 0 ? (
+            <p className="mt-2 text-body-sm text-ink-muted">No orders yet.</p>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-left text-body-sm">
+                <thead className="font-mono text-eyebrow text-ink-muted">
+                  <tr>
+                    <th className="px-2 py-2">Order</th>
+                    <th className="px-2 py-2">Status</th>
+                    <th className="px-2 py-2">Total</th>
+                    <th className="px-2 py-2">Placed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {u.recentOrders.map((o) => (
+                    <tr key={o.id} className="border-t border-line">
+                      <td className="px-2 py-2 font-mono">
+                        <Link href={`/admin/orders/${o.id}`} className="text-gold-deep hover:underline">
+                          {o.orderNumber}
+                        </Link>
+                      </td>
+                      <td className="px-2 py-2">
+                        <Badge variant="outline">{o.status}</Badge>
+                      </td>
+                      <td className="px-2 py-2">{formatInr(o.total)}</td>
+                      <td className="px-2 py-2 text-ink-muted">{new Date(o.placedAt).toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
         <Card className="lg:col-span-2">
           <h2 className="font-semibold text-forest">Addresses</h2>

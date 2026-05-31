@@ -1,15 +1,19 @@
 import Script from "next/script";
 import { COOKIE_CONSENT_STORAGE_KEY } from "@/lib/cookie-consent";
 
-const PIXEL_KEY = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+export type MetaPixelProps = {
+  /** From admin `metaAds` setting or `NEXT_PUBLIC_META_PIXEL_ID`. */
+  pixelId?: string | null;
+};
 
 /**
  * Meta Pixel with consent mode: revoke before init when analytics not accepted; grant only after user accepts (via banner).
  */
-export function MetaPixel() {
-  if (!PIXEL_KEY) return null;
+export function MetaPixel({ pixelId }: MetaPixelProps) {
+  const resolved = (pixelId ?? process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "").trim();
+  if (!resolved) return null;
 
-  const idLiteral = JSON.stringify(PIXEL_KEY);
+  const idLiteral = JSON.stringify(resolved);
   const key = COOKIE_CONSENT_STORAGE_KEY;
 
   const bootstrap = `

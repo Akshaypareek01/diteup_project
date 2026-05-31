@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminProductDeleteButton } from "@/components/admin/AdminProductDeleteButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { formatInr, moneyNumber } from "@/lib/format-money";
@@ -46,12 +47,13 @@ export default async function AdminProductsPage() {
                 <th className="px-4 py-3">Stock (est.)</th>
                 <th className="px-4 py-3">From price</th>
                 <th className="px-4 py-3">Updated</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-ink-muted">
+                  <td colSpan={6} className="px-4 py-8 text-center text-ink-muted">
                     No products.
                   </td>
                 </tr>
@@ -78,6 +80,13 @@ export default async function AdminProductsPage() {
                       <td className="px-4 py-3">{stock}</td>
                       <td className="px-4 py-3">{formatInr(price)}</td>
                       <td className="px-4 py-3 text-ink-muted">{new Date(p.updatedAt).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-right">
+                        <AdminProductDeleteButton
+                          productId={p.id}
+                          productName={p.name}
+                          visibility={p.visibility}
+                        />
+                      </td>
                     </tr>
                   );
                 })

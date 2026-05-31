@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
     title: "DiteUp",
     description: `Track order ${params.orderNumber} on DiteUp.`,
     robots: { index: false, follow: false },
+    referrer: "no-referrer",
   };
 }
 

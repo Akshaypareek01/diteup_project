@@ -7,7 +7,10 @@ import { serverApiFetch, tryGetServerApiBase } from "@/lib/server-api";
 type DashboardStats = {
   ordersLast7Days: number;
   ordersLast30Days: number;
+  gmvToday: number;
+  gmvLast7Days: number;
   gmvLast30Days: number;
+  pendingOrdersCount: number;
   customerCount: number;
   reviewsPendingModeration: number;
   lowStockVariants: unknown[];
@@ -51,9 +54,11 @@ export default async function AdminDashboardPage() {
       : { orders: [] };
 
   const kpis = [
+    { label: "Revenue today", value: formatInr(stats.gmvToday) },
+    { label: "Revenue (7d)", value: formatInr(stats.gmvLast7Days) },
+    { label: "Revenue (30d)", value: formatInr(stats.gmvLast30Days) },
+    { label: "Pending orders", value: String(stats.pendingOrdersCount) },
     { label: "Orders (7d)", value: String(stats.ordersLast7Days) },
-    { label: "Orders (30d)", value: String(stats.ordersLast30Days) },
-    { label: "GMV (30d)", value: formatInr(stats.gmvLast30Days) },
     { label: "Customers", value: String(stats.customerCount) },
   ];
 
@@ -64,7 +69,7 @@ export default async function AdminDashboardPage() {
         <p className="mt-1 text-body text-ink-soft">Live aggregates from the API.</p>
       </div>
 
-      <section aria-label="KPI tiles" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="KPI tiles" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {kpis.map((k) => (
           <Card key={k.label}>
             <p className="font-mono text-eyebrow text-ink-muted">{k.label}</p>
@@ -81,6 +86,12 @@ export default async function AdminDashboardPage() {
         <p className="mt-1 text-body-sm text-forest">
           Low-stock inventory rows: <strong>{stats.lowStockVariants.length}</strong>
         </p>
+        <p className="mt-1 text-body-sm text-forest">
+          Orders needing fulfilment (placed / confirmed): <strong>{stats.pendingOrdersCount}</strong>
+        </p>
+        <Link href="/admin/settings/meta" className="mt-3 inline-block text-body-sm font-semibold text-gold-deep hover:underline">
+          Meta Pixel settings →
+        </Link>
       </Card>
 
       <section aria-labelledby="recent-orders">

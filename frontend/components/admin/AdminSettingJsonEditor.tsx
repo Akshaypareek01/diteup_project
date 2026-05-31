@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/ToastProvider";
 import { ApiError, clientApiJson } from "@/lib/client-api";
 
 export type AdminSettingJsonEditorProps = {
@@ -15,6 +16,7 @@ export type AdminSettingJsonEditorProps = {
  */
 export function AdminSettingJsonEditor({ settingKey, initialValue }: AdminSettingJsonEditorProps) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [text, setText] = useState(() => JSON.stringify(initialValue ?? {}, null, 2));
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -25,7 +27,9 @@ export function AdminSettingJsonEditor({ settingKey, initialValue }: AdminSettin
     try {
       parsed = JSON.parse(text) as unknown;
     } catch {
-      setErr("Invalid JSON.");
+      const msg = "Invalid JSON.";
+      setErr(msg);
+      showToast(msg, "error");
       return;
     }
     setSaving(true);
@@ -34,10 +38,12 @@ export function AdminSettingJsonEditor({ settingKey, initialValue }: AdminSettin
         method: "PUT",
         json: { key: settingKey, value: parsed },
       });
+      showToast(`${settingKey} saved successfully.`);
       router.refresh();
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Save failed.";
       setErr(msg);
+      showToast(msg, "error");
     } finally {
       setSaving(false);
     }

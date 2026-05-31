@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Card } from "@/components/ui/Card";
+import { AdminInventoryLedgerPanel } from "@/components/admin/AdminInventoryLedgerPanel";
+import { AdminXlsxUploadForm } from "@/components/admin/AdminXlsxUploadForm";
 import { InventoryAdjustCell } from "@/components/admin/InventoryAdjustCell";
 import { adminGet } from "@/lib/admin-json";
 
@@ -13,7 +16,7 @@ type InvRow = {
 };
 
 /**
- * Inventory grid — `GET /v1/admin/inventory` with per-row adjust.
+ * Inventory grid — adjust, import, export, and per-SKU ledger history.
  */
 export default async function AdminInventoryPage() {
   const { data, ok } = await adminGet<{ rows: InvRow[] }>("/v1/admin/inventory?page=1&pageSize=60");
@@ -23,7 +26,7 @@ export default async function AdminInventoryPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-display-md font-semibold text-forest">Inventory</h1>
-          <p className="mt-1 text-body text-ink-soft">Adjust stock via the API; export uses `GET /v1/admin/inventory/export`.</p>
+          <p className="mt-1 text-body text-ink-soft">Adjust stock, import bulk updates, export snapshot.</p>
         </div>
         <a
           href="/v1/admin/inventory/export"
@@ -34,6 +37,15 @@ export default async function AdminInventoryPage() {
           Export snapshot
         </a>
       </div>
+
+      <Card>
+        <h2 className="font-semibold text-forest">Bulk import</h2>
+        <p className="mt-1 text-body-sm text-ink-muted">XLSX columns: sku, delta (optional note)</p>
+        <div className="mt-4">
+          <AdminXlsxUploadForm uploadPath="/v1/admin/inventory/import" label="Import stock adjustments" />
+        </div>
+      </Card>
+
       {!ok ? (
         <p className="text-error">Could not load inventory.</p>
       ) : (
@@ -47,6 +59,7 @@ export default async function AdminInventoryPage() {
                 <th className="px-4 py-3">Reserved</th>
                 <th className="px-4 py-3">Low stock ≤</th>
                 <th className="px-4 py-3 min-w-[280px]">Adjust</th>
+                <th className="px-4 py-3">History</th>
               </tr>
             </thead>
             <tbody>
@@ -62,6 +75,9 @@ export default async function AdminInventoryPage() {
                   <td className="px-4 py-3">{r.lowStockThreshold}</td>
                   <td className="px-4 py-3 align-top">
                     <InventoryAdjustCell inventoryId={r.id} />
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <AdminInventoryLedgerPanel inventoryId={r.id} sku={r.sku} />
                   </td>
                 </tr>
               ))}

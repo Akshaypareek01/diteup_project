@@ -6,8 +6,8 @@ import { ProductDetailClient } from "@/components/product/ProductDetailClient";
 type Props = { params: { slug: string } };
 
 export default async function ProductPage({ params }: Props) {
-  const product = await fetchProductBySlug(params.slug);
-  if (!product) {
+  const pageData = await fetchProductBySlug(params.slug);
+  if (!pageData) {
     notFound();
   }
   const reviews = await fetchProductReviewsBySlug(params.slug, {
@@ -15,5 +15,11 @@ export default async function ProductPage({ params }: Props) {
     pageSize: "30",
     sort: "helpful",
   });
-  return <ProductDetailClient product={product} reviews={reviews} />;
+  return (
+    <ProductDetailClient
+      product={pageData.product}
+      siteMode={pageData.siteMode}
+      reviews={reviews}
+    />
+  );
 }

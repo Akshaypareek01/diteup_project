@@ -16,6 +16,7 @@ export default async function AdminReportsPage() {
 
   const labels: Record<string, string> = {
     orders: "Orders — spreadsheet export (filters via query string on API)",
+    payments: "Payments — XLSX (status / search filters via query string)",
     users: "Users — XLSX",
     inventory: "Inventory — snapshot XLSX",
     coupon_redemptions: "Coupon redemptions — open a coupon, then export",

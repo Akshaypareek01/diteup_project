@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Montserrat, Playfair_Display } from "next/font/google";
-import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { MetaPixelGate } from "@/components/analytics/MetaPixelGate";
 import { CookieBanner } from "@/components/legal/CookieBanner";
 import { AppProviders } from "./providers";
 import "./globals.css";
@@ -32,6 +32,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "DiteUp",
   description: "DiteUp",
+  referrer: "strict-origin-when-cross-origin",
 };
 
 export default function RootLayout({
@@ -47,7 +48,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-cream font-sans text-ink antialiased">
         <AppProviders>
           {children}
-          <MetaPixel />
+          <MetaPixelGate />
           <CookieBanner />
         </AppProviders>
       </body>

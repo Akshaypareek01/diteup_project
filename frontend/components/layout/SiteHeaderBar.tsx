@@ -101,7 +101,7 @@ export function SiteHeaderBar({ isCompact = false, navLinks }: SiteHeaderBarProp
             </div>
             <HeaderLogo className="relative h-11 w-[9rem] justify-self-center sm:h-12 sm:w-[10rem]" />
             <div className="flex justify-end gap-1">
-              <HeroBannerArtworkToggle />
+              {/* <HeroBannerArtworkToggle /> */}
               <button
                 type="button"
                 className="relative inline-flex size-10 items-center justify-center rounded-md text-ink transition-colors hover:bg-beige/90"
@@ -136,7 +136,7 @@ export function SiteHeaderBar({ isCompact = false, navLinks }: SiteHeaderBarProp
               </nav>
             )}
             <div className="flex items-center gap-0.5 sm:gap-1">
-              <HeroBannerArtworkToggle />
+              {/* <HeroBannerArtworkToggle /> */}
               <button
                 type="button"
                 className="inline-flex size-10 items-center justify-center rounded-md text-ink transition-colors hover:bg-beige/90"

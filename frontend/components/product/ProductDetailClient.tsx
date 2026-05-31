@@ -5,10 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { FlowHeader } from "@/components/layout/FlowHeader";
+import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
+import { CountdownTimer } from "@/components/site-mode/CountdownTimer";
 import { Button } from "@/components/ui/Button";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { formatInr, moneyNumber } from "@/lib/format-money";
 import type { PublicProduct } from "@/lib/types/catalog";
+import type { PublicSiteMode } from "@/lib/types/site-mode";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
 import { pixelAddToCart } from "@/lib/meta-pixel-events";
 import { NotifyMeForm } from "@/components/product/NotifyMeForm";
@@ -23,6 +26,7 @@ const HOW_TO_USE_SRC = "/assets/Images/howtouse.png";
 
 export type ProductDetailClientProps = {
   product: PublicProduct;
+  siteMode: PublicSiteMode;
   reviews: ProductReviewsPayload | null;
 };
 
@@ -82,9 +86,11 @@ function StarRow({ rating }: { rating: number }) {
 /**
  * PDP: mobile-first single column; `lg` two-column gallery + sticky buy box, wider container on desktop.
  */
-export function ProductDetailClient({ product, reviews }: ProductDetailClientProps) {
+export function ProductDetailClient({ product, siteMode, reviews }: ProductDetailClientProps) {
   const router = useRouter();
   const { addLine, replaceWithLine } = useCartState();
+
+  const siteBlocksPurchase = siteMode.active && siteMode.blocksCheckout;
 
   const defaultVariant = useMemo(
     () => product.variants.find((v) => v.isDefault) ?? product.variants[0],
@@ -100,7 +106,7 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
   const hero = resolveHeroImageSrc(product);
 
   function handleAddToCart() {
-    if (!selected || !product.buyable) return;
+    if (!selected || !product.buyable || siteBlocksPurchase) return;
     const qty = 1;
     const lineValue = sale * qty;
     addLine({
@@ -121,7 +127,7 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
   }
 
   function handleBuyNow() {
-    if (!selected || !product.buyable) return;
+    if (!selected || !product.buyable || siteBlocksPurchase) return;
     replaceWithLine({
       variantId: selected.id,
       quantity: 1,
@@ -142,6 +148,7 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
   const canPurchase =
     Boolean(selected) &&
     product.buyable &&
+    !siteBlocksPurchase &&
     (selected!.available > 0 || Boolean(product.allowBackorder) || Boolean(product.preorderEnabled));
 
   const showNotifyMe = Boolean(selected) && !canPurchase && product.slug;
@@ -151,6 +158,7 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
 
   return (
     <div className="min-h-screen bg-cream pb-20 lg:pb-14">
+      {siteMode.active ? <SiteModeStrip siteMode={siteMode} withShell /> : null}
       <FlowHeader backHref="/" showShare />
       <div className="mx-auto max-w-[1320px] px-4 pb-8 pt-2 sm:px-5 lg:px-8 lg:pb-12 lg:pt-4 xl:px-12">
         <nav aria-label="Breadcrumb" className="hidden text-body-sm text-ink-muted sm:flex sm:flex-wrap sm:items-center">
@@ -235,6 +243,20 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
               </p>
             ) : null}
 
+            {siteBlocksPurchase && siteMode.endsAt ? (
+              <div
+                className="mt-4 rounded-lg border border-forest/25 bg-[#142920]/5 p-3 text-body-sm text-forest"
+                role="status"
+              >
+                <p className="font-semibold uppercase tracking-wide">{siteMode.headline}</p>
+                {siteMode.message ? <p className="mt-1 text-ink-soft">{siteMode.message}</p> : null}
+                <p className="mt-2 font-mono text-body-sm font-semibold tabular-nums text-gold-deep">
+                  <CountdownTimer endsAt={siteMode.endsAt} onExpire={() => router.refresh()} />
+                </p>
+                <p className="mt-1 text-ink-muted">Purchases are temporarily unavailable.</p>
+              </div>
+            ) : null}
+
             <ProductPdpFeatureStrip className="mt-7 lg:mt-8" />
 
             <div className="mt-8">
@@ -251,6 +273,7 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
                   const variantMrp = moneyNumber(v.priceMrp);
                   const variantPurchasable =
                     product.buyable &&
+                    !siteBlocksPurchase &&
                     (v.available > 0 || Boolean(product.allowBackorder) || Boolean(product.preorderEnabled));
                   const isActive = v.id === variantId;
                   return (
