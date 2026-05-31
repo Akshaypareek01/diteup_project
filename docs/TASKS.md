@@ -253,6 +253,8 @@ Closes gaps between the API/workers and `PRD.md` §6–§13 (backend-owned). **S
 - [ ] **15.3** Razorpay test-mode end-to-end
 - [ ] **15.4** Meta Pixel verification with Pixel Helper
 - [ ] **15.5** Lighthouse audit (mobile ≥90 perf, 100 SEO)
+- [x] **15.5a** SEO production infrastructure — metadata, robots, sitemap, JSON-LD, admin `siteSeo` (`docs/SEO-PRODUCTION-HANDOVER.md`)
+- [ ] **15.5b** Marketing GSC verification + sitemap submit + final meta copy (see SEO handover doc §3–6)
 - [ ] **15.6** Security audit checklist
 - [ ] **15.7** DB backup restore drill
 - [ ] **15.8** Production deployment — Vercel (frontend) + Railway (API + DB)

@@ -252,3 +252,69 @@ export async function getEffectiveSiteMode(): Promise<PublicSiteMode> {
     blocksCheckout: blocksCheckoutForReason(raw.reason),
   };
 }
+
+/** Admin `Setting` key `siteSeo` JSON shape (PRD §7.10). */
+export type SiteSeoSettingJson = {
+  siteTitle?: string;
+  defaultDescription?: string;
+  defaultOgImage?: string;
+  twitterHandle?: string;
+  googleSiteVerification?: string;
+  organizationName?: string;
+  organizationLogo?: string;
+  contactEmail?: string;
+};
+
+/** Public storefront SEO payload — no secrets. */
+export type PublicSiteSeoPayload = {
+  siteTitle: string;
+  defaultDescription: string;
+  defaultOgImage: string;
+  twitterHandle: string | null;
+  googleSiteVerification: string | null;
+  organizationName: string;
+  organizationLogo: string;
+  contactEmail: string;
+};
+
+const defaultPublicSiteSeo: PublicSiteSeoPayload = {
+  siteTitle: "DiteUp — Clean Nutrition, Zero Hassle",
+  defaultDescription:
+    "Pre-portioned soaked breakfast packs with 10 powerful ingredients. High protein, no added sugar — just soak overnight and start your day the smart way. Ships across India.",
+  defaultOgImage: "",
+  twitterHandle: null,
+  googleSiteVerification: null,
+  organizationName: "DiteUp",
+  organizationLogo: "",
+  contactEmail: "info@diteup.com",
+};
+
+/**
+ * Loads public site SEO settings for SSR metadata and JSON-LD.
+ */
+export async function getPublicSiteSeo(): Promise<PublicSiteSeoPayload> {
+  const row = await prisma.setting.findUnique({ where: { key: "siteSeo" } });
+  const fromDb =
+    row?.value && typeof row.value === "object" && row.value !== null
+      ? (row.value as SiteSeoSettingJson)
+      : {};
+
+  return {
+    siteTitle: strOr(fromDb.siteTitle, defaultPublicSiteSeo.siteTitle),
+    defaultDescription: strOr(fromDb.defaultDescription, defaultPublicSiteSeo.defaultDescription),
+    defaultOgImage: strOr(fromDb.defaultOgImage, defaultPublicSiteSeo.defaultOgImage),
+    twitterHandle: optionalStr(fromDb.twitterHandle),
+    googleSiteVerification: optionalStr(fromDb.googleSiteVerification),
+    organizationName: strOr(fromDb.organizationName, defaultPublicSiteSeo.organizationName),
+    organizationLogo: strOr(fromDb.organizationLogo, defaultPublicSiteSeo.organizationLogo),
+    contactEmail: strOr(fromDb.contactEmail, defaultPublicSiteSeo.contactEmail),
+  };
+}
+
+function strOr(raw: unknown, fallback: string): string {
+  return typeof raw === "string" && raw.trim() ? raw.trim() : fallback;
+}
+
+function optionalStr(raw: unknown): string | null {
+  return typeof raw === "string" && raw.trim() ? raw.trim() : null;
+}

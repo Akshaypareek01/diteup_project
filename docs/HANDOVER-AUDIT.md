@@ -24,6 +24,8 @@
 
 **Bottom line:** Core e-commerce flow (browse → cart → pay → track) is implemented end-to-end. The **admin panel can view data** but is **missing several action UIs promised in the proposal** (order status updates, filters, broadcast send, inventory import, stock history). **Landing page** is missing **image carousel** and **embedded product video**. **Go-live deployment** is still outstanding.
 
+**SEO:** Technical SEO infrastructure is implemented — see [`SEO-PRODUCTION-HANDOVER.md`](SEO-PRODUCTION-HANDOVER.md). Marketing must complete GSC setup, final copy, OG images, and off-site SEO.
+
 ---
 
 ## 2.1 Public website (customer-facing)

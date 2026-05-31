@@ -12,7 +12,7 @@ export const SETTINGS_SECTION_KEYS: Record<string, string[]> = {
   refunds: [],
   inventory: [],
   orders: [],
-  seo: [],
+  seo: ["siteSeo"],
   site: ["siteMode"],
   security: [],
 };

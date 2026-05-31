@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SignupPageClient } from "@/components/auth/SignupPageClient";
+import { buildPrivatePageMetadata } from "@/lib/seo/private-metadata";
+
+export const metadata: Metadata = buildPrivatePageMetadata("Sign up");
 
 export default function SignupPage() {
   return (

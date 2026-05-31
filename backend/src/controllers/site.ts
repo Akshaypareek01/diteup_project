@@ -3,7 +3,7 @@
  */
 import type { Request, Response, NextFunction } from "express";
 
-import { getEffectiveSiteMode, getPublicMetaPixelId } from "../services/settings.js";
+import { getEffectiveSiteMode, getPublicMetaPixelId, getPublicSiteSeo } from "../services/settings.js";
 
 /** GET /v1/site/mode — active site mode for banners and checkout gating. */
 export async function getSiteMode(_req: Request, res: Response, next: NextFunction) {
@@ -20,6 +20,16 @@ export async function getSiteIntegrations(_req: Request, res: Response, next: Ne
   try {
     const metaPixelId = await getPublicMetaPixelId();
     res.status(200).json({ metaPixelId });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/** GET /v1/site/seo — public site-wide SEO defaults for SSR metadata. */
+export async function getSiteSeo(_req: Request, res: Response, next: NextFunction) {
+  try {
+    const siteSeo = await getPublicSiteSeo();
+    res.status(200).json(siteSeo);
   } catch (err) {
     next(err);
   }

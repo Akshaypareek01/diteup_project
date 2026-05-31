@@ -1,8 +1,12 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AccountAreaHeader } from "@/components/account/AccountAreaHeader";
 import { getAuthUser } from "@/lib/auth-user";
+import { buildPrivatePageMetadata } from "@/lib/seo/private-metadata";
 import { resolveShopNavHref } from "@/lib/resolve-shop-nav-href";
+
+export const metadata: Metadata = buildPrivatePageMetadata("Your account");
 
 export default async function AccountLayout({ children }: { children: ReactNode }) {
   const user = await getAuthUser();

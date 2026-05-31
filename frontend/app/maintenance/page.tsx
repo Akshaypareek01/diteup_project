@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+import { buildPrivatePageMetadata } from "@/lib/seo/private-metadata";
+
+export const metadata: Metadata = buildPrivatePageMetadata(
+  "Maintenance",
+  "DiteUp is temporarily unavailable for scheduled maintenance.",
+);
+
 export default function MaintenancePage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-forest px-5 text-center text-cream">

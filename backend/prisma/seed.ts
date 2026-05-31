@@ -105,6 +105,13 @@ async function seed(): Promise<void> {
             order: 0,
           },
         },
+        seo: {
+          title: "Energy Bite 750g — High Protein Soaked Breakfast Pack | DiteUp",
+          description:
+            "Buy Energy Bite 750g — pre-portioned soaked breakfast with 10 clean ingredients. High protein, no added sugar. Ships across India.",
+          ogImage: "https://diteup.com/assets/Images/desktop_banner_light.png",
+          canonical: "https://diteup.com/product/energy-bite-750g",
+        },
       },
     });
   }

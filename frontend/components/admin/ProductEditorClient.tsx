@@ -350,9 +350,16 @@ export function ProductEditorClient({ productId, initialProduct }: ProductEditor
               <label className="mb-1.5 block font-mono text-eyebrow font-semibold uppercase text-ink-muted">
                 SEO JSON
               </label>
+              <p className="text-body-sm text-ink-soft">
+                Expected keys: <code className="font-mono text-xs">title</code>,{" "}
+                <code className="font-mono text-xs">description</code>,{" "}
+                <code className="font-mono text-xs">ogImage</code>,{" "}
+                <code className="font-mono text-xs">canonical</code> (absolute URLs for OG/canonical).
+              </p>
               <textarea
                 value={seoText}
                 onChange={(e) => setSeoText(e.target.value)}
+                placeholder={`{\n  "title": "Product name | DiteUp",\n  "description": "155-char meta description",\n  "ogImage": "https://diteup.com/assets/...",\n  "canonical": "https://diteup.com/product/slug"\n}`}
                 className="min-h-[200px] w-full rounded-sm border border-line bg-paper p-3 font-mono text-xs"
                 spellCheck={false}
               />

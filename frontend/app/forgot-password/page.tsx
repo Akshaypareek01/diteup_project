@@ -1,4 +1,8 @@
+import type { Metadata } from "next";
 import { ForgotPasswordClient } from "@/components/auth/ForgotPasswordClient";
+import { buildPrivatePageMetadata } from "@/lib/seo/private-metadata";
+
+export const metadata: Metadata = buildPrivatePageMetadata("Forgot password");
 
 export default function ForgotPasswordPage() {
   return (

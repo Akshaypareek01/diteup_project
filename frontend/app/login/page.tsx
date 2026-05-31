@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/auth/LoginForm";
+import { buildPrivatePageMetadata } from "@/lib/seo/private-metadata";
+
+export const metadata: Metadata = buildPrivatePageMetadata("Log in");
 
 export default function LoginPage() {
   return (

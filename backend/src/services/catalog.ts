@@ -209,6 +209,54 @@ export async function getProductBySlug(slug: string) {
   return toPublicProductPayload(raw);
 }
 
+export type SitemapProductRow = {
+  slug: string;
+  updatedAt: string;
+};
+
+/**
+ * Published product slugs for sitemap.xml — excludes draft, hidden, and archived effective states.
+ */
+export async function getSitemapProducts(): Promise<SitemapProductRow[]> {
+  const rows = await prisma.product.findMany({
+    where: {
+      visibility: { notIn: ["DRAFT", "HIDDEN", "ARCHIVED"] },
+    },
+    select: {
+      id: true,
+      slug: true,
+      updatedAt: true,
+      visibility: true,
+      allowBackorder: true,
+      preorderEnabled: true,
+      availableFrom: true,
+      availableUntil: true,
+      variants: {
+        where: { isActive: true },
+        orderBy: { createdAt: "asc" as const },
+        include: {
+          inventory: { select: { stockOnHand: true, stockReserved: true } },
+        },
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  return rows
+    .filter((row) => {
+      const effective = computeEffectiveVisibility(row);
+      return (
+        effective !== "DRAFT" &&
+        effective !== "HIDDEN" &&
+        effective !== "ARCHIVED"
+      );
+    })
+    .map((row) => ({
+      slug: row.slug,
+      updatedAt: row.updatedAt.toISOString(),
+    }));
+}
+
 export type PincodeCheckResult = {
   serviceable: boolean;
   codAvailable: boolean;

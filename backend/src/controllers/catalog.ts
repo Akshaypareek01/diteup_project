@@ -16,6 +16,16 @@ export async function getFeatured(_req: Request, res: Response, next: NextFuncti
   }
 }
 
+/** GET /v1/products/sitemap — indexable product slugs for Next.js sitemap.xml */
+export async function getSitemap(_req: Request, res: Response, next: NextFunction) {
+  try {
+    const products = await catalogService.getSitemapProducts();
+    res.status(200).json({ products });
+  } catch (err) {
+    next(err);
+  }
+}
+
 /** GET /v1/products/:slug */
 export async function getBySlug(req: Request, res: Response, next: NextFunction) {
   try {

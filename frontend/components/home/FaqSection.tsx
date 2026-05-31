@@ -4,6 +4,12 @@ const faqs = [
   { q: "What is the shelf life?", a: "See printed pack; store cool and dry." },
 ];
 
+/** Static home FAQ copy — shared with FAQPage JSON-LD. */
+export const HOME_FAQ_ITEMS = faqs.map((item) => ({
+  question: item.q,
+  answer: item.a,
+}));
+
 /**
  * FAQ accordion-style (static for scaffold; wire Radix later).
  */

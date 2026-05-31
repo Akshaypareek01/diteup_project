@@ -20,8 +20,11 @@ const router = Router();
 
 router.get("/site/mode", siteController.getSiteMode);
 router.get("/site/integrations", siteController.getSiteIntegrations);
+router.get("/site/seo", siteController.getSiteSeo);
 
 router.get("/products/featured", catalogController.getFeatured);
+
+router.get("/products/sitemap", catalogController.getSitemap);
 
 router.get(
   "/products/:slug/reviews",

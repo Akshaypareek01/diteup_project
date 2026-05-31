@@ -79,3 +79,20 @@ export async function fetchProductBySlug(
     return null;
   }
 }
+
+/**
+ * Loads indexable product slugs for sitemap.xml generation.
+ */
+export async function fetchSitemapProducts(): Promise<
+  Array<{ slug: string; updatedAt: string }>
+> {
+  if (!tryGetServerApiBase()) return [];
+  try {
+    const res = await serverApiFetch("/v1/products/sitemap", { forwardCookies: false });
+    if (!res.ok) return [];
+    const data = (await res.json()) as { products?: Array<{ slug: string; updatedAt: string }> };
+    return data.products ?? [];
+  } catch {
+    return [];
+  }
+}
