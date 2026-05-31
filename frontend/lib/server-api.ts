@@ -5,8 +5,9 @@ import { cookies } from "next/headers";
  */
 export function tryGetServerApiBase(): string | null {
   const fromInternal = process.env.API_INTERNAL_URL?.replace(/\/$/, "");
+  const fromProxy = process.env.API_PROXY_TARGET?.replace(/\/$/, "");
   const fromPublic = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-  return fromInternal || fromPublic || null;
+  return fromInternal || fromProxy || fromPublic || null;
 }
 
 export type ServerApiFetchOptions = RequestInit & {

@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import type { PublicSiteMode } from "@/lib/types/site-mode";
 import { CountdownTimer } from "@/components/site-mode/CountdownTimer";
+import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
 
 export type SiteModeStripProps = {
   siteMode: PublicSiteMode;
@@ -32,9 +32,11 @@ function IconClock({ className }: { className?: string }) {
  * Inner content for the site mode promo strip — headline, optional message, countdown.
  */
 function SiteModeStripContent({ siteMode }: { siteMode: PublicSiteMode }) {
-  const router = useRouter();
+  const { refreshSiteMode } = useSiteMode();
 
   if (!siteMode.active || !siteMode.endsAt) return null;
+
+  const onExpire = () => void refreshSiteMode();
 
   return (
     <>
@@ -48,7 +50,7 @@ function SiteModeStripContent({ siteMode }: { siteMode: PublicSiteMode }) {
           ) : null}
           <span className="mt-0.5 flex items-center gap-1.5 font-mono text-[0.75rem] font-semibold tabular-nums text-gold">
             <IconClock className="size-4 shrink-0" />
-            <CountdownTimer endsAt={siteMode.endsAt} onExpire={() => router.refresh()} />
+            <CountdownTimer endsAt={siteMode.endsAt} onExpire={onExpire} />
           </span>
         </p>
       </div>
@@ -62,7 +64,7 @@ function SiteModeStripContent({ siteMode }: { siteMode: PublicSiteMode }) {
           <p className="normal-case tracking-normal text-white/90">{siteMode.message}</p>
         ) : null}
         <p className="flex items-center gap-2 font-mono text-[0.8125rem] font-semibold tabular-nums tracking-normal text-gold">
-          <CountdownTimer endsAt={siteMode.endsAt} onExpire={() => router.refresh()} />
+          <CountdownTimer endsAt={siteMode.endsAt} onExpire={onExpire} />
         </p>
       </div>
     </>

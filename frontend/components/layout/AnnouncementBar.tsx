@@ -1,5 +1,7 @@
-import type { PublicSiteMode } from "@/lib/types/site-mode";
+"use client";
+
 import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
+import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
 
 /** Truck outline — inherits `currentColor`. */
 function IconTruck({ className }: { className?: string }) {
@@ -65,24 +67,12 @@ function IconLock({ className }: { className?: string }) {
   );
 }
 
-export type AnnouncementBarProps = {
-  siteMode?: PublicSiteMode;
-};
-
 /**
- * Slim evergreen promo strip: site mode countdown when active, else shipping + payments.
+ * Default shipping / payments strip when site mode is inactive.
  */
-export function AnnouncementBar({ siteMode }: AnnouncementBarProps) {
-  if (siteMode?.active) {
-    return <SiteModeStrip siteMode={siteMode} withShell />;
-  }
-
+function DefaultAnnouncementContent() {
   return (
-    <div
-      className="border-b border-black/15 bg-[#142920]"
-      role="region"
-      aria-label="Store announcements"
-    >
+    <>
       <div className="mx-auto flex max-w-[1320px] items-center justify-center px-4 py-2.5 md:hidden">
         <p className="flex items-center gap-2.5 text-white">
           <IconTruck className="size-[18px] shrink-0 text-gold" aria-hidden />
@@ -107,6 +97,27 @@ export function AnnouncementBar({ siteMode }: AnnouncementBarProps) {
           <span>Secure Payments</span>
         </p>
       </div>
+    </>
+  );
+}
+
+/**
+ * Slim evergreen promo strip — live site mode from client API, else shipping + payments.
+ */
+export function AnnouncementBar() {
+  const { siteMode } = useSiteMode();
+
+  if (siteMode.active) {
+    return <SiteModeStrip siteMode={siteMode} withShell />;
+  }
+
+  return (
+    <div
+      className="border-b border-black/15 bg-[#142920]"
+      role="region"
+      aria-label="Store announcements"
+    >
+      <DefaultAnnouncementContent />
     </div>
   );
 }

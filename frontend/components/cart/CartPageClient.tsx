@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlowHeader } from "@/components/layout/FlowHeader";
 import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
+import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
 import { CartIconCod, CartIconLock, CartIconStarBadge, CartIconTrash } from "@/components/cart/cart-ui-icons";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
-import type { PublicSiteMode } from "@/lib/types/site-mode";
 import { formatInr, moneyNumber } from "@/lib/format-money";
 import { FREE_SHIPPING_THRESHOLD_INR } from "@/lib/storefront-policy-constants";
 import { cn } from "@/lib/utils";
@@ -87,7 +87,8 @@ function shippingSummaryLabel(shippingAfterCoupon: unknown): string {
 /**
  * Full cart with `POST /v1/cart/preview` totals and optional coupon code.
  */
-export function CartPageClient({ siteMode }: { siteMode: PublicSiteMode }) {
+export function CartPageClient() {
+  const { siteMode } = useSiteMode();
   const { lines, setQty, removeLine, previewPayload } = useCartState();
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);

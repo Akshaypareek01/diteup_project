@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { CartStateProvider } from "@/components/cart/CartStateProvider";
 import { CartDrawerProvider } from "@/components/cart/CartDrawerProvider";
 import { HeroBannerVariantProvider } from "@/components/home/HeroBannerVariantProvider";
+import { SiteModeProvider } from "@/components/site-mode/SiteModeProvider";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 
 /**
@@ -14,11 +15,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <MotionConfig reducedMotion="user">
       <ToastProvider>
-        <CartStateProvider>
-          <CartDrawerProvider>
-            <HeroBannerVariantProvider>{children}</HeroBannerVariantProvider>
-          </CartDrawerProvider>
-        </CartStateProvider>
+        <SiteModeProvider>
+          <CartStateProvider>
+            <CartDrawerProvider>
+              <HeroBannerVariantProvider>{children}</HeroBannerVariantProvider>
+            </CartDrawerProvider>
+          </CartStateProvider>
+        </SiteModeProvider>
       </ToastProvider>
     </MotionConfig>
   );

@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FlowHeader } from "@/components/layout/FlowHeader";
 import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
+import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
 import { RazorpayCheckoutScript } from "@/components/payments/RazorpayCheckoutScript";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { ApiError, clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
-import type { PublicSiteMode } from "@/lib/types/site-mode";
 import type { PincodeCheckPayload } from "@/lib/types/pincode";
 import { pixelAddPaymentInfo, pixelInitiateCheckout } from "@/lib/meta-pixel-events";
 import { CheckoutFormSections } from "@/components/checkout/CheckoutFormSections";
@@ -37,7 +37,8 @@ function sumCartQty(lines: Array<{ quantity: number }>): number {
 /**
  * Checkout: cart preview totals, PIN serviceability (`POST /v1/pincode/check`), Razorpay + COD, Pixel funnel events.
  */
-export function CheckoutClient({ siteMode }: { siteMode: PublicSiteMode }) {
+export function CheckoutClient() {
+  const { siteMode } = useSiteMode();
   const router = useRouter();
   const { lines, previewPayload, clear } = useCartState();
   const [userEmail, setUserEmail] = useState<string | null>(null);

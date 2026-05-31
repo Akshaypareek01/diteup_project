@@ -15,11 +15,5 @@ export default async function ProductPage({ params }: Props) {
     pageSize: "30",
     sort: "helpful",
   });
-  return (
-    <ProductDetailClient
-      product={pageData.product}
-      siteMode={pageData.siteMode}
-      reviews={reviews}
-    />
-  );
+  return <ProductDetailClient product={pageData.product} reviews={reviews} />;
 }

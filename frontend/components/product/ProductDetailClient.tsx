@@ -6,12 +6,12 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { FlowHeader } from "@/components/layout/FlowHeader";
 import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
+import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
 import { CountdownTimer } from "@/components/site-mode/CountdownTimer";
 import { Button } from "@/components/ui/Button";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { formatInr, moneyNumber } from "@/lib/format-money";
 import type { PublicProduct } from "@/lib/types/catalog";
-import type { PublicSiteMode } from "@/lib/types/site-mode";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
 import { pixelAddToCart } from "@/lib/meta-pixel-events";
 import { NotifyMeForm } from "@/components/product/NotifyMeForm";
@@ -26,7 +26,6 @@ const HOW_TO_USE_SRC = "/assets/Images/howtouse.png";
 
 export type ProductDetailClientProps = {
   product: PublicProduct;
-  siteMode: PublicSiteMode;
   reviews: ProductReviewsPayload | null;
 };
 
@@ -86,8 +85,9 @@ function StarRow({ rating }: { rating: number }) {
 /**
  * PDP: mobile-first single column; `lg` two-column gallery + sticky buy box, wider container on desktop.
  */
-export function ProductDetailClient({ product, siteMode, reviews }: ProductDetailClientProps) {
+export function ProductDetailClient({ product, reviews }: ProductDetailClientProps) {
   const router = useRouter();
+  const { siteMode, refreshSiteMode } = useSiteMode();
   const { addLine, replaceWithLine } = useCartState();
 
   const siteBlocksPurchase = siteMode.active && siteMode.blocksCheckout;
@@ -251,7 +251,7 @@ export function ProductDetailClient({ product, siteMode, reviews }: ProductDetai
                 <p className="font-semibold uppercase tracking-wide">{siteMode.headline}</p>
                 {siteMode.message ? <p className="mt-1 text-ink-soft">{siteMode.message}</p> : null}
                 <p className="mt-2 font-mono text-body-sm font-semibold tabular-nums text-gold-deep">
-                  <CountdownTimer endsAt={siteMode.endsAt} onExpire={() => router.refresh()} />
+                  <CountdownTimer endsAt={siteMode.endsAt} onExpire={() => void refreshSiteMode()} />
                 </p>
                 <p className="mt-1 text-ink-muted">Purchases are temporarily unavailable.</p>
               </div>
