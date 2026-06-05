@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { cn } from "@/lib/utils";
+import { ProductVariantManager } from "@/components/admin/ProductVariantManager";
 import { ApiError, clientApiJson } from "@/lib/client-api";
+import { cn } from "@/lib/utils";
 
 const VISIBILITY = [
   "DRAFT",
@@ -367,30 +368,8 @@ export function ProductEditorClient({ productId, initialProduct }: ProductEditor
           ) : null}
 
           {tab === "variants" ? (
-            <div className="mt-6 space-y-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-body-sm">
-                  <thead className="font-mono text-eyebrow text-ink-muted">
-                    <tr>
-                      <th className="pb-2 pr-3">SKU</th>
-                      <th className="pb-2 pr-3">Name</th>
-                      <th className="pb-2 pr-3">MRP</th>
-                      <th className="pb-2">Sale</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {variants.map((v) => (
-                      <tr key={str(v.id)} className="border-t border-line">
-                        <td className="py-2 pr-3 font-mono">{str(v.sku)}</td>
-                        <td className="py-2 pr-3">{str(v.name)}</td>
-                        <td className="py-2 pr-3">{str(v.priceMrp)}</td>
-                        <td className="py-2">{str(v.priceSale)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <VariantAddForm productId={productId} />
+            <div className="mt-6">
+              <ProductVariantManager productId={productId} variants={variants} />
             </div>
           ) : null}
 
@@ -432,63 +411,6 @@ export function ProductEditorClient({ productId, initialProduct }: ProductEditor
       <Link href="/admin/products" className="text-body-sm text-gold-deep hover:underline">
         ← Products
       </Link>
-    </div>
-  );
-}
-
-function VariantAddForm({ productId }: { productId: string }) {
-  const router = useRouter();
-  const [sku, setSku] = useState("");
-  const [variantName, setVariantName] = useState("");
-  const [priceMrp, setPriceMrp] = useState("");
-  const [priceSale, setPriceSale] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-
-  async function add() {
-    setMsg(null);
-    setBusy(true);
-    try {
-      await clientApiJson(`/v1/admin/products/${encodeURIComponent(productId)}/variants`, {
-        method: "POST",
-        json: {
-          sku: sku.trim(),
-          name: variantName.trim(),
-          priceMrp: Number(priceMrp),
-          priceSale: Number(priceSale),
-          isDefault: false,
-          isActive: true,
-        },
-      });
-      setSku("");
-      setVariantName("");
-      setPriceMrp("");
-      setPriceSale("");
-      router.refresh();
-    } catch (e) {
-      setMsg(e instanceof ApiError ? e.message : "Failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="rounded-lg border border-dashed border-line p-4">
-      <h3 className="font-semibold text-forest">Add variant</h3>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
-        <Input label="Variant name" value={variantName} onChange={(e) => setVariantName(e.target.value)} />
-        <Input label="MRP" value={priceMrp} onChange={(e) => setPriceMrp(e.target.value)} />
-        <Input label="Sale price" value={priceSale} onChange={(e) => setPriceSale(e.target.value)} />
-      </div>
-      {msg ? (
-        <p className="mt-2 text-body-sm text-error" role="alert">
-          {msg}
-        </p>
-      ) : null}
-      <Button type="button" className="mt-3" variant="secondary" size="sm" disabled={busy} onClick={() => void add()}>
-        {busy ? "Adding…" : "Add variant"}
-      </Button>
     </div>
   );
 }
