@@ -170,7 +170,9 @@ function VariantRow({ productId, variant, canRemove }: VariantRowProps) {
           </div>
           <p className="font-mono text-body-sm text-ink-muted">SKU: {str(variant.sku)}</p>
           <p className="text-body-sm text-ink-soft">
-            MRP {str(variant.priceMrp)} · Sale {str(variant.priceSale)} · Stock {inventoryStock(variant)}
+            MRP {str(variant.priceMrp)} · Sale {str(variant.priceSale)}
+            {variant.weightGm != null && str(variant.weightGm) !== "" ? ` · ${str(variant.weightGm)} g` : ""}
+            {" · "}Stock {inventoryStock(variant)}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
@@ -222,6 +224,7 @@ export function ProductVariantManager({ productId, variants }: ProductVariantMan
   const [variantName, setVariantName] = useState("");
   const [priceMrp, setPriceMrp] = useState("");
   const [priceSale, setPriceSale] = useState("");
+  const [weightGm, setWeightGm] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
@@ -238,6 +241,7 @@ export function ProductVariantManager({ productId, variants }: ProductVariantMan
           name: variantName.trim(),
           priceMrp: Number(priceMrp),
           priceSale: Number(priceSale),
+          weightGm: weightGm.trim() === "" ? null : Number(weightGm),
           isDefault: variants.length === 0,
           isActive: true,
         },
@@ -246,6 +250,7 @@ export function ProductVariantManager({ productId, variants }: ProductVariantMan
       setVariantName("");
       setPriceMrp("");
       setPriceSale("");
+      setWeightGm("");
       router.refresh();
     } catch (e) {
       setMsg(e instanceof ApiError ? e.message : "Failed to add variant.");
@@ -273,6 +278,7 @@ export function ProductVariantManager({ productId, variants }: ProductVariantMan
           <Input label="Variant name" value={variantName} onChange={(e) => setVariantName(e.target.value)} />
           <Input label="MRP (₹)" value={priceMrp} onChange={(e) => setPriceMrp(e.target.value)} />
           <Input label="Sale price (₹)" value={priceSale} onChange={(e) => setPriceSale(e.target.value)} />
+          <Input label="Weight (g)" value={weightGm} onChange={(e) => setWeightGm(e.target.value)} />
         </div>
         {msg ? (
           <p className="mt-2 text-body-sm text-error" role="alert">
