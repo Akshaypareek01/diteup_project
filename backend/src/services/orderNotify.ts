@@ -9,12 +9,12 @@ import { sendEmail } from "./email.js";
 import { enqueueEmailSendJob } from "./jobQueue.js";
 import { ensureOrderInvoice, generateOrderInvoicePdf } from "./invoice.js";
 import { sendPurchaseEventForOrder } from "./metaPixel.js";
+import { buildOrderTrackingUrl } from "../utils/orderAccess.js";
 import { moneyNumber } from "../utils/money.js";
 import { prisma } from "../utils/prisma.js";
 import { logger } from "../utils/logger.js";
 
 const DEDUPE = {
-  PLACED_PENDING: "EMAIL_ORDER_PLACED_PENDING",
   CONFIRMED: "EMAIL_ORDER_CONFIRMED",
   ADMIN_NEW: "EMAIL_ADMIN_NEW_ORDER",
   SHIPPED: "EMAIL_ORDER_SHIPPED",
@@ -22,15 +22,6 @@ const DEDUPE = {
   CANCELLED: "EMAIL_ORDER_CANCELLED",
   REFUND: "EMAIL_ORDER_REFUNDED",
 } as const;
-
-function siteBase(): string {
-  return env.PUBLIC_SITE_URL ?? "https://diteup.com";
-}
-
-/** Public-facing order summary URL (Phase 12 may add guest token flow). */
-function orderTrackUrl(orderNumber: string): string {
-  return `${siteBase()}/orders/${encodeURIComponent(orderNumber)}`;
-}
 
 async function loadOrderLite(orderNumber: string) {
   return prisma.order.findUnique({
@@ -68,32 +59,11 @@ async function withEmailDedupe(orderId: string, dedupeType: string, fn: () => Pr
 }
 
 /**
- * Razorpay `PLACED` — customer “complete payment” + admin heads-up.
+ * Razorpay `PLACED` — admin heads-up only (customer email fires after payment capture).
  */
 export async function fireOrderPlacedPendingAndAdmin(orderNumber: string): Promise<void> {
   const order = await loadOrderLite(orderNumber);
   if (!order || order.paymentMethod !== "RAZORPAY") return;
-
-  const to = recipientEmail(order);
-  if (to) {
-    await withEmailDedupe(order.id, DEDUPE.PLACED_PENDING, async () => {
-      const tpl = templates.orderPlacedPendingPayEmail({
-        name: order.user?.name,
-        orderNumber: order.orderNumber,
-        total: `₹${moneyNumber(order.total).toFixed(2)}`,
-        siteUrl: orderTrackUrl(order.orderNumber),
-      });
-      await enqueueEmailSendJob({
-        to,
-        subject: tpl.subject,
-        html: tpl.html,
-        text: tpl.text,
-        template: "order_placed_pending",
-        refType: "ORDER",
-        refId: order.id,
-      });
-    });
-  }
 
   const raw = env.ADMIN_ALERT_EMAILS?.trim();
   if (raw) {
@@ -157,7 +127,7 @@ export async function fireOrderConfirmedSuite(orderNumber: string): Promise<void
         orderNumber: order.orderNumber,
         invoiceNumber: inv?.invoiceNumber,
         invoiceUrl: inv?.invoicePdfUrl,
-        siteUrl: orderTrackUrl(order.orderNumber),
+        siteUrl: buildOrderTrackingUrl(order.orderNumber),
       });
       await sendEmail({
         to,
@@ -239,7 +209,7 @@ export async function fireOrderShipped(orderNumber: string): Promise<void> {
       orderNumber: order.orderNumber,
       carrier: order.shippingCarrier,
       awb: order.awbNumber,
-      siteUrl: orderTrackUrl(order.orderNumber),
+      siteUrl: buildOrderTrackingUrl(order.orderNumber),
     });
     await enqueueEmailSendJob({
       to,
@@ -265,7 +235,7 @@ export async function fireOrderDelivered(orderNumber: string): Promise<void> {
     const tpl = templates.orderDeliveredEmail({
       name: order.user?.name,
       orderNumber: order.orderNumber,
-      siteUrl: orderTrackUrl(order.orderNumber),
+      siteUrl: buildOrderTrackingUrl(order.orderNumber),
     });
     await enqueueEmailSendJob({
       to,

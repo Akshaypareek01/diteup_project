@@ -13,6 +13,22 @@ export function makeOrderGuestToken(orderNumber: string): string {
 }
 
 /**
+ * Public storefront origin for email links and marketing.
+ */
+export function getPublicSiteBase(): string {
+  return env.PUBLIC_SITE_URL ?? "https://diteup.com";
+}
+
+/**
+ * Builds the customer-facing order tracking URL (`/order/:orderNumber?token=…`).
+ */
+export function buildOrderTrackingUrl(orderNumber: string): string {
+  const base = getPublicSiteBase().replace(/\/$/, "");
+  const token = makeOrderGuestToken(orderNumber);
+  return `${base}/order/${encodeURIComponent(orderNumber)}?token=${encodeURIComponent(token)}`;
+}
+
+/**
  * Constant-time compare of guest token vs expected HMAC.
  */
 export function verifyOrderGuestToken(orderNumber: string, token: string | undefined): boolean {
