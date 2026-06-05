@@ -48,7 +48,6 @@ export type CheckoutOrderSummaryProps = {
   preview: CartPricingBreakdown | null;
   previewErr: string | null;
   lines: CartLineMeta[];
-  paymentMethod: "RAZORPAY" | "COD";
   /** Extra classes on the outer `<section>` (e.g. sticky sidebar spacing). */
   className?: string;
 };
@@ -60,7 +59,6 @@ export function CheckoutOrderSummary({
   preview,
   previewErr,
   lines,
-  paymentMethod,
   className = "",
 }: CheckoutOrderSummaryProps) {
   return (
@@ -120,12 +118,6 @@ export function CheckoutOrderSummary({
               <dt>Shipping</dt>
               <dd>{formatInr(preview.shippingAfterCoupon)}</dd>
             </div>
-            {paymentMethod === "COD" ? (
-              <div className="flex justify-between gap-4">
-                <dt>COD fee</dt>
-                <dd>{formatInr(preview.codCharge)}</dd>
-              </div>
-            ) : null}
             <div className="flex justify-between gap-4 border-t border-line pt-2 text-base font-semibold lg:text-lg">
               <dt>Pay now</dt>
               <dd>{formatInr(preview.total)}</dd>

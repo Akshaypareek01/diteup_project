@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { CHECKOUT_COUNTRIES, INDIAN_STATES, isKnownIndianState } from "@/lib/india-locations";
 
 export type CheckoutAddressRow = {
   id: string;
@@ -196,15 +198,65 @@ export function CheckoutShippingPanel({
           <Input
             label="Full name"
             name="ship-name"
+            autoComplete="shipping name"
             value={shipName}
             onChange={(e) => onShipNameChange(e.target.value)}
             required
           />
-          <Input label="Phone" name="ship-phone" value={shipPhone} onChange={(e) => onShipPhoneChange(e.target.value)} required />
-          <Input className="sm:col-span-2" label="Address line 1" name="line1" value={line1} onChange={(e) => onLine1Change(e.target.value)} required />
-          <Input className="sm:col-span-2" label="Address line 2 (optional)" name="line2" value={line2} onChange={(e) => onLine2Change(e.target.value)} />
-          <Input label="City" name="city" value={city} onChange={(e) => onCityChange(e.target.value)} required />
-          <Input label="State" name="state" value={stateField} onChange={(e) => onStateChange(e.target.value)} required />
+          <Input
+            label="Phone"
+            name="ship-phone"
+            type="tel"
+            autoComplete="shipping tel"
+            value={shipPhone}
+            onChange={(e) => onShipPhoneChange(e.target.value)}
+            required
+          />
+          <Input
+            className="sm:col-span-2"
+            label="Address line 1"
+            name="line1"
+            autoComplete="shipping address-line1"
+            value={line1}
+            onChange={(e) => onLine1Change(e.target.value)}
+            required
+          />
+          <Input
+            className="sm:col-span-2"
+            label="Address line 2 (optional)"
+            name="line2"
+            autoComplete="shipping address-line2"
+            value={line2}
+            onChange={(e) => onLine2Change(e.target.value)}
+          />
+          <Input
+            label="City"
+            name="city"
+            autoComplete="shipping address-level2"
+            value={city}
+            onChange={(e) => onCityChange(e.target.value)}
+            required
+          />
+          <Select
+            label="State"
+            name="state"
+            autoComplete="shipping address-level1"
+            value={stateField}
+            onChange={(e) => onStateChange(e.target.value)}
+            required
+          >
+            <option value="" disabled>
+              Select state
+            </option>
+            {stateField && !isKnownIndianState(stateField) ? (
+              <option value={stateField}>{stateField}</option>
+            ) : null}
+            {INDIAN_STATES.map((state) => (
+              <option key={state} value={state}>
+                {state}
+              </option>
+            ))}
+          </Select>
           <div className="sm:col-span-2 space-y-2">
             <Input
               label="PIN code"
@@ -227,7 +279,23 @@ export function CheckoutShippingPanel({
               </p>
             ) : null}
           </div>
-          <Input label="Country" name="country" value={country} onChange={(e) => onCountryChange(e.target.value)} required />
+          <Select
+            label="Country"
+            name="country"
+            autoComplete="shipping country"
+            value={country}
+            onChange={(e) => onCountryChange(e.target.value)}
+            required
+          >
+            {country && !CHECKOUT_COUNTRIES.some((c) => c.code === country) ? (
+              <option value={country}>{country}</option>
+            ) : null}
+            {CHECKOUT_COUNTRIES.map(({ code, label }) => (
+              <option key={code} value={code}>
+                {label}
+              </option>
+            ))}
+          </Select>
         </div>
       ) : null}
     </section>

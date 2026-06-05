@@ -1,6 +1,19 @@
 /* eslint-disable @typescript-eslint/consistent-type-definitions */
 export {};
 
+type RazorpayPaymentFailedResponse = {
+  error?: {
+    description?: string;
+    reason?: string;
+    code?: string;
+  };
+};
+
+type RazorpayCheckoutInstance = {
+  open: () => void;
+  on: (event: "payment.failed", handler: (response: RazorpayPaymentFailedResponse) => void) => void;
+};
+
 declare global {
   interface Window {
     Razorpay?: new (options: {
@@ -17,6 +30,8 @@ declare global {
       }) => void;
       modal?: { ondismiss?: () => void };
       prefill?: { email?: string; contact?: string };
-    }) => { open: () => void };
+    }) => RazorpayCheckoutInstance;
   }
 }
+
+export type { RazorpayPaymentFailedResponse, RazorpayCheckoutInstance };

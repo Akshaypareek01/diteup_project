@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FlowHeader } from "@/components/layout/FlowHeader";
 import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
 import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
 import { RazorpayCheckoutScript } from "@/components/payments/RazorpayCheckoutScript";
+import { loadRazorpayCheckout } from "@/lib/load-razorpay-checkout";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { ApiError, clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
@@ -14,8 +16,6 @@ import { pixelAddPaymentInfo, pixelInitiateCheckout } from "@/lib/meta-pixel-eve
 import { CheckoutFormSections } from "@/components/checkout/CheckoutFormSections";
 import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
 import type { CheckoutAddressRow } from "@/components/checkout/CheckoutShippingPanel";
-
-type PaymentMethod = "RAZORPAY" | "COD";
 
 type MeResponse = { user?: { id: string; email: string } };
 
@@ -35,7 +35,7 @@ function sumCartQty(lines: Array<{ quantity: number }>): number {
 }
 
 /**
- * Checkout: cart preview totals, PIN serviceability (`POST /v1/pincode/check`), Razorpay + COD, Pixel funnel events.
+ * Checkout: cart preview totals, PIN serviceability (`POST /v1/pincode/check`), Razorpay, Pixel funnel events.
  */
 export function CheckoutClient() {
   const { siteMode } = useSiteMode();
@@ -45,9 +45,10 @@ export function CheckoutClient() {
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [couponCode, setCouponCode] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("RAZORPAY");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
+  const [pendingOrder, setPendingOrder] = useState<{ orderNumber: string; guestToken?: string } | null>(null);
 
   const [shipName, setShipName] = useState("");
   const [shipPhone, setShipPhone] = useState("");
@@ -70,6 +71,9 @@ export function CheckoutClient() {
   const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string | null>(null);
 
   const initiateOnce = useRef(false);
+
+  /** Tracks contact phone last mirrored into shipping — avoids overwriting a manual ship-phone edit. */
+  const lastSyncedContactPhone = useRef("");
 
   /** When cart preview resolves `productId`, re-run PIN check for accuracy (saved PIN already known). */
   const lastValidatedProductPin = useRef<string | null>(null);
@@ -135,7 +139,7 @@ export function CheckoutClient() {
         method: "POST",
         json: {
           items,
-          paymentMethod,
+          paymentMethod: "RAZORPAY",
           couponCode: couponCode.trim() || null,
           guestEmail: userEmail ? undefined : emailForPricing || undefined,
         },
@@ -145,7 +149,7 @@ export function CheckoutClient() {
       setPreview(null);
       setPreviewErr(e instanceof Error ? e.message : "Could not load totals.");
     }
-  }, [previewPayload, paymentMethod, couponCode, userEmail, emailForPricing]);
+  }, [previewPayload, couponCode, userEmail, emailForPricing]);
 
   useEffect(() => {
     void refreshPreview();
@@ -169,16 +173,9 @@ export function CheckoutClient() {
   useEffect(() => {
     if (previewTotal == null) return;
     pixelAddPaymentInfo({ value: previewTotal, currency: "INR" });
-  }, [paymentMethod, previewTotal]);
+  }, [previewTotal]);
 
-  useEffect(() => {
-    if (!pinStatus || paymentMethod !== "COD") return;
-    if (!pinStatus.serviceable || !pinStatus.codAvailable) {
-      setPaymentMethod("RAZORPAY");
-    }
-  }, [pinStatus, paymentMethod]);
-
-  /** Validates delivery + COD eligibility for entered or saved PIN. */
+  /** Validates delivery for entered or saved PIN. */
   const validatePinForCart = useCallback(
     async (pinOverride?: string) => {
       const p = (pinOverride ?? pincode).trim();
@@ -198,8 +195,6 @@ export function CheckoutClient() {
         setPinStatus(body);
         if (!body.serviceable) {
           setPinErr("We can't deliver to this PIN right now.");
-        } else if (paymentMethod === "COD" && !body.codAvailable) {
-          setPinErr("COD isn't available here — switch to online payment.");
         }
       } catch (e) {
         setPinErr(e instanceof ApiError ? e.message : "PIN check failed.");
@@ -207,7 +202,7 @@ export function CheckoutClient() {
         setCheckingPin(false);
       }
     },
-    [pincode, checkoutProductId, paymentMethod],
+    [pincode, checkoutProductId],
   );
 
   useEffect(() => {
@@ -245,7 +240,8 @@ export function CheckoutClient() {
     setSelectedSavedAddressId(null);
     lastValidatedProductPin.current = null;
     setShipName("");
-    setShipPhone("");
+    setShipPhone(guestPhone);
+    lastSyncedContactPhone.current = guestPhone;
     setLine1("");
     setLine2("");
     setCity("");
@@ -254,18 +250,54 @@ export function CheckoutClient() {
     setCountry("IN");
     setPinErr(null);
     setPinStatus(null);
+  }, [guestPhone]);
+
+  /**
+   * Contact phone drives shipping phone until the shopper edits shipping phone independently.
+   */
+  const handleGuestPhoneChange = useCallback((value: string) => {
+    setGuestPhone(value);
+    setShipPhone((prev) => {
+      if (!prev || prev === lastSyncedContactPhone.current) {
+        lastSyncedContactPhone.current = value;
+        return value;
+      }
+      return prev;
+    });
   }, []);
 
+  const handleShipPhoneChange = useCallback((value: string) => {
+    setShipPhone(value);
+    if (value !== guestPhone) {
+      lastSyncedContactPhone.current = "";
+    }
+  }, [guestPhone]);
+
   const redirectAfterOrder = useCallback(
-    (orderNumber: string, guestToken?: string) => {
-      const q = guestToken ? `?token=${encodeURIComponent(guestToken)}` : "";
-      router.push(`/order/${encodeURIComponent(orderNumber)}${q}`);
+    (orderNumber: string, guestToken?: string, paymentSuccess = false) => {
+      const params = new URLSearchParams();
+      if (guestToken) params.set("token", guestToken);
+      if (paymentSuccess) params.set("payment", "success");
+      const q = params.toString();
+      router.push(`/order/${encodeURIComponent(orderNumber)}${q ? `?${q}` : ""}`);
     },
     [router],
   );
 
+  /**
+   * Builds the order tracking URL for a pending unpaid order.
+   */
+  const pendingOrderHref = useMemo(() => {
+    if (!pendingOrder) return null;
+    const params = new URLSearchParams();
+    if (pendingOrder.guestToken) params.set("token", pendingOrder.guestToken);
+    const q = params.toString();
+    return `/order/${encodeURIComponent(pendingOrder.orderNumber)}${q ? `?${q}` : ""}`;
+  }, [pendingOrder]);
+
   const placeOrder = useCallback(async () => {
     setErr(null);
+    setPaymentNotice(null);
     const items = previewPayload();
     if (items.length === 0) {
       setErr("Your cart is empty.");
@@ -302,10 +334,6 @@ export function CheckoutClient() {
       setErr("Validate your PIN for delivery — scroll to Shipping.");
       return;
     }
-    if (paymentMethod === "COD" && !pinStatus.codAvailable) {
-      setErr("COD is unavailable for this address. Choose Razorpay.");
-      return;
-    }
 
     setBusy(true);
     try {
@@ -316,7 +344,7 @@ export function CheckoutClient() {
 
       const shared = {
         items,
-        paymentMethod,
+        paymentMethod: "RAZORPAY" as const,
         couponCode: couponCode.trim() || undefined,
         guestEmail: userEmail ? undefined : email,
         guestPhone: guestPhone.trim() || undefined,
@@ -345,25 +373,31 @@ export function CheckoutClient() {
         json: body,
       });
 
-      if (paymentMethod === "COD") {
-        clear();
-        setBusy(false);
-        redirectAfterOrder(placed.order.orderNumber, placed.guestToken);
-        return;
-      }
-
       const { razorpayOrderId, razorpayKeyId, amountPaise } = placed.payment;
       if (!razorpayOrderId || !razorpayKeyId || !amountPaise) {
-        setErr("Online payment is not available for this order. Try COD or try again later.");
+        setErr("Online payment is not available for this order. Please try again later.");
         setBusy(false);
         return;
       }
 
-      if (typeof window === "undefined" || !window.Razorpay) {
+      try {
+        await loadRazorpayCheckout();
+      } catch {
         setErr("Payment SDK not loaded — refresh and try again.");
         setBusy(false);
         return;
       }
+
+      if (!window.Razorpay) {
+        setErr("Payment SDK not loaded — refresh and try again.");
+        setBusy(false);
+        return;
+      }
+
+      setPendingOrder({
+        orderNumber: placed.order.orderNumber,
+        guestToken: placed.guestToken,
+      });
 
       const rzp = new window.Razorpay({
         key: razorpayKeyId,
@@ -377,6 +411,7 @@ export function CheckoutClient() {
           contact: guestPhone.trim() || shipPhone.trim() || undefined,
         },
         handler: async (response) => {
+          setPaymentNotice("Verifying payment…");
           try {
             await clientApiJson("/v1/payments/verify", {
               method: "POST",
@@ -388,20 +423,39 @@ export function CheckoutClient() {
                 guestToken: placed.guestToken,
               },
             });
+            setPendingOrder(null);
+            setPaymentNotice(null);
             clear();
-            redirectAfterOrder(placed.order.orderNumber, placed.guestToken);
+            redirectAfterOrder(placed.order.orderNumber, placed.guestToken, true);
           } catch (e) {
             const msg = e instanceof ApiError ? e.message : "Payment verification failed.";
-            setErr(msg);
+            setPaymentNotice(null);
+            setErr(
+              `${msg} Order #${placed.order.orderNumber} is saved as payment pending — open your order page to check status or try again.`,
+            );
             setBusy(false);
           }
         },
         modal: {
           ondismiss: () => {
+            setPaymentNotice(
+              `Payment cancelled. Order #${placed.order.orderNumber} is saved — complete payment from your order page when ready.`,
+            );
             setBusy(false);
           },
         },
       });
+
+      rzp.on("payment.failed", (response) => {
+        const reason =
+          response.error?.description?.trim() ||
+          response.error?.reason?.trim() ||
+          "Payment failed. Please try again.";
+        setPaymentNotice(null);
+        setErr(`${reason} Order #${placed.order.orderNumber} is still pending payment.`);
+        setBusy(false);
+      });
+
       rzp.open();
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Could not place order.";
@@ -414,7 +468,6 @@ export function CheckoutClient() {
     emailForPricing,
     guestPhone,
     couponCode,
-    paymentMethod,
     shipName,
     shipPhone,
     line1,
@@ -430,14 +483,11 @@ export function CheckoutClient() {
     savedAddresses,
   ]);
 
-  const codSelectable = pinStatus !== null && pinStatus.serviceable && pinStatus.codAvailable;
-
   const pinStatusSummary = useMemo(() => {
     if (!pinStatus?.serviceable) return null;
     return (
       <p className="text-body-sm text-success" role="status">
-        Ships in ~{pinStatus.etaDays} business days · COD{" "}
-        {pinStatus.codAvailable ? "available for this PIN" : "not available — pay online"}
+        Delivers in ~{pinStatus.etaDays} business days to this PIN.
       </p>
     );
   }, [pinStatus]);
@@ -486,7 +536,7 @@ export function CheckoutClient() {
       onGuestEmailChange={(v) => setGuestEmail(v)}
       userEmail={userEmail}
       guestPhone={guestPhone}
-      onGuestPhoneChange={(v) => setGuestPhone(v)}
+      onGuestPhoneChange={handleGuestPhoneChange}
       savedAddresses={savedAddresses}
       loadingSavedAddresses={loadingSavedAddresses}
       selectedSavedAddressId={selectedSavedAddressId}
@@ -501,7 +551,7 @@ export function CheckoutClient() {
       pincode={pincode}
       country={country}
       onShipNameChange={(v) => setShipName(v)}
-      onShipPhoneChange={(v) => setShipPhone(v)}
+      onShipPhoneChange={handleShipPhoneChange}
       onLine1Change={(v) => setLine1(v)}
       onLine2Change={(v) => setLine2(v)}
       onCityChange={(v) => setCity(v)}
@@ -517,9 +567,6 @@ export function CheckoutClient() {
       pinStatusSummary={pinStatusSummary}
       checkingPin={checkingPin}
       pinErr={pinErr}
-      paymentMethod={paymentMethod}
-      onPaymentMethodChange={(m) => setPaymentMethod(m)}
-      codSelectable={codSelectable}
       couponCode={couponCode}
       onCouponCodeChange={(v) => setCouponCode(v)}
       preview={preview}
@@ -551,7 +598,6 @@ export function CheckoutClient() {
             preview={preview}
             previewErr={previewErr}
             lines={lines}
-            paymentMethod={paymentMethod}
             className="lg:hidden"
           />
 
@@ -562,6 +608,23 @@ export function CheckoutClient() {
                 {err}
               </p>
             ) : null}
+            {paymentNotice ? (
+              <div
+                className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-body-sm text-forest"
+                role="status"
+                aria-live="polite"
+              >
+                <p>{paymentNotice}</p>
+                {pendingOrderHref ? (
+                  <Link
+                    href={pendingOrderHref}
+                    className="mt-2 inline-block font-semibold text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:text-forest"
+                  >
+                    View order #{pendingOrder?.orderNumber}
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           <aside className="hidden space-y-5 lg:sticky lg:top-24 lg:z-10 lg:col-span-5 lg:block lg:self-start xl:col-span-4">
@@ -569,7 +632,6 @@ export function CheckoutClient() {
               preview={preview}
               previewErr={previewErr}
               lines={lines}
-              paymentMethod={paymentMethod}
             />
             <button
               type="button"

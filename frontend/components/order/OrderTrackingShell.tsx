@@ -9,6 +9,12 @@ import { ApiError, clientApiJson } from "@/lib/client-api";
 import { shippingSnapshotLines } from "@/lib/format-order-address";
 import { formatInr } from "@/lib/format-money";
 import { pixelPurchase } from "@/lib/meta-pixel-events";
+import {
+  orderStatusCardClass,
+  orderStatusIconClass,
+  orderStatusSubtitle,
+  orderStatusTone,
+} from "@/lib/order-status-ui";
 
 export type OrderDetailInitial = {
   order: {
@@ -37,19 +43,19 @@ type OrderTrackingShellProps = {
   orderNumber: string;
   guestToken?: string;
   initial: OrderDetailInitial;
+  /** Set when redirected from checkout after verified Razorpay payment. */
+  paymentSuccess?: boolean;
 };
 
 /**
  * Short supporting sentence for the prominent status card from raw order status.
  */
-function orderStatusSubtitle(status: string): string {
+function orderStatusHeading(status: string): string {
   const u = status.toUpperCase();
-  if (u === "DELIVERED") return "Your order has been delivered.";
-  if (u === "PLACED") return "We’ve received your order.";
-  if (u === "CONFIRMED") return "Payment confirmed — we’ll pack it soon.";
-  if (u === "SHIPPED" || u.includes("TRANSIT")) return "Your order is on the way!";
-  if (u === "CANCELLED") return "This order was cancelled.";
-  return "We’ll keep this page updated as your order moves.";
+  if (u === "PLACED") return "Payment pending";
+  if (u === "CONFIRMED") return "Order confirmed";
+  if (u === "CANCELLED") return "Order cancelled";
+  return status.replace(/_/g, " ").toLowerCase();
 }
 
 /**
@@ -75,7 +81,7 @@ function OrderBackChevron(props: SVGProps<SVGSVGElement>) {
 /**
  * Polls `GET /v1/orders/:orderNumber`, fires Pixel Purchase once when confirmed, supports customer cancel when allowed.
  */
-export function OrderTrackingShell({ orderNumber, guestToken, initial }: OrderTrackingShellProps) {
+export function OrderTrackingShell({ orderNumber, guestToken, initial, paymentSuccess = false }: OrderTrackingShellProps) {
   const router = useRouter();
   const [data, setData] = useState(initial);
   const [pollErr, setPollErr] = useState<string | null>(null);
@@ -148,6 +154,7 @@ export function OrderTrackingShell({ orderNumber, guestToken, initial }: OrderTr
   const { order, items, timeline } = data;
   const primaryLabel = items[0]?.productName ?? "Your order";
   const shipLines = shippingSnapshotLines(order.shippingAddress);
+  const statusTone = orderStatusTone(order.status);
 
   return (
     <div className="min-h-screen bg-cream pb-12">
@@ -179,6 +186,16 @@ export function OrderTrackingShell({ orderNumber, guestToken, initial }: OrderTr
           </p>
         ) : null}
 
+        {paymentSuccess ? (
+          <div
+            className="mt-4 rounded-xl border border-success/35 bg-success/10 px-4 py-3 text-body-sm text-forest"
+            role="status"
+          >
+            <p className="font-semibold">Payment successful</p>
+            <p className="mt-1 text-ink-soft">Thank you — your payment was verified and your order is being processed.</p>
+          </div>
+        ) : null}
+
         <section aria-labelledby="order-product-heading" className="mt-6">
           <h2 id="order-product-heading" className="sr-only">
             Product in this order
@@ -200,23 +217,32 @@ export function OrderTrackingShell({ orderNumber, guestToken, initial }: OrderTr
         </section>
 
         <section
-          className="mt-6 rounded-2xl border border-success/30 bg-gradient-to-br from-success/12 via-paper to-paper p-5 shadow-sm"
+          className={`mt-6 rounded-2xl border p-5 shadow-sm ${orderStatusCardClass(order.status)}`}
           aria-labelledby="order-status-heading"
         >
           <div className="flex gap-4">
             <div
-              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-success/20 text-success"
+              className={`flex size-12 shrink-0 items-center justify-center rounded-full ${orderStatusIconClass(order.status)}`}
               aria-hidden
             >
-              <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20 7h-3V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v2H4" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 9h16v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9z" />
-                <path strokeLinecap="round" d="M9 13h6" />
-              </svg>
+              {statusTone === "success" || paymentSuccess ? (
+                <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.75">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              ) : statusTone === "cancelled" ? (
+                <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.75">
+                  <path strokeLinecap="round" d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="1.75">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
+                  <circle cx="12" cy="12" r="9" />
+                </svg>
+              )}
             </div>
             <div className="min-w-0">
               <h2 id="order-status-heading" className="text-lg font-semibold capitalize text-forest sm:text-xl">
-                {order.status.replace(/_/g, " ").toLowerCase()}
+                {orderStatusHeading(order.status)}
               </h2>
               <p className="mt-1 text-body-sm leading-relaxed text-ink-soft">{orderStatusSubtitle(order.status)}</p>
               <p className="mt-3 font-mono text-body-sm text-ink-muted">

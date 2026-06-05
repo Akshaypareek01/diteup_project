@@ -36,9 +36,6 @@ export type CheckoutFormSectionsProps = {
   pinStatusSummary: ReactNode;
   checkingPin: boolean;
   pinErr: string | null;
-  paymentMethod: "RAZORPAY" | "COD";
-  onPaymentMethodChange: (m: "RAZORPAY" | "COD") => void;
-  codSelectable: boolean;
   couponCode: string;
   onCouponCodeChange: (v: string) => void;
   preview: CartPricingBreakdown | null;
@@ -78,9 +75,6 @@ export function CheckoutFormSections({
   pinStatusSummary,
   checkingPin,
   pinErr,
-  paymentMethod,
-  onPaymentMethodChange,
-  codSelectable,
   couponCode,
   onCouponCodeChange,
   preview,
@@ -146,28 +140,9 @@ export function CheckoutFormSections({
         <h2 id="co-pay" className="font-semibold text-forest">
           Payment
         </h2>
-        <div className="mt-4 space-y-3">
-          <label className="flex cursor-pointer items-center gap-2 text-body-sm">
-            <input
-              type="radio"
-              name="pay"
-              checked={paymentMethod === "RAZORPAY"}
-              onChange={() => onPaymentMethodChange("RAZORPAY")}
-            />
-            Pay online (Razorpay)
-          </label>
-          <label className={`flex cursor-pointer items-center gap-2 text-body-sm ${!codSelectable ? "text-ink-muted" : ""}`}>
-            <input
-              type="radio"
-              name="pay"
-              checked={paymentMethod === "COD"}
-              disabled={!codSelectable}
-              onChange={() => onPaymentMethodChange("COD")}
-            />
-            Cash on delivery
-            {!codSelectable ? " (validate PIN · COD-eligible zones only)" : ""}
-          </label>
-        </div>
+        <p className="mt-4 text-body-sm text-ink-soft">
+          Pay online via Razorpay — UPI, cards, and netbanking.
+        </p>
         <div className="mt-4">
           <Input label="Coupon (optional)" name="coupon" value={couponCode} onChange={(e) => onCouponCodeChange(e.target.value)} />
           {preview?.coupon?.message ? (

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { OrderAccessDenied } from "@/components/order/OrderAccessDenied";
 import { OrderTrackingShell, type OrderDetailInitial } from "@/components/order/OrderTrackingShell";
 import { serverApiFetch, tryGetServerApiBase } from "@/lib/server-api";
 
-type Props = { params: { orderNumber: string }; searchParams: { token?: string } };
+type Props = { params: { orderNumber: string }; searchParams: { token?: string; payment?: string } };
 
 /**
  * Locks the browser tab title to brand for the tracking experience.
@@ -29,7 +30,11 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const q = token ? `?token=${encodeURIComponent(token)}` : "";
   const res = await serverApiFetch(`/v1/orders/${encodeURIComponent(params.orderNumber)}${q}`);
 
-  if (res.status === 404 || res.status === 403) {
+  if (res.status === 403) {
+    return <OrderAccessDenied orderNumber={params.orderNumber} />;
+  }
+
+  if (res.status === 404) {
     notFound();
   }
 
@@ -48,6 +53,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
       orderNumber={params.orderNumber}
       guestToken={token}
       initial={initial}
+      paymentSuccess={searchParams.payment === "success"}
     />
   );
 }
