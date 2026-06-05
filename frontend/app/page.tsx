@@ -3,7 +3,7 @@ import { FaqSection, HOME_FAQ_ITEMS } from "@/components/home/FaqSection";
 import { HeroSection } from "@/components/home/HeroSection";
 import { IngredientsSection } from "@/components/home/IngredientsSection";
 import { PerfectForEveryYouSection } from "@/components/home/PerfectForEveryYouSection";
-import { RegulatoryTrustStripSection } from "@/components/home/RegulatoryTrustStripSection";
+// import { RegulatoryTrustStripSection } from "@/components/home/RegulatoryTrustStripSection";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { WhyChoosePressSection } from "@/components/home/WhyChoosePressSection";
 import { TrustBarSection } from "@/components/home/TrustBarSection";
@@ -35,7 +35,7 @@ export default async function HomePage() {
       <WhyChoosePressSection />
       <TrustBarSection />
       <PerfectForEveryYouSection />
-      <RegulatoryTrustStripSection />
+      {/* <RegulatoryTrustStripSection /> */}
       <IngredientsSection />
       <TestimonialsSection reviewsPayload={reviewsPayload} />
       <FaqSection />

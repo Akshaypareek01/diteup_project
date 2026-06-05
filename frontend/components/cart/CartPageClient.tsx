@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FlowHeader } from "@/components/layout/FlowHeader";
 import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
 import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
-import { CartIconCod, CartIconLock, CartIconStarBadge, CartIconTrash } from "@/components/cart/cart-ui-icons";
+import { CartIconLock, CartIconStarBadge, CartIconTrash } from "@/components/cart/cart-ui-icons";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
@@ -82,6 +82,73 @@ function CartLineThumb({ src, alt }: { src: string; alt: string }) {
  */
 function shippingSummaryLabel(shippingAfterCoupon: unknown): string {
   return moneyNumber(shippingAfterCoupon) === 0 ? "FREE" : formatInr(shippingAfterCoupon);
+}
+
+/**
+ * Coupon entry card — grouped input + apply control aligned with cart line styling.
+ */
+function CartCouponField({
+  value,
+  onChange,
+  onApply,
+  statusMessage,
+  statusEligible,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onApply: () => void;
+  statusMessage?: string | null;
+  statusEligible?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border border-line/80 bg-white p-4 shadow-xs lg:p-5">
+      <label htmlFor="coupon" className="font-mono text-eyebrow font-semibold uppercase text-ink-muted">
+        Have a coupon code?
+      </label>
+      <div
+        className={cn(
+          "mt-3 flex overflow-hidden rounded-xl border bg-paper transition",
+          "border-line focus-within:border-forest focus-within:ring-2 focus-within:ring-forest/15",
+        )}
+      >
+        <input
+          id="coupon"
+          name="coupon"
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onApply();
+            }
+          }}
+          placeholder="Enter coupon code"
+          autoComplete="off"
+          spellCheck={false}
+          className="h-12 min-w-0 flex-1 border-0 bg-transparent px-4 text-base text-ink outline-none placeholder:text-ink-muted/70 sm:text-body"
+        />
+        <button
+          type="button"
+          className="shrink-0 border-l border-line bg-forest px-5 font-sans text-body-sm font-bold uppercase tracking-wide text-white transition hover:bg-sage sm:px-6"
+          onClick={onApply}
+        >
+          Apply
+        </button>
+      </div>
+      {statusMessage ? (
+        <p
+          className={cn(
+            "mt-2.5 text-body-sm",
+            statusEligible ? "font-medium text-success" : "text-ink-muted",
+          )}
+          role="status"
+        >
+          {statusMessage}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 /**
@@ -220,34 +287,17 @@ export function CartPageClient() {
                 })}
               </ul>
 
-              <div>
-                <label htmlFor="coupon" className="text-body-sm font-medium text-ink">
-                  Have a coupon code?
-                </label>
-                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-stretch">
-                  <input
-                    id="coupon"
-                    name="coupon"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value)}
-                    placeholder="Enter coupon code"
-                    autoComplete="off"
-                    className="h-12 min-w-0 flex-1 rounded-xl border border-line bg-white px-3 text-body text-ink placeholder:text-ink-muted/70 outline-none focus:border-forest focus:ring-2 focus:ring-forest/15"
-                  />
-                  <button
-                    type="button"
-                    className="h-12 shrink-0 rounded-xl bg-forest px-6 font-sans text-body-sm font-bold uppercase tracking-wide text-white shadow-sm transition hover:bg-sage sm:w-auto sm:px-8"
-                    onClick={applyCoupon}
-                  >
-                    Apply
-                  </button>
-                </div>
-                {breakdown?.coupon ? (
-                  <p className="mt-2 text-body-sm text-ink-muted" role="status">
-                    {breakdown.coupon.message ?? (breakdown.coupon.eligible ? "Coupon applied" : "")}
-                  </p>
-                ) : null}
-              </div>
+              <CartCouponField
+                value={couponInput}
+                onChange={setCouponInput}
+                onApply={applyCoupon}
+                statusMessage={
+                  breakdown?.coupon
+                    ? breakdown.coupon.message ?? (breakdown.coupon.eligible ? "Coupon applied" : null)
+                    : null
+                }
+                statusEligible={breakdown?.coupon?.eligible}
+              />
 
               {loadErr ? (
                 <p className="text-body-sm text-error" role="alert">
@@ -350,10 +400,6 @@ export function CartPageClient() {
                 <p className="flex items-center justify-center gap-2 lg:justify-start">
                   <CartIconLock className="size-4 shrink-0 text-forest" aria-hidden />
                   <span>100% Secure Payments</span>
-                </p>
-                <p className="flex items-center justify-center gap-2 lg:justify-start">
-                  <CartIconCod className="size-4 shrink-0 text-forest" aria-hidden />
-                  <span>COD Available</span>
                 </p>
               </div>
             </aside>

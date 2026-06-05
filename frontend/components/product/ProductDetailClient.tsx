@@ -327,7 +327,7 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
               </Button>
             </div>
 
-            <ProductPdpTrustStrip product={product} className="mt-9 border-t border-line/70 pt-7" />
+            <ProductPdpTrustStrip className="mt-9 border-t border-line/70 pt-7" />
           </div>
         </div>
 

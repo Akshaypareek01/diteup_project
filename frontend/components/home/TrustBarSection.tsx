@@ -36,47 +36,6 @@ function GlyphTruck() {
   );
 }
 
-/** Circular arrow with centered “7” for return window. */
-function GlyphReturn7() {
-  return (
-    <span className="relative inline-flex size-[18px] items-center justify-center text-current">
-      <svg className="absolute inset-0 size-[18px]" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path
-          d="M12 20a8 8 0 004.5-14.5M12 20a8 8 0 01-8-8 8 8 0 018-8"
-          stroke="currentColor"
-          strokeWidth={1.35}
-          strokeLinecap="round"
-        />
-        <path
-          d="M17 5v4h-4"
-          stroke="currentColor"
-          strokeWidth={1.35}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="relative z-[1] translate-y-px text-[10px] font-bold leading-none">7</span>
-    </span>
-  );
-}
-
-/** House with rupee mark for COD. */
-function GlyphCod() {
-  return (
-    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M4 11l8-6 8 6v9a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9z"
-        stroke="currentColor"
-        strokeWidth={1.35}
-        strokeLinejoin="round"
-      />
-      <text x={12} y={15.5} textAnchor="middle" fill="currentColor" fontSize={9} fontWeight={700}>
-        ₹
-      </text>
-    </svg>
-  );
-}
-
 /** Shield with padlock body for secure checkout. */
 function GlyphShieldLock() {
   return (
@@ -126,20 +85,8 @@ const CELLS: TrustCell[] = [
   {
     id: "shipping",
     title: "FREE SHIPPING",
-    subtitle: "On orders above ₹499",
+    subtitle: "On all orders",
     glyph: <GlyphTruck />,
-  },
-  {
-    id: "returns",
-    title: "7 DAYS RETURN",
-    subtitle: "Hassle-free returns",
-    glyph: <GlyphReturn7 />,
-  },
-  {
-    id: "cod",
-    title: "COD AVAILABLE",
-    subtitle: "Pay on delivery",
-    glyph: <GlyphCod />,
   },
   {
     id: "secure",
@@ -156,13 +103,13 @@ const CELLS: TrustCell[] = [
 ];
 
 /**
- * Full-width evergreen trust strip: five service promises with gold disc icons and column dividers.
+ * Full-width evergreen trust strip: service promises with gold disc icons and column dividers.
  */
 export function TrustBarSection() {
   return (
     <section
       className="border-y border-black/20 bg-[#002b1b] py-5 text-white md:py-7"
-      aria-label="Shipping, returns, and support"
+      aria-label="Shipping, payments, and support"
     >
       <div className="mx-auto max-w-[1320px] px-4 md:px-8 lg:px-12">
         <ul className="flex flex-col divide-y divide-white/[0.12] md:flex-row md:divide-x md:divide-y-0 md:divide-white/[0.12]">

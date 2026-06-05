@@ -67,13 +67,6 @@ const AUDIENCES: AudienceCardProps[] = [
     imageHeight: 1024,
   },
   {
-    title: "Weight Watchers",
-    subtitle: "Light, nutritious & satisfying",
-    imageSrc: "/assets/perfectforeveryyou/weight_wathcers_cion.png",
-    imageWidth: 1024,
-    imageHeight: 1024,
-  },
-  {
     title: "Busy Moms",
     subtitle: "Healthy for the whole family",
     imageSrc: "/assets/perfectforeveryyou/busy_moms_icon.png",
@@ -90,7 +83,7 @@ const AUDIENCES: AudienceCardProps[] = [
 ];
 
 /**
- * Persona strip — who EnergyBite fits; serif headline + six beige tiles with persona icons.
+ * Persona strip — who EnergyBite fits; serif headline + five beige tiles with persona icons.
  */
 export function PerfectForEveryYouSection() {
   return (
@@ -112,7 +105,7 @@ export function PerfectForEveryYouSection() {
           </p>
         </header>
 
-        <div className="mt-11 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 lg:gap-2">
+        <div className="mt-11 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:gap-2">
           {AUDIENCES.map((item) => (
             <AudienceCard key={item.title} {...item} />
           ))}

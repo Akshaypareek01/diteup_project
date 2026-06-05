@@ -77,7 +77,7 @@ function FeatureCard({
 }
 
 /**
- * Homepage block directly under the hero: five “why choose” pillars plus an “As seen in” press row (typographic lockups).
+ * Homepage block directly under the hero: five “why choose” pillars.
  */
 export function WhyChoosePressSection() {
   return (
@@ -106,37 +106,6 @@ export function WhyChoosePressSection() {
             <FeatureCard key={feature.title} {...feature} />
           ))}
         </ul>
-
-        <div className="mt-14 md:mt-18">
-          <div className="flex items-center gap-4" role="presentation">
-            <span className="h-px flex-1 bg-line" aria-hidden />
-            <p className="shrink-0 font-sans text-[0.6875rem] font-bold uppercase tracking-[0.18em] text-ink md:text-xs">
-              As seen in
-            </p>
-            <span className="h-px flex-1 bg-line" aria-hidden />
-          </div>
-
-          <ul
-            className="mt-10 flex list-none flex-wrap items-center justify-center gap-x-10 gap-y-6 md:justify-between md:gap-x-6 lg:gap-x-10"
-            aria-label="Press coverage"
-          >
-            <li className="font-sans text-lg font-bold lowercase tracking-tight text-ink md:text-xl">
-              mid<span className="text-error">-</span>day
-            </li>
-            <li className="font-sans text-lg font-medium lowercase tracking-tight text-ink/85 md:text-xl">
-              healthshots
-            </li>
-            <li className="font-sans text-lg font-black uppercase tracking-tighter text-ink md:text-xl">
-              FITNESS
-            </li>
-            <li className="font-display text-xs font-semibold uppercase leading-tight tracking-[0.14em] text-ink md:text-sm">
-              INDIA TODAY
-            </li>
-            <li className="max-w-[11rem] text-center font-display text-[0.625rem] font-semibold uppercase leading-snug tracking-[0.08em] text-ink md:text-xs">
-              THE TIMES OF INDIA
-            </li>
-          </ul>
-        </div>
       </div>
     </section>
   );
