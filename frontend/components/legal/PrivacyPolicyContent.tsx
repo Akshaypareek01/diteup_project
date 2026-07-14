@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PolicySection } from "@/components/legal/PolicySection";
 
 /**
- * Renders the full privacy policy body for the public `/privacy` route.
+ * Renders the full privacy policy body for the public `/privacy-policy` route.
  * Operational details (processors, retention schedules) should be confirmed with counsel.
  */
 export function PrivacyPolicyContent() {
@@ -40,10 +40,10 @@ export function PrivacyPolicyContent() {
                 DiteUp operates this storefront and related customer support channels. For privacy
                 questions or requests, contact us at{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>
                 . You may also use our{" "}
                 <Link
@@ -211,10 +211,10 @@ export function PrivacyPolicyContent() {
               <p>
                 You may file a grievance with our designated contact at{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>
                 . If you are not satisfied with our response, you may escalate to the Data
                 Protection Board of India in accordance with the DPDP Act and rules framed
@@ -274,10 +274,10 @@ export function PrivacyPolicyContent() {
               <p>
                 Privacy requests and questions:{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>
                 .
               </p>

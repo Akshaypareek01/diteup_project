@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProductDetailClient } from "@/components/product/ProductDetailClient";
 import { BreadcrumbJsonLd } from "@/components/seo/BreadcrumbJsonLd";
 import { FaqJsonLd } from "@/components/seo/FaqJsonLd";
@@ -50,6 +51,7 @@ export default async function ProductPage({ params }: Props) {
       <BreadcrumbJsonLd productName={pageData.product.name} productSlug={pageData.product.slug} />
       {faqItems.length > 0 ? <FaqJsonLd items={faqItems} /> : null}
       <ProductDetailClient product={pageData.product} reviews={reviews} />
+      <SiteFooter />
     </>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -16,13 +15,20 @@ import type { ProductReviewsPayload } from "@/lib/types/reviews";
 import { pixelAddToCart } from "@/lib/meta-pixel-events";
 import { NotifyMeForm } from "@/components/product/NotifyMeForm";
 import { ProductPdpAccordions } from "@/components/product/ProductPdpAccordions";
+import { ProductPdpAplusContent } from "@/components/product/ProductPdpAplusContent";
+import { ProductPdpDeliveryCheck } from "@/components/product/ProductPdpDeliveryCheck";
 import { ProductPdpFeatureStrip } from "@/components/product/ProductPdpFeatureStrip";
-import { ProductPdpTrustStrip } from "@/components/product/ProductPdpTrustStrip";
+import { ProductPdpRatingsRow } from "@/components/product/ProductPdpRatingsRow";
+import { ProductPdpReviews } from "@/components/product/ProductPdpReviews";
+import { ProductPdpUspHighlight } from "@/components/product/ProductPdpUspHighlight";
+import {
+  computeVariantPricesPerKg,
+  findBestValueVariantId,
+} from "@/lib/pdp-variant-pricing";
 
 const PACKAGING_FALLBACK_SRC = "/assets/Images/product_.png";
 /** Clean packaging cutout for cart / summaries (Energy Bite). */
 const ENERGY_CART_PACKAGING_SRC = "/assets/Images/prodcut_clean.png";
-const HOW_TO_USE_SRC = "/assets/Images/howtouse.png";
 
 export type ProductDetailClientProps = {
   product: PublicProduct;
@@ -58,30 +64,6 @@ function resolveCartLineImage(product: PublicProduct): { imageSrc: string; image
   return { imageSrc: PACKAGING_FALLBACK_SRC, imageAlt: `${product.name} packaging` };
 }
 
-/** Five-star PDP row: rounded score → filled golden stars plus subtle outlines for the rest (mock-aligned). */
-function StarRow({ rating }: { rating: number }) {
-  const full = Math.round(Math.min(5, Math.max(0, rating)));
-  const empty = Math.max(0, 5 - full);
-  const starCls = "size-[0.82rem] shrink-0 sm:size-[0.875rem]";
-  const StarPath =
-    "M12 2.75 14.74 9.14h6.93l-5.61 4.06 2.13 6.59L12 16.93l-5.18 3.87 2.13-6.59L3.34 9.14h6.93L12 2.75z";
-
-  return (
-    <span className="inline-flex items-center gap-0.5 text-gold-deep" aria-hidden>
-      {Array.from({ length: full }, (_, i) => (
-        <svg key={`f-${String(i)}`} className={starCls} viewBox="0 0 24 24" fill="currentColor">
-          <path d={StarPath} />
-        </svg>
-      ))}
-      {Array.from({ length: empty }, (_, i) => (
-        <svg key={`e-${String(i)}`} className={`${starCls} text-line-dark/35`} viewBox="0 0 24 24" fill="none">
-          <path d={StarPath} stroke="currentColor" strokeWidth="1.45" />
-        </svg>
-      ))}
-    </span>
-  );
-}
-
 /**
  * PDP: mobile-first single column; `lg` two-column gallery + sticky buy box, wider container on desktop.
  */
@@ -96,6 +78,11 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
     () => product.variants.find((v) => v.isDefault) ?? product.variants[0],
     [product.variants],
   );
+  const perKgByVariant = useMemo(
+    () => new Map(computeVariantPricesPerKg(product.variants).map((row) => [row.variantId, row])),
+    [product.variants],
+  );
+  const bestValueVariantId = useMemo(() => findBestValueVariantId(product.variants), [product.variants]);
   const [variantId, setVariantId] = useState(defaultVariant?.id ?? "");
 
   const selected = product.variants.find((v) => v.id === variantId) ?? defaultVariant;
@@ -154,7 +141,6 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
   const showNotifyMe = Boolean(selected) && !canPurchase && product.slug;
 
   const summary = reviews?.summary;
-  const showRatings = product.reviewsEnabled && summary && summary.totalCount > 0;
 
   return (
     <div className="min-h-screen bg-cream pb-20 lg:pb-14">
@@ -211,15 +197,13 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
               {selected ? selected.name : "Select a pack size"}
             </p>
 
-            {showRatings && summary ? (
-              <p className="mt-3 flex flex-wrap items-center gap-2 font-sans text-[0.8125rem] text-ink leading-snug lg:text-body-sm">
-                <StarRow rating={summary.averageRating} />
-                <span className="font-semibold text-forest">{summary.averageRating.toFixed(1)}</span>
-                <span className="text-ink">
-                  ({summary.totalCount} {summary.totalCount === 1 ? "Review" : "Reviews"})
-                </span>
-              </p>
-            ) : null}
+            <ProductPdpUspHighlight className="mt-3" />
+
+            <ProductPdpRatingsRow
+              summary={summary}
+              reviewsEnabled={product.reviewsEnabled}
+              className="mt-3"
+            />
 
             {selected ? (
               <div className="mt-5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
@@ -271,90 +255,92 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
                 {product.variants.map((v) => {
                   const variantSale = moneyNumber(v.priceSale);
                   const variantMrp = moneyNumber(v.priceMrp);
+                  const perKg = perKgByVariant.get(v.id);
+                  const isBestValue = bestValueVariantId === v.id && Boolean(perKg);
                   const variantPurchasable =
                     product.buyable &&
                     !siteBlocksPurchase &&
                     (v.available > 0 || Boolean(product.allowBackorder) || Boolean(product.preorderEnabled));
                   const isActive = v.id === variantId;
                   return (
-                    <button
-                      key={v.id}
-                      type="button"
-                      onClick={() => setVariantId(v.id)}
-                      disabled={!variantPurchasable}
-                      className={`flex min-h-[3.625rem] min-w-[5.875rem] shrink-0 flex-col items-center justify-center rounded-[0.6875rem] px-3 py-2.5 text-center transition lg:min-h-[4rem] lg:w-full lg:min-w-0 lg:shrink ${
-                        isActive
-                          ? "border-[2px] border-forest bg-paper shadow-sm"
-                          : "border border-line bg-transparent hover:border-line-dark/45"
-                      } ${!variantPurchasable ? "opacity-55" : ""}`}
-                      aria-pressed={isActive}
-                    >
-                      <span className="font-sans text-[0.875rem] font-semibold tabular-nums leading-tight tracking-tight text-ink">
-                        {v.name}{" "}
-                        <span className="whitespace-nowrap">{formatInr(variantSale)}</span>
-                      </span>
-                      {variantMrp > variantSale ? (
-                        <span className="mt-0.5 block text-[0.6875rem] font-medium tabular-nums leading-none text-ink-muted line-through">
-                          {formatInr(variantMrp)}
+                    <div key={v.id} className="relative shrink-0 pt-3 lg:w-full lg:shrink">
+                      {perKg ? (
+                        <span
+                          className={`absolute left-1/2 top-0 z-10 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 font-sans text-[0.625rem] font-semibold tabular-nums leading-none sm:text-[0.6875rem] ${
+                            isBestValue
+                              ? "bg-error text-cream"
+                              : "border border-line bg-paper text-ink"
+                          }`}
+                        >
+                          {isBestValue ? "🔥 " : ""}
+                          {perKg.formattedPerKg}/kg
                         </span>
                       ) : null}
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => setVariantId(v.id)}
+                        disabled={!variantPurchasable}
+                        className={`flex min-h-[3.625rem] min-w-[5.875rem] w-full flex-col items-center justify-center rounded-[0.6875rem] px-3 py-2.5 text-center transition lg:min-h-[4rem] lg:min-w-0 ${
+                          isActive
+                            ? "border-[2px] border-forest bg-paper shadow-sm"
+                            : "border border-line bg-transparent hover:border-line-dark/45"
+                        } ${!variantPurchasable ? "opacity-55" : ""}`}
+                        aria-pressed={isActive}
+                      >
+                        <span className="font-sans text-[0.875rem] font-semibold tabular-nums leading-tight tracking-tight text-ink">
+                          {v.name}{" "}
+                          <span className="whitespace-nowrap">{formatInr(variantSale)}</span>
+                        </span>
+                        {variantMrp > variantSale ? (
+                          <span className="mt-0.5 block text-[0.6875rem] font-medium tabular-nums leading-none text-ink-muted line-through">
+                            {formatInr(variantMrp)}
+                          </span>
+                        ) : null}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
             </div>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row xl:gap-4">
-              <Button
-                type="button"
-                variant="primaryGoldInk"
-                size="lg"
-                className="w-full rounded-xl border-gold-deep/35 shadow-sm sm:flex-1 xl:flex-1"
-                disabled={!canPurchase}
-                onClick={handleAddToCart}
-              >
-                Add to cart
-              </Button>
+            <div className="mt-7 flex flex-col gap-3">
               <Button
                 type="button"
                 variant="primaryForest"
                 size="lg"
-                className="w-full rounded-xl shadow-sm sm:flex-1 xl:flex-1"
+                className="w-full rounded-xl shadow-md sm:shadow-lg"
                 disabled={!canPurchase}
                 onClick={handleBuyNow}
               >
                 Buy now
               </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                className="w-full rounded-xl"
+                disabled={!canPurchase}
+                onClick={handleAddToCart}
+              >
+                Add to cart
+              </Button>
             </div>
 
-            <ProductPdpTrustStrip className="mt-9 border-t border-line/70 pt-7" />
+            <ProductPdpDeliveryCheck className="mt-8" />
           </div>
         </div>
 
         <div className="mx-auto mt-10 max-w-lg space-y-10 lg:mt-16 lg:max-w-none lg:space-y-12">
-          {product.slug.includes("energy-bite") ? (
-            <section
-              aria-labelledby="pdp-how-to-enjoy-heading"
-              className="overflow-hidden rounded-2xl border border-line/60 bg-cream lg:mx-auto lg:max-w-4xl xl:max-w-5xl"
-            >
-              <h2 id="pdp-how-to-enjoy-heading" className="sr-only">
-                How to enjoy
-              </h2>
-              <figure className="m-0 bg-cream px-2 py-3 sm:px-3 sm:py-4 lg:px-6 lg:py-6">
-                <Image
-                  src={HOW_TO_USE_SRC}
-                  alt="How to enjoy: soak overnight for six to eight hours, eat in the morning for steady energy — add water, soak overnight, enjoy fresh."
-                  width={1536}
-                  height={1024}
-                  className="h-auto w-full object-contain"
-                  sizes="(max-width: 1024px) 100vw, 896px"
-                  priority={false}
-                />
-              </figure>
-            </section>
-          ) : null}
+          <ProductPdpAplusContent className="lg:mx-auto lg:max-w-4xl xl:max-w-5xl" />
 
           <ProductPdpAccordions product={product} className="lg:mx-auto lg:max-w-3xl xl:max-w-[42rem]" />
+
+          <ProductPdpReviews
+            productName={product.name}
+            reviewsEnabled={product.reviewsEnabled}
+            payload={reviews}
+            className="lg:mx-auto lg:max-w-4xl xl:max-w-5xl"
+          />
 
           {showNotifyMe && selected ? (
             <div className="lg:mx-auto lg:max-w-3xl">

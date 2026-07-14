@@ -5,6 +5,7 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./lib/**/*.{js,ts,tsx}",
   ],
   theme: {
     extend: {
@@ -97,6 +98,7 @@ const config: Config = {
     },
   },
   plugins: [],
+  safelist: ["bg-forest", "bg-sage", "bg-gold", "bg-olive", "text-cream", "text-forest"],
 };
 
 export default config;

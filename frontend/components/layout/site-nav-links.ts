@@ -13,6 +13,6 @@ export function buildPrimaryNavLinks(shopHref: string): SiteNavLink[] {
     { href: shopHref, label: "Shop" },
     { href: "/#ingredients", label: "Ingredients" },
     { href: "/#reviews", label: "Reviews" },
-    { href: "/#faq", label: "FAQ" },
+    { href: "/faq", label: "FAQ" },
   ];
 }

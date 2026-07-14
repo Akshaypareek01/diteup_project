@@ -3,7 +3,7 @@ import { PolicySection } from "@/components/legal/PolicySection";
 import { RETURN_WINDOW_DAYS } from "@/lib/storefront-policy-constants";
 
 /**
- * Refund and return policy for `/refund-policy` — align operational SLAs with support before launch.
+ * Refund and return policy for `/return-refund-policy` — align operational SLAs with support before launch.
  */
 export function RefundPolicyContent() {
   return (
@@ -106,10 +106,10 @@ export function RefundPolicyContent() {
               <p>
                 Email{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>{" "}
                 or message us via the{" "}
                 <Link
@@ -238,10 +238,10 @@ export function RefundPolicyContent() {
               <p>
                 Returns &amp; refunds:{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>
               </p>
             </>

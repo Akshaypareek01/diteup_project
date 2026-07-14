@@ -2,10 +2,12 @@
 export const INDEXABLE_STATIC_PATHS = [
   "",
   "/contact",
-  "/terms",
-  "/privacy",
-  "/refund-policy",
+  "/faq",
+  "/policies",
   "/shipping-policy",
+  "/return-refund-policy",
+  "/privacy-policy",
+  "/terms-conditions",
 ] as const;
 
 /** Paths blocked in robots.txt and excluded from sitemap.xml. */

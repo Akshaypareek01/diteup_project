@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { HeroBannerOverlay } from "@/components/home/hero-banner-overlay";
+import { HeroDesktopBannerSlider } from "@/components/home/HeroDesktopBannerSlider";
 import { useHeroBannerVariant } from "@/components/home/HeroBannerVariantProvider";
 import type { PublicProduct } from "@/lib/types/catalog";
 import { moneyNumber } from "@/lib/format-money";
@@ -57,18 +58,10 @@ export function HeroSection({ featured }: HeroSectionProps) {
           role="presentation"
           className="h-auto w-full object-cover object-center md:hidden"
         />
-        <Image
-          key={desktopSrc}
-          src={desktopSrc}
-          alt=""
-          width={1774}
-          height={887}
-          priority
-          sizes="100vw"
-          role="presentation"
-          className="hidden h-auto w-full object-cover object-center md:block"
-        />
-        <HeroBannerOverlay shopHref={shopHref} />
+        <HeroDesktopBannerSlider primarySrc={desktopSrc} shopHref={shopHref} />
+        <div className="absolute inset-0 md:hidden">
+          <HeroBannerOverlay shopHref={shopHref} />
+        </div>
       </div>
     </section>
   );

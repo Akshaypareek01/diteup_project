@@ -9,6 +9,21 @@ const nextConfig = {
         destination: "/order/:orderNumber",
         permanent: true,
       },
+      {
+        source: "/refund-policy",
+        destination: "/return-refund-policy",
+        permanent: true,
+      },
+      {
+        source: "/privacy",
+        destination: "/privacy-policy",
+        permanent: true,
+      },
+      {
+        source: "/terms",
+        destination: "/terms-conditions",
+        permanent: true,
+      },
     ];
   },
   async rewrites() {

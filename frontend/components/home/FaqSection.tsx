@@ -1,17 +1,17 @@
-const faqs = [
-  { q: "How long should I soak it?", a: "8 hours overnight for best texture." },
-  { q: "Is it vegan?", a: "Use plant milk — recipe is vegan-friendly." },
-  { q: "What is the shelf life?", a: "See printed pack; store cool and dry." },
-];
+import Link from "next/link";
+import { FaqAccordionList } from "@/components/faq/FaqAccordionList";
+import { getHomePreviewFaqItems } from "@/lib/energy-bite-faqs";
 
-/** Static home FAQ copy — shared with FAQPage JSON-LD. */
-export const HOME_FAQ_ITEMS = faqs.map((item) => ({
-  question: item.q,
-  answer: item.a,
+const previewFaqs = getHomePreviewFaqItems();
+
+/** First three homepage FAQs — used for FAQPage JSON-LD on the home route. */
+export const HOME_FAQ_ITEMS = previewFaqs.map((item) => ({
+  question: item.question,
+  answer: item.answer,
 }));
 
 /**
- * FAQ accordion-style (static for scaffold; wire Radix later).
+ * Homepage FAQ preview for `/#faq` — three questions plus link to the full FAQ page.
  */
 export function FaqSection() {
   return (
@@ -20,25 +20,24 @@ export function FaqSection() {
       className="scroll-mt-[104px] bg-cream py-14 md:py-20"
       aria-labelledby="faq-heading"
     >
-      <div className="mx-auto max-w-[680px] px-5 md:px-8 lg:px-12">
+      <div className="mx-auto max-w-[760px] px-5 md:px-8 lg:px-12">
         <h2
           id="faq-heading"
           className="font-display text-display-lg text-balance text-center font-semibold text-forest"
         >
-          FAQ
+          Frequently asked questions
         </h2>
-        <div className="mt-10 space-y-4">
-          {faqs.map((item) => (
-            <details
-              key={item.q}
-              className="group rounded-lg border border-line bg-paper px-4 py-3 open:shadow-sm"
-            >
-              <summary className="cursor-pointer list-none font-semibold text-forest marker:content-none [&::-webkit-details-marker]:hidden">
-                {item.q}
-              </summary>
-              <p className="mt-3 text-body text-ink-soft">{item.a}</p>
-            </details>
-          ))}
+        <p className="mx-auto mt-4 max-w-[52ch] text-center text-body text-ink-soft">
+          Quick answers about DiteUp Energy Bite — usage, ingredients, storage, shipping, and returns.
+        </p>
+        <FaqAccordionList items={previewFaqs} className="mt-10" />
+        <div className="mt-8 flex justify-center">
+          <Link
+            href="/faq"
+            className="inline-flex h-11 min-w-[9rem] items-center justify-center rounded-md border border-forest bg-transparent px-8 font-sans text-sm font-semibold uppercase tracking-wide text-forest transition hover:bg-forest/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+          >
+            More
+          </Link>
         </div>
       </div>
     </section>

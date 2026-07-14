@@ -1,14 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { buildPrimaryNavLinks } from "@/components/layout/site-nav-links";
+import { POLICY_NAV_LINKS } from "@/lib/policy-nav-links";
 import { resolveShopNavHref } from "@/lib/resolve-shop-nav-href";
-
-const POLICY_LINKS = [
-  { href: "/shipping-policy", label: "Shipping Policy" },
-  { href: "/refund-policy", label: "Return & Refund" },
-  { href: "/privacy", label: "Privacy Policy" },
-  { href: "/terms", label: "Terms & Conditions" },
-] as const;
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/" },
@@ -148,7 +142,7 @@ export async function SiteFooter() {
               Policies
             </h2>
             <ul className="mt-4 space-y-2.5 font-sans text-body-sm text-ink-soft">
-              {POLICY_LINKS.map((l) => (
+              {POLICY_NAV_LINKS.map((l) => (
                 <li key={l.href}>
                   <Link href={l.href} className="transition-colors hover:text-forest">
                     {l.label}

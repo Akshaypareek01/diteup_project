@@ -4,7 +4,7 @@ import { formatInr } from "@/lib/format-money";
 import { FREE_SHIPPING_THRESHOLD_INR } from "@/lib/storefront-policy-constants";
 
 /**
- * Full terms of service body for `/terms` — counsel should review before production reliance.
+ * Full terms of service body for `/terms-conditions` — counsel should review before production reliance.
  */
 export function TermsOfServiceContent() {
   return (
@@ -24,7 +24,7 @@ export function TermsOfServiceContent() {
           By placing an order, creating an account, or browsing our site, you agree to these Terms
           and our{" "}
           <Link
-            href="/privacy"
+            href="/privacy-policy"
             className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
           >
             Privacy policy
@@ -61,10 +61,10 @@ export function TermsOfServiceContent() {
                 contract under applicable law. You are responsible for safeguarding your account
                 credentials and for activity under your account. Notify us promptly at{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>{" "}
                 if you suspect unauthorized access.
               </p>
@@ -141,7 +141,7 @@ export function TermsOfServiceContent() {
                 </Link>{" "}
                 and{" "}
                 <Link
-                  href="/refund-policy"
+                  href="/return-refund-policy"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
                   Refund policy
@@ -312,10 +312,10 @@ export function TermsOfServiceContent() {
               <p>
                 Questions about these Terms:{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>{" "}
                 or{" "}
                 <Link

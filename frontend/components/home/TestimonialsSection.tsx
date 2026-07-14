@@ -1,9 +1,21 @@
+import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
+import { PDP_MOCK_REVIEW_CARDS } from "@/lib/pdp-mock-reviews";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
 
 const quotes = [
-  { name: "Aditi K.", text: "Finally a breakfast that fits my mornings." },
-  { name: "Rahul M.", text: "Tastes clean — not sugary like other mixes." },
-  { name: "Neha S.", text: "Shipping was quick and the pack feels premium." },
+  { id: "home-t1", name: "Aditi K.", text: "Finally a breakfast that fits my mornings.", verified: false },
+  { id: "home-t2", name: "Rahul M.", text: "Tastes clean — not sugary like other mixes.", verified: false },
+  { id: "home-t3", name: "Neha S.", text: "Shipping was quick and the pack feels premium.", verified: false },
+];
+
+const fallbackSlides = [
+  ...quotes,
+  ...PDP_MOCK_REVIEW_CARDS.slice(3).map((item) => ({
+    id: item.id,
+    name: item.name,
+    text: item.body,
+    verified: true,
+  })),
 ];
 
 export type TestimonialsSectionProps = {
@@ -11,19 +23,20 @@ export type TestimonialsSectionProps = {
 };
 
 /**
- * Social proof band — uses moderated API reviews when available (PRD §6.2.9), else curated fallbacks.
+ * Social proof band — uses moderated API reviews when available, else curated fallback slides.
  */
 export function TestimonialsSection({ reviewsPayload }: TestimonialsSectionProps) {
   const useApi = reviewsPayload && reviewsPayload.summary.totalCount > 0 && reviewsPayload.reviews.length > 0;
   const summaryCount = useApi ? reviewsPayload!.summary.totalCount : 128;
   const avg = useApi ? reviewsPayload!.summary.averageRating.toFixed(1) : "4.8";
-  const list = useApi
-    ? reviewsPayload!.reviews.slice(0, 6).map((r) => ({
-        name: r.authorName,
-        text: r.title ? `${r.title} — ${r.body}` : r.body,
-        verified: r.isVerified,
+  const items = useApi
+    ? reviewsPayload!.reviews.slice(0, 8).map((review) => ({
+        id: review.id,
+        name: review.authorName,
+        text: review.title ? `${review.title} — ${review.body}` : review.body,
+        verified: review.isVerified,
       }))
-    : quotes.map((q) => ({ ...q, verified: false }));
+    : fallbackSlides;
 
   return (
     <section
@@ -41,31 +54,7 @@ export function TestimonialsSection({ reviewsPayload }: TestimonialsSectionProps
         <p className="mt-3 text-center text-lg text-gold" aria-label={`Average rating ${avg} of 5`}>
           ★★★★★ <span className="text-body-sm text-cream/70">({summaryCount} reviews)</span>
         </p>
-        <ul className="mt-10 grid gap-6 md:grid-cols-3">
-          {list.map((q) => (
-            <li
-              key={`${q.name}-${q.text.slice(0, 24)}`}
-              className="rounded-lg border border-line-dark/50 bg-sage/80 p-6 shadow-sm backdrop-blur-sm"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className="flex size-12 shrink-0 items-center justify-center rounded-full bg-gold/25 font-display text-lg font-semibold text-gold"
-                  aria-hidden
-                >
-                  {q.name.charAt(0)}
-                </div>
-                <div>
-                  <p className="font-semibold text-cream">{q.name}</p>
-                  <p className="text-body-sm text-cream/70">{q.verified ? "Verified buyer" : "Buyer"}</p>
-                </div>
-              </div>
-              <p className="mt-4 text-body text-cream/85">&ldquo;{q.text}&rdquo;</p>
-              <p className="mt-2 text-gold" aria-hidden>
-                ★★★★★
-              </p>
-            </li>
-          ))}
-        </ul>
+        <TestimonialsCarousel items={items} />
       </div>
     </section>
   );

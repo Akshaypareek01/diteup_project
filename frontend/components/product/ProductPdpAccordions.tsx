@@ -1,5 +1,7 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PublicProduct } from "@/lib/types/catalog";
+import { getHomePreviewFaqItems } from "@/lib/energy-bite-faqs";
 import { cn } from "@/lib/utils";
 
 export type ProductPdpAccordionsProps = {
@@ -36,21 +38,10 @@ function AccordionRow({ title, children }: RowProps) {
   );
 }
 
-const FALLBACK_FAQ = (
-  <dl className="space-y-4">
-    <div>
-      <dt className="font-semibold text-forest">Is this vegetarian?</dt>
-      <dd className="mt-1">Yes — Energy Bite is 100% vegetarian.</dd>
-    </div>
-    <div>
-      <dt className="font-semibold text-forest">How should I store it?</dt>
-      <dd className="mt-1">Keep sealed in a cool, dry place away from direct sunlight.</dd>
-    </div>
-  </dl>
-);
+const previewFaqs = getHomePreviewFaqItems();
 
 /**
- * Expandable product information blocks (description through FAQ).
+ * Expandable product information blocks (description through FAQ preview).
  */
 export function ProductPdpAccordions({ product, className }: ProductPdpAccordionsProps) {
   const description =
@@ -78,7 +69,24 @@ export function ProductPdpAccordions({ product, className }: ProductPdpAccordion
         Busy professionals, students, travelers, and anyone who wants a pantry-stable, high-protein snack without added sugar
         or preservatives.
       </AccordionRow>
-      <AccordionRow title="FAQ">{FALLBACK_FAQ}</AccordionRow>
+      <AccordionRow title="FAQ">
+        <dl className="space-y-4">
+          {previewFaqs.map((item) => (
+            <div key={item.question}>
+              <dt className="font-semibold text-forest">{item.question}</dt>
+              <dd className="mt-1">{item.answer}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="mt-6 flex justify-center">
+          <Link
+            href="/faq"
+            className="inline-flex h-10 min-w-[8rem] items-center justify-center rounded-md border border-forest bg-transparent px-6 font-sans text-xs font-semibold uppercase tracking-wide text-forest transition hover:bg-forest/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+          >
+            More
+          </Link>
+        </div>
+      </AccordionRow>
     </section>
   );
 }

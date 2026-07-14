@@ -59,7 +59,7 @@ export function CookieBanner() {
       <p id="cookie-banner-desc" className="text-body text-ink">
         We use essential cookies for security, cart, and checkout. With your permission we also use
         analytics cookies (including Meta Pixel) to understand how our site is used. See our{" "}
-        <Link href="/privacy" className="font-medium text-gold-deep underline underline-offset-2">
+        <Link href="/privacy-policy" className="font-medium text-gold-deep underline underline-offset-2">
           Privacy
         </Link>{" "}
         policy for details.

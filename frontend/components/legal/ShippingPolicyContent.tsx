@@ -39,10 +39,10 @@ export function ShippingPolicyContent() {
                 We deliver to addresses in India where our carriers operate. If your pincode is not
                 serviceable at checkout, we cannot fulfil the order until service expands — contact{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>{" "}
                 for assistance.
               </p>
@@ -97,7 +97,7 @@ export function ShippingPolicyContent() {
                 Shipments are tendered to third-party couriers (e.g. national and regional partners).
                 Title and risk follow our{" "}
                 <Link
-                  href="/terms"
+                  href="/terms-conditions"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
                   Terms of service
@@ -217,10 +217,10 @@ export function ShippingPolicyContent() {
               <p>
                 Shipping questions:{" "}
                 <a
-                  href="mailto:hello@diteup.com"
+                  href="mailto:info@diteup.com"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
                 >
-                  hello@diteup.com
+                  info@diteup.com
                 </a>{" "}
                 or{" "}
                 <Link
