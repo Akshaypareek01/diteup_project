@@ -39,8 +39,10 @@ function sanitizeText(raw: unknown, maxLen: number): string {
 }
 
 /**
- * POST /v1/webhooks/shiprocket — always ACK processing outcomes with 200
- * (Shiprocket disables webhooks that keep failing); only bad auth gets 401.
+ * POST /v1/webhooks/shiprocket or /v1/webhooks/shipment-updates — always ACK
+ * processing outcomes with 200 (Shiprocket disables webhooks that keep failing);
+ * only bad auth gets 401. Use `shipment-updates` in the Shiprocket panel (their
+ * URL validator blocks the word "shiprocket").
  * `shiprocketLastStatus` is persisted only after successful handling so a
  * rejected transition can be retried by a later delivery of the same status.
  */

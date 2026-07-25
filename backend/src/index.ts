@@ -74,11 +74,11 @@ function createApp(): express.Application {
 
   // No HMAC from Shiprocket — plain JSON body + static token header, mounted
   // before cookie/origin middleware so server-to-server posts pass through.
-  app.post(
-    "/v1/webhooks/shiprocket",
-    express.json({ limit: "256kb" }),
-    shiprocketWebhookController.postShiprocketWebhook,
-  );
+  const shiprocketWebhookJson = express.json({ limit: "256kb" });
+  const shiprocketWebhookHandler = shiprocketWebhookController.postShiprocketWebhook;
+  app.post("/v1/webhooks/shiprocket", shiprocketWebhookJson, shiprocketWebhookHandler);
+  // Shiprocket panel rejects URLs containing "shiprocket" / "sr" / "kr" keywords.
+  app.post("/v1/webhooks/shipment-updates", shiprocketWebhookJson, shiprocketWebhookHandler);
 
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser());
