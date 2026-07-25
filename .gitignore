@@ -8,3 +8,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Large local docs / assets (keep out of git — use Drive/Dropbox instead)
+*.docx
+*.doc

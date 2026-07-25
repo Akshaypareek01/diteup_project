@@ -6,8 +6,6 @@ type FeatureItem = {
   imageSrc: string;
   /** Extra classes when asset aspect ratio differs (e.g. square vs portrait). */
   imageClassName?: string;
-  /** Last item in a 2×2 + 1 layout spans full width on small screens. */
-  wideOnNarrow?: boolean;
 };
 
 /** Order matches design: full → ready → clean → energy → gut. */
@@ -38,7 +36,6 @@ const WHY_CHOOSE_FEATURES: FeatureItem[] = [
     title: "Gut Friendly & Light",
     description: "Natural ingredients easy on digestion.",
     imageSrc: "/assets/whychooseus/gutfriendly.webp",
-    wideOnNarrow: true,
   },
 ];
 
@@ -52,21 +49,18 @@ function FeatureCard({
   description,
   imageSrc,
   imageClassName = "",
-  wideOnNarrow = false,
 }: FeatureCardProps) {
   const alt = `${title}. ${description}`;
 
   return (
-    <li
-      className={`flex min-w-0 justify-center ${wideOnNarrow ? "col-span-2 lg:col-span-1" : ""}`}
-    >
-      <article className="flex w-full max-w-[8.75rem] flex-col overflow-hidden rounded-xl bg-[#F7F1E9] shadow-xs sm:max-w-[9.25rem] lg:max-w-[9.5rem] xl:max-w-[10rem]">
+    <li className="w-[8.75rem] shrink-0 sm:w-[9.25rem] md:w-[9.5rem] xl:w-[10rem]">
+      <article className="flex w-full flex-col overflow-hidden rounded-xl bg-[#F7F1E9] shadow-xs">
         <div className="relative aspect-[2/3] w-full">
           <Image
             src={imageSrc}
             alt={alt}
             fill
-            sizes="(min-width: 1024px) 160px, (min-width: 640px) 148px, 140px"
+            sizes="(min-width: 1280px) 160px, (min-width: 768px) 152px, (min-width: 640px) 148px, 140px"
             className={`object-contain object-center ${imageClassName}`.trim()}
           />
         </div>
@@ -77,6 +71,8 @@ function FeatureCard({
 
 /**
  * Homepage block directly under the hero: five “why choose” pillars.
+ * Fixed-width cards + flex-wrap/justify-center keep rows clustered
+ * (2+2+1 / 3+2 / 5) instead of stretching to the container edges.
  */
 export function WhyChoosePressSection() {
   return (
@@ -98,7 +94,7 @@ export function WhyChoosePressSection() {
         </header>
 
         <ul
-          className="mx-auto mt-10 grid w-full max-w-[38rem] list-none grid-cols-2 items-stretch gap-x-4 gap-y-5 sm:max-w-[40rem] sm:gap-x-5 lg:mt-12 lg:max-w-[50rem] lg:grid-cols-5 lg:gap-3 xl:max-w-[52rem] xl:gap-4"
+          className="mx-auto mt-10 flex w-full max-w-[calc(2*8.75rem+0.75rem)] list-none flex-wrap justify-center gap-x-3 gap-y-5 sm:max-w-[calc(3*9.25rem+2*1rem)] sm:gap-x-4 md:max-w-[calc(3*9.5rem+2*1.25rem)] md:gap-x-5 lg:mt-12 lg:max-w-none lg:gap-x-4 xl:gap-x-5"
           aria-label="Why choose DiteUp highlights"
         >
           {WHY_CHOOSE_FEATURES.map((feature) => (
