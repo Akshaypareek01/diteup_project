@@ -4,6 +4,7 @@
 export const SETTINGS_SECTION_KEYS: Record<string, string[]> = {
   meta: ["metaAds"],
   shipping: ["pincodePolicy"],
+  shiprocket: ["shiprocket", "shiprocketSecret"],
   cod: ["checkout"],
   payments: [],
   email: [],

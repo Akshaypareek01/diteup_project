@@ -35,7 +35,7 @@ export function HeroDesktopBannerSlider({ primarySrc, shopHref }: HeroDesktopBan
         alt: "DiteUp clean nutrition hero",
       },
       {
-        src: "/assets/Images/webbanner-slider2.png",
+        src: "/assets/Images/webbanner-slider2.webp",
         width: 1536,
         height: 1024,
         showOverlay: false,
@@ -96,7 +96,7 @@ export function HeroDesktopBannerSlider({ primarySrc, shopHref }: HeroDesktopBan
               width={active.width}
               height={active.height}
               priority={index === 0}
-              sizes="100vw"
+              sizes="(max-width: 767px) 1px, 100vw"
               role={active.showOverlay ? "presentation" : undefined}
               className="h-full w-full object-cover object-center"
             />

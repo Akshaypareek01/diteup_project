@@ -12,7 +12,7 @@ export function IngredientsSection() {
     >
       <div className="mx-auto w-full">
         <Image
-          src="/assets/Images/whatinsideiamgeweb.png"
+          src="/assets/Images/whatinsideiamgeweb.webp"
           alt="What's inside DiteUp Energy Bite — 8 powerful ingredients including chana, peanut, moong, cashew, almond, raisin, pumpkin seeds, and sunflower seeds"
           width={1672}
           height={941}

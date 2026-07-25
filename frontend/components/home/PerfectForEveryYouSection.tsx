@@ -12,7 +12,7 @@ export function PerfectForEveryYouSection() {
     >
       <div className="mx-auto w-full">
         <Image
-          src="/assets/Images/perfectforyou.png"
+          src="/assets/Images/perfectforyou.webp"
           alt="Perfect for every you — DiteUp Energy Bite for students, gym and fitness, office workers, busy moms, and healthy lifestyle"
           width={1672}
           height={941}

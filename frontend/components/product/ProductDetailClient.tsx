@@ -26,9 +26,9 @@ import {
   findBestValueVariantId,
 } from "@/lib/pdp-variant-pricing";
 
-const PACKAGING_FALLBACK_SRC = "/assets/Images/product_.png";
+const PACKAGING_FALLBACK_SRC = "/assets/Images/product_.webp";
 /** Clean packaging cutout for cart / summaries (Energy Bite). */
-const ENERGY_CART_PACKAGING_SRC = "/assets/Images/prodcut_clean.png";
+const ENERGY_CART_PACKAGING_SRC = "/assets/Images/prodcut_clean.webp";
 
 export type ProductDetailClientProps = {
   product: PublicProduct;
@@ -165,6 +165,8 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
                 <img
                   src={hero.src}
                   alt={hero.alt}
+                  fetchPriority="high"
+                  decoding="async"
                   className="aspect-square w-full object-contain p-4 sm:p-8 lg:p-10"
                 />
                 {product.displayBadge ? (

@@ -13,6 +13,11 @@ export function tryGetServerApiBase(): string | null {
 export type ServerApiFetchOptions = RequestInit & {
   /** When false, omits Cookie header (public catalog, health, etc.). Default true. */
   forwardCookies?: boolean;
+  /**
+   * When set, caches the response in the Next.js Data Cache for N seconds (ISR-style).
+   * Only use for public, non-personalized endpoints. Default: uncached (`no-store`).
+   */
+  revalidate?: number;
 };
 
 /**
@@ -30,7 +35,7 @@ export async function serverApiFetch(path: string, options: ServerApiFetchOption
     );
   }
 
-  const { forwardCookies = true, ...init } = options;
+  const { forwardCookies = true, revalidate, ...init } = options;
   const headers = new Headers(init.headers);
 
   if (forwardCookies) {
@@ -44,9 +49,16 @@ export async function serverApiFetch(path: string, options: ServerApiFetchOption
     }
   }
 
+  // Personalized (cookie-forwarded) requests are never cached; public ones may opt into
+  // short-lived Data Cache entries so every page view doesn't hit the API + DB.
+  const cacheOptions: Pick<RequestInit, "cache" | "next"> =
+    !forwardCookies && typeof revalidate === "number"
+      ? { next: { revalidate } }
+      : { cache: "no-store" };
+
   return fetch(`${base}${path.startsWith("/") ? path : `/${path}`}`, {
     ...init,
-    cache: "no-store",
+    ...cacheOptions,
     headers,
   });
 }

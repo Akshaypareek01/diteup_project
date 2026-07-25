@@ -8,10 +8,10 @@ export const DEFAULT_SITE_DESCRIPTION =
   "Pre-portioned soaked breakfast packs with 10 powerful ingredients. High protein, no added sugar — just soak overnight and start your day the smart way. Ships across India.";
 
 /**
- * Default OG image path (1200×630 banner art on CDN/static host).
+ * Default OG image path (1200×600 banner art, JPEG for crawler compatibility).
  */
 export function defaultOgImageUrl(): string {
-  return absoluteUrl("/assets/Images/desktop_banner_light.png");
+  return absoluteUrl("/assets/Images/og_default.jpg");
 }
 
 /**
@@ -36,7 +36,7 @@ export function buildSharedSocialMetadata(input: {
       siteName: "DiteUp",
       title: input.title,
       description: input.description,
-      images: [{ url: image, width: 1200, height: 630, alt: input.title }],
+      images: [{ url: image, width: 1200, height: 600, alt: input.title }],
     },
     twitter: {
       card: "summary_large_image",

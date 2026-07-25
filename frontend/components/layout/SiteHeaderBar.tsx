@@ -183,7 +183,7 @@ function HeaderLogo({ className }: HeaderLogoProps) {
   return (
     <Link href="/" className={`block shrink-0 ${className}`} aria-label="DiteUp home">
       <Image
-        src="/assets/logos/logo_light.png"
+        src="/assets/logos/logo_light.webp"
         alt=""
         fill
         className="object-contain object-center lg:object-left"

@@ -7,7 +7,7 @@ import type { CartPricingBreakdown } from "@/lib/types/catalog";
 import { formatInr } from "@/lib/format-money";
 
 /** Matches cart / checkout fallback when line metadata has no thumbnail. */
-export const CHECKOUT_FALLBACK_PRODUCT_IMAGE = "/assets/Images/prodcut_clean.png";
+export const CHECKOUT_FALLBACK_PRODUCT_IMAGE = "/assets/Images/prodcut_clean.webp";
 
 /**
  * Renders a single checkout line thumbnail; uses Next `Image` for local paths and `<img>` for remote URLs.

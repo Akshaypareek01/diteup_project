@@ -21,7 +21,7 @@ const APLUS_SLIDES: AplusSlide[] = [
   {
     id: "inside",
     title: "What's inside",
-    src: "/assets/Images/whatinsideiamgeweb.png",
+    src: "/assets/Images/whatinsideiamgeweb.webp",
     alt: "What's inside DiteUp Energy Bite — 8 powerful ingredients in one perfect mix",
     width: 1672,
     height: 941,
@@ -29,7 +29,7 @@ const APLUS_SLIDES: AplusSlide[] = [
   {
     id: "why",
     title: "Why choose us",
-    src: "/assets/Images/whychooseus.png",
+    src: "/assets/Images/whychooseus.webp",
     alt: "Why choose DiteUp Energy Bite — clean nutrition, sustained energy, and real results",
     width: 1536,
     height: 1024,
@@ -37,7 +37,7 @@ const APLUS_SLIDES: AplusSlide[] = [
   {
     id: "compare",
     title: "How we compare",
-    src: "/assets/Images/howwecompair.png",
+    src: "/assets/Images/howwecompair.webp",
     alt: "DiteUp Energy Bite vs regular breakfast — smart choice for busy mornings",
     width: 1536,
     height: 1024,
@@ -45,7 +45,7 @@ const APLUS_SLIDES: AplusSlide[] = [
   {
     id: "how-to-use",
     title: "How to use",
-    src: "/assets/Images/howtouseslide.png",
+    src: "/assets/Images/howtouseslide.webp",
     alt: "How to use DiteUp Energy Bite — soak at night, eat in the morning",
     width: 1672,
     height: 941,
@@ -141,7 +141,6 @@ export function ProductPdpAplusContent({ className }: ProductPdpAplusContentProp
                 src={active.src}
                 alt={active.alt}
                 fill
-                priority={index === 0}
                 sizes="(max-width: 1024px) 100vw, 896px"
                 className="object-contain object-center"
               />

@@ -162,7 +162,7 @@ export function FlowHeader({ backHref = "/", showSearch = false, showShare = fal
             aria-label="Dite Up home"
           >
             <Image
-              src="/assets/logos/logo_light.png"
+              src="/assets/logos/logo_light.webp"
               alt="Dite Up"
               fill
               className="object-contain object-center"

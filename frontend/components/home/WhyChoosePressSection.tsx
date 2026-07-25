@@ -15,29 +15,29 @@ const WHY_CHOOSE_FEATURES: FeatureItem[] = [
   {
     title: "Keeps You Full Longer",
     description: "High protein & fiber keeps hunger away",
-    imageSrc: "/assets/whychooseus/keppyoufull longer.png",
+    imageSrc: "/assets/whychooseus/keppyoufull longer.webp",
   },
   {
     title: "Ready in 2 Minutes",
     description: "No cooking. Just soak and eat.",
-    imageSrc: "/assets/whychooseus/readyintwomin.png",
+    imageSrc: "/assets/whychooseus/readyintwomin.webp",
   },
   {
     title: "No Junk, Only Clean",
     description: "No refined sugar, no preservatives.",
-    imageSrc: "/assets/whychooseus/nojunkonlyclean.png",
+    imageSrc: "/assets/whychooseus/nojunkonlyclean.webp",
   },
   {
     title: "Sustained Energy",
     description: "Keeps you active & fresh all day.",
-    imageSrc: "/assets/whychooseus/sustained_energy.png",
+    imageSrc: "/assets/whychooseus/sustained_energy.webp",
     /** Square asset — scaled to align with portrait cards, slightly smaller than 1.5×. */
     imageClassName: "scale-[1.14] origin-center mt-[-7px]",
   },
   {
     title: "Gut Friendly & Light",
     description: "Natural ingredients easy on digestion.",
-    imageSrc: "/assets/whychooseus/gutfriendly.png",
+    imageSrc: "/assets/whychooseus/gutfriendly.webp",
     wideOnNarrow: true,
   },
 ];
@@ -66,7 +66,6 @@ function FeatureCard({
             src={imageSrc}
             alt={alt}
             fill
-            unoptimized
             sizes="(min-width: 1024px) 160px, (min-width: 640px) 148px, 140px"
             className={`object-contain object-center ${imageClassName}`.trim()}
           />

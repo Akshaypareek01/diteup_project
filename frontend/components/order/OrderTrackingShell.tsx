@@ -24,6 +24,8 @@ export type OrderDetailInitial = {
     paymentMethod: string;
     total: number;
     shippingAddress: unknown;
+    awbNumber?: string | null;
+    shippingCarrier?: string | null;
     placedAt: string;
     shippedAt?: string | null;
     deliveredAt?: string | null;
@@ -203,7 +205,7 @@ export function OrderTrackingShell({ orderNumber, guestToken, initial, paymentSu
           <div className="overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_12px_40px_-18px_rgba(31,61,46,0.45)] ring-1 ring-forest/5">
             <div className="bg-gradient-to-b from-beige/50 to-paper px-4 pb-5 pt-6 sm:px-6">
               <Image
-                src="/assets/Images/prodcut_clean.png"
+                src="/assets/Images/prodcut_clean.webp"
                 alt={`${primaryLabel} — DiteUp packaging`}
                 width={640}
                 height={640}
@@ -248,6 +250,11 @@ export function OrderTrackingShell({ orderNumber, guestToken, initial, paymentSu
               <p className="mt-3 font-mono text-body-sm text-ink-muted">
                 {order.paymentMethod} · Total {formatInr(order.total)}
               </p>
+              {order.awbNumber ? (
+                <p className="mt-1 font-mono text-body-sm text-ink-muted">
+                  {order.shippingCarrier ? `${order.shippingCarrier} · ` : ""}AWB {order.awbNumber}
+                </p>
+              ) : null}
             </div>
           </div>
 

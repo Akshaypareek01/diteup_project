@@ -33,11 +33,11 @@ export function HeroSection({ featured }: HeroSectionProps) {
   const shopHref = featured ? `/product/${featured.slug}` : "/#shop";
 
   const mobileSrc = useLightBanner
-    ? "/assets/Images/mobile_banner_light.png"
-    : "/assets/Images/mobile_banner.png";
+    ? "/assets/Images/mobile_banner_light.webp"
+    : "/assets/Images/mobile_banner.webp";
   const desktopSrc = useLightBanner
-    ? "/assets/Images/desktop_banner_light.png"
-    : "/assets/Images/desktop_banner.png";
+    ? "/assets/Images/desktop_banner_light.webp"
+    : "/assets/Images/desktop_banner.webp";
 
   return (
     <section
@@ -54,7 +54,7 @@ export function HeroSection({ featured }: HeroSectionProps) {
           width={870}
           height={1808}
           priority
-          sizes="100vw"
+          sizes="(min-width: 768px) 1px, 100vw"
           role="presentation"
           className="h-auto w-full object-cover object-center md:hidden"
         />

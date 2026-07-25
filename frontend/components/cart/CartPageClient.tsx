@@ -14,8 +14,8 @@ import { formatInr, moneyNumber } from "@/lib/format-money";
 import { FREE_SHIPPING_THRESHOLD_INR } from "@/lib/storefront-policy-constants";
 import { cn } from "@/lib/utils";
 
-const DEFAULT_CART_THUMB = "/assets/Images/prodcut_clean.png";
-const CART_PROMO_BANNER_SRC = "/assets/Images/cart_banner.png";
+const DEFAULT_CART_THUMB = "/assets/Images/prodcut_clean.webp";
+const CART_PROMO_BANNER_SRC = "/assets/Images/cart_banner.webp";
 
 /**
  * Bottom-of-cart promo graphic: artwork may be transparent; sits on a white card.

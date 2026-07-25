@@ -23,6 +23,7 @@ export const settingsSections: { slug: string; label: string; blurb: string }[] 
   { slug: "general", label: "General", blurb: "Brand, support, cookie copy" },
   { slug: "gst", label: "GST & invoicing", blurb: "GSTIN, HSN, invoice prefix" },
   { slug: "shipping", label: "Shipping", blurb: "Rates, thresholds, pincodes" },
+  { slug: "shiprocket", label: "Shiprocket", blurb: "Courier push, pickup, credentials (encrypted — needs SETTINGS_ENCRYPTION_KEY)" },
   { slug: "cod", label: "COD", blurb: "Charges, limits, pincode rules" },
   { slug: "refunds", label: "Refunds & returns", blurb: "Default policy windows" },
   { slug: "inventory", label: "Inventory defaults", blurb: "Low stock, backorder, reservation" },

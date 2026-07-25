@@ -8,7 +8,7 @@ import { INACTIVE_SITE_MODE, type PublicSiteMode } from "@/lib/types/site-mode";
 export async function fetchSiteMode(): Promise<PublicSiteMode> {
   if (!tryGetServerApiBase()) return INACTIVE_SITE_MODE;
   try {
-    const res = await serverApiFetch("/v1/site/mode", { forwardCookies: false });
+    const res = await serverApiFetch("/v1/site/mode", { forwardCookies: false, revalidate: 30 });
     if (!res.ok) return INACTIVE_SITE_MODE;
     const data = (await res.json()) as { siteMode?: PublicSiteMode };
     return data.siteMode ?? INACTIVE_SITE_MODE;
@@ -26,7 +26,7 @@ export async function fetchMetaPixelId(): Promise<string | null> {
     return envId || null;
   }
   try {
-    const res = await serverApiFetch("/v1/site/integrations", { forwardCookies: false });
+    const res = await serverApiFetch("/v1/site/integrations", { forwardCookies: false, revalidate: 300 });
     if (!res.ok) {
       const envId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
       return envId || null;
@@ -48,7 +48,7 @@ export async function fetchMetaPixelId(): Promise<string | null> {
 export async function fetchFeaturedProduct(): Promise<PublicProduct | null> {
   if (!tryGetServerApiBase()) return null;
   try {
-    const res = await serverApiFetch("/v1/products/featured", { forwardCookies: false });
+    const res = await serverApiFetch("/v1/products/featured", { forwardCookies: false, revalidate: 60 });
     if (!res.ok) return null;
     const data = (await res.json()) as { product?: PublicProduct };
     return data.product ?? null;
@@ -66,7 +66,7 @@ export async function fetchProductBySlug(
   if (!tryGetServerApiBase()) return null;
   try {
     const enc = encodeURIComponent(slug);
-    const res = await serverApiFetch(`/v1/products/${enc}`, { forwardCookies: false });
+    const res = await serverApiFetch(`/v1/products/${enc}`, { forwardCookies: false, revalidate: 60 });
     if (res.status === 404) return null;
     if (!res.ok) return null;
     const data = (await res.json()) as { product?: PublicProduct; siteMode?: PublicSiteMode };
@@ -88,7 +88,7 @@ export async function fetchSitemapProducts(): Promise<
 > {
   if (!tryGetServerApiBase()) return [];
   try {
-    const res = await serverApiFetch("/v1/products/sitemap", { forwardCookies: false });
+    const res = await serverApiFetch("/v1/products/sitemap", { forwardCookies: false, revalidate: 3600 });
     if (!res.ok) return [];
     const data = (await res.json()) as { products?: Array<{ slug: string; updatedAt: string }> };
     return data.products ?? [];

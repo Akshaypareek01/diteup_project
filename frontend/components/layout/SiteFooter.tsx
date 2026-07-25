@@ -96,7 +96,7 @@ export async function SiteFooter() {
         <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="relative mb-5 inline-block h-12 w-44 md:h-14 md:w-48" aria-label="DiteUp home">
-              <Image src="/assets/logos/logo_light.png" alt="" fill className="object-contain object-left" />
+              <Image src="/assets/logos/logo_light.webp" alt="" fill className="object-contain object-left" />
             </Link>
             <p className="max-w-xs font-sans text-body-sm leading-relaxed text-ink-soft">
               Real ingredients. Real nutrition.

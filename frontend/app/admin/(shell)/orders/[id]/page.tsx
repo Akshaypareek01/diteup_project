@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdminOrderShiprocketPanel } from "@/components/admin/AdminOrderShiprocketPanel";
 import { AdminOrderStatusPanel } from "@/components/admin/AdminOrderStatusPanel";
 import { Card } from "@/components/ui/Card";
 import { formatInr } from "@/lib/format-money";
@@ -37,6 +38,14 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       guestEmail: string | null;
       shippingAddress: unknown;
       user: { email?: string; name?: string | null } | null;
+      awbNumber: string | null;
+      shippingCarrier: string | null;
+      shiprocketOrderId: string | null;
+      shiprocketShipmentId: string | null;
+      shiprocketPushStatus: "PENDING" | "PUSHED" | "FAILED" | null;
+      shiprocketPushError: string | null;
+      shiprocketLastStatus: string | null;
+      shiprocketStatusAt: string | null;
     };
     items: Array<{
       id: string;
@@ -68,6 +77,23 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           <p className="mt-1 text-body-sm text-ink-muted">Triggers customer emails when shipped or delivered.</p>
           <div className="mt-4">
             <AdminOrderStatusPanel orderId={id} currentStatus={order.status} />
+          </div>
+        </Card>
+        <Card>
+          <h2 className="font-semibold text-forest">Shiprocket</h2>
+          <p className="mt-1 text-body-sm text-ink-muted">Push this order to Shiprocket for courier assignment.</p>
+          <div className="mt-4">
+            <AdminOrderShiprocketPanel
+              orderId={id}
+              shiprocketOrderId={order.shiprocketOrderId ?? null}
+              shiprocketShipmentId={order.shiprocketShipmentId ?? null}
+              shiprocketPushStatus={order.shiprocketPushStatus ?? null}
+              shiprocketPushError={order.shiprocketPushError ?? null}
+              shiprocketLastStatus={order.shiprocketLastStatus ?? null}
+              shiprocketStatusAt={order.shiprocketStatusAt ?? null}
+              awbNumber={order.awbNumber ?? null}
+              shippingCarrier={order.shippingCarrier ?? null}
+            />
           </div>
         </Card>
         <Card>

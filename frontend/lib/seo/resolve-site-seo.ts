@@ -38,7 +38,7 @@ const DEFAULTS: PublicSiteSeo = {
 export async function resolveSiteSeo(): Promise<PublicSiteSeo> {
   if (!tryGetServerApiBase()) return DEFAULTS;
   try {
-    const res = await serverApiFetch("/v1/site/seo", { forwardCookies: false });
+    const res = await serverApiFetch("/v1/site/seo", { forwardCookies: false, revalidate: 300 });
     if (!res.ok) return DEFAULTS;
     const data = (await res.json()) as Partial<PublicSiteSeo>;
     return {
