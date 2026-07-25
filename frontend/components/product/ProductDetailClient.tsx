@@ -174,19 +174,6 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
                     {product.displayBadge}
                   </span>
                 ) : null}
-                <button
-                  type="button"
-                  className="absolute right-3 top-3 inline-flex size-11 items-center justify-center rounded-full border border-line bg-cream/95 text-forest shadow-sm backdrop-blur-sm"
-                  aria-label="Add to wishlist (coming soon)"
-                  disabled
-                >
-                  <svg className="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-                    <path
-                      d="M12 21s-6.5-4.35-9-8.75C.5 8.5 3 5 5.75 5 8 5 10 6.5 12 9c2-2.5 4-4 6.25-4C21 5 23.5 8.5 21 12.25 18.5 16.65 12 21 12 21z"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>

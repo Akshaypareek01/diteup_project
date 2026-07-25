@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { PolicySection } from "@/components/legal/PolicySection";
-import { formatInr } from "@/lib/format-money";
-import { FREE_SHIPPING_THRESHOLD_INR } from "@/lib/storefront-policy-constants";
+import { FSSAI_LICENSE_NO, SUPPORT_EMAIL } from "@/lib/brand-contact";
 
 /**
  * Full terms of service body for `/terms-conditions` — counsel should review before production reliance.
@@ -52,6 +51,36 @@ export function TermsOfServiceContent() {
         />
 
         <PolicySection
+          id="terms-business"
+          title="Business information"
+          body={
+            <ul className="list-disc space-y-2 pl-5">
+              <li>
+                <span className="font-medium text-ink">Brand name:</span> DiteUp
+              </li>
+              <li>
+                <span className="font-medium text-ink">Product name:</span> DiteUp Energy Bite
+              </li>
+              <li>
+                <span className="font-medium text-ink">Website:</span> www.diteup.com
+              </li>
+              <li>
+                <span className="font-medium text-ink">Contact email:</span>{" "}
+                <a
+                  href={`mailto:${SUPPORT_EMAIL}`}
+                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
+                >
+                  {SUPPORT_EMAIL}
+                </a>
+              </li>
+              <li>
+                <span className="font-medium text-ink">FSSAI lic. no.:</span> {FSSAI_LICENSE_NO}
+              </li>
+            </ul>
+          }
+        />
+
+        <PolicySection
           id="terms-eligibility"
           title="Eligibility & accounts"
           body={
@@ -93,10 +122,13 @@ export function TermsOfServiceContent() {
           body={
             <>
               <p>
-                Product prices are shown in Indian Rupees (INR) unless stated otherwise. Applicable
-                taxes and shipping appear at checkout. We may adjust prices; changes apply to future
-                orders after we publish them. An order is an offer to purchase — we accept it when we
-                confirm shipment or send an order confirmation, subject to payment authorization.
+                Product prices are shown in Indian Rupees (INR). Current product pricing for DiteUp
+                Energy Bite is an <span className="font-medium text-ink">MRP of ₹1099</span> and a{" "}
+                <span className="font-medium text-ink">selling price of ₹799</span>. Prices, offers,
+                discounts and availability may change without prior notice; the final price shown at
+                checkout will apply to your order. An order is an offer to purchase — we accept it
+                when we confirm shipment or send an order confirmation, subject to payment
+                authorization.
               </p>
             </>
           }
@@ -124,8 +156,7 @@ export function TermsOfServiceContent() {
           body={
             <>
               <p>
-                Shipping, delivery timelines, free-shipping on qualifying orders (currently cart
-                subtotal {formatInr(FREE_SHIPPING_THRESHOLD_INR)} and above, subject to change — see{" "}
+                Shipping, delivery timelines, free shipping on all orders (see{" "}
                 <Link
                   href="/shipping-policy"
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
@@ -146,7 +177,13 @@ export function TermsOfServiceContent() {
                 >
                   Refund policy
                 </Link>
-                , which are incorporated into these Terms by reference.
+                , which are incorporated into these Terms by reference. Because DiteUp Energy Bite
+                is a food product,{" "}
+                <span className="font-medium text-ink">
+                  returns are not accepted once the product is opened, used or consumed
+                </span>
+                . A replacement or refund may be considered only for wrong, damaged, expired,
+                missing, tampered or quality-issue items with valid proof.
               </p>
             </>
           }
@@ -222,6 +259,14 @@ export function TermsOfServiceContent() {
                 medical or dietary advice, especially if pregnant, nursing, or managing a health
                 condition.
               </p>
+              <p className="mt-4">
+                DiteUp Energy Bite contains{" "}
+                <span className="font-medium text-ink">peanuts, nuts and seeds</span>. Customers with
+                allergies, food sensitivities or dietary restrictions should read the ingredient
+                list carefully before purchasing or consuming the product. DiteUp is not responsible
+                for allergic reactions caused by ingredients clearly mentioned on the product label
+                or website.
+              </p>
             </>
           }
         />
@@ -281,10 +326,9 @@ export function TermsOfServiceContent() {
           body={
             <>
               <p>
-                These Terms are governed by the laws of India. Subject to mandatory consumer
-                protection provisions, courts at Bengaluru, Karnataka shall have exclusive
-                jurisdiction over disputes — replace this venue clause after confirming your
-                registered legal entity and counsel’s advice.
+                These Terms &amp; Conditions are governed by the laws of India. Nothing in these
+                Terms limits mandatory consumer protection rights available to you under applicable
+                Indian law.
               </p>
             </>
           }

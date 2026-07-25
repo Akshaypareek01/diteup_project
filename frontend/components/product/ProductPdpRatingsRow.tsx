@@ -1,9 +1,6 @@
 import type { PublicReviewSummary } from "@/lib/types/reviews";
 import { cn } from "@/lib/utils";
 
-const FALLBACK_RATING = 4.8;
-const FALLBACK_COUNT = 500;
-
 type ProductPdpRatingsRowProps = {
   summary: PublicReviewSummary | null | undefined;
   reviewsEnabled?: boolean;
@@ -36,14 +33,29 @@ function StarRow({ rating }: { rating: number }) {
 
 /**
  * Star rating + review count near the product title (CRO issue 2).
- * Falls back to static values when live review data is unavailable.
+ * Shows a genuine "No reviews yet" state until real, moderated reviews exist —
+ * never invented star counts.
  */
 export function ProductPdpRatingsRow({ summary, reviewsEnabled = true, className }: ProductPdpRatingsRowProps) {
   if (!reviewsEnabled) return null;
 
   const hasLiveData = summary && summary.totalCount > 0;
-  const rating = hasLiveData ? summary.averageRating : FALLBACK_RATING;
-  const count = hasLiveData ? summary.totalCount : FALLBACK_COUNT;
+
+  if (!hasLiveData) {
+    return (
+      <p
+        className={cn(
+          "font-sans text-[0.8125rem] leading-snug text-ink-muted lg:text-body-sm",
+          className,
+        )}
+      >
+        No reviews yet
+      </p>
+    );
+  }
+
+  const rating = summary.averageRating;
+  const count = summary.totalCount;
 
   return (
     <p

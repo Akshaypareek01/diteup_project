@@ -2,16 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FlowHeader } from "@/components/layout/FlowHeader";
 import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
 import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
-import { CartIconLock, CartIconStarBadge, CartIconTrash } from "@/components/cart/cart-ui-icons";
+import { CartIconLock, CartIconTrash } from "@/components/cart/cart-ui-icons";
 import { useCartState } from "@/components/cart/CartStateProvider";
 import { clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
 import { formatInr, moneyNumber } from "@/lib/format-money";
-import { FREE_SHIPPING_THRESHOLD_INR } from "@/lib/storefront-policy-constants";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_CART_THUMB = "/assets/Images/prodcut_clean.webp";
@@ -163,15 +162,6 @@ export function CartPageClient() {
   const [loadErr, setLoadErr] = useState<string | null>(null);
 
   const lineCount = lines.reduce((n, l) => n + l.quantity, 0);
-
-  const freeShipProgress = useMemo(() => {
-    if (!breakdown) return { pct: 0, remaining: FREE_SHIPPING_THRESHOLD_INR, unlocked: false };
-    const sub = moneyNumber(breakdown.subtotal);
-    const pct = Math.min(100, Math.max(0, (sub / FREE_SHIPPING_THRESHOLD_INR) * 100));
-    const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD_INR - sub);
-    const unlocked = sub >= FREE_SHIPPING_THRESHOLD_INR;
-    return { pct, remaining, unlocked };
-  }, [breakdown]);
 
   const refreshPreview = useCallback(async () => {
     const items = previewPayload();
@@ -340,38 +330,10 @@ export function CartPageClient() {
               </div>
 
               {breakdown && lines.length > 0 ? (
-                <div className="rounded-2xl border border-beige/90 bg-[#F5EDE0] px-4 py-3 lg:px-5 lg:py-4">
-                  <p className="text-center text-body-sm font-medium text-ink lg:text-body">
-                    {freeShipProgress.unlocked
-                      ? "You've unlocked FREE shipping!"
-                      : `You are ${formatInr(freeShipProgress.remaining)} away from FREE shipping!`}
+                <div className="rounded-2xl border border-beige/90 bg-[#F5EDE0] px-4 py-3 text-center lg:px-5 lg:py-4">
+                  <p className="text-body-sm font-medium text-forest lg:text-body">
+                    Free shipping on all orders.
                   </p>
-                  <div className="relative mt-3 px-0.5">
-                    <div
-                      className="h-2.5 w-full overflow-hidden rounded-full bg-white/90"
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={Math.round(freeShipProgress.pct)}
-                      aria-label="Progress toward free shipping"
-                    >
-                      <div
-                        className="h-full rounded-full bg-forest transition-[width] duration-300"
-                        style={{ width: `${String(freeShipProgress.pct)}%` }}
-                      />
-                    </div>
-                    <span
-                      className="absolute -top-1.5 z-10 flex size-6 -translate-x-1/2 items-center justify-center text-gold-deep drop-shadow-sm"
-                      style={{ left: `clamp(0%, ${String(freeShipProgress.pct)}%, 100%)` }}
-                      aria-hidden
-                    >
-                      <CartIconStarBadge className="size-5" />
-                    </span>
-                  </div>
-                  <div className="mt-1 flex justify-between font-mono text-[0.6875rem] uppercase tracking-wider text-ink-muted">
-                    <span>{formatInr(0)}</span>
-                    <span>{formatInr(FREE_SHIPPING_THRESHOLD_INR)}</span>
-                  </div>
                 </div>
               ) : null}
 

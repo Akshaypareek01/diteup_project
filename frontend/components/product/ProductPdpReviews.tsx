@@ -1,11 +1,7 @@
 import { ProductPdpReviewSlides } from "@/components/product/ProductPdpReviewSlides";
 import { Button } from "@/components/ui/Button";
-import type { ProductReviewsPayload, PublicReviewDistribution } from "@/lib/types/reviews";
+import type { ProductReviewsPayload } from "@/lib/types/reviews";
 import { cn } from "@/lib/utils";
-
-const FALLBACK_RATING = 4.8;
-const FALLBACK_COUNT = 500;
-const FALLBACK_DISTRIBUTION: PublicReviewDistribution = { 5: 428, 4: 69, 3: 1, 2: 1, 1: 1 };
 
 type ProductPdpReviewsProps = {
   productName: string;
@@ -69,12 +65,8 @@ function DistributionBar({ stars, count, maxCount }: DistributionBarProps) {
 export function ProductPdpReviews({ productName, reviewsEnabled = true, payload, className }: ProductPdpReviewsProps) {
   if (!reviewsEnabled) return null;
 
-  const hasLiveData = payload && payload.summary.totalCount > 0;
-  const summary = hasLiveData ? payload.summary : null;
-  const rating = summary?.averageRating ?? FALLBACK_RATING;
-  const count = summary?.totalCount ?? FALLBACK_COUNT;
-  const distribution = summary?.distribution ?? FALLBACK_DISTRIBUTION;
-  const maxDistCount = Math.max(...Object.values(distribution));
+  const hasLiveData = Boolean(payload && payload.summary.totalCount > 0);
+  const summary = hasLiveData ? payload!.summary : null;
   const reviewItems = payload?.reviews ?? [];
 
   return (
@@ -86,34 +78,47 @@ export function ProductPdpReviews({ productName, reviewsEnabled = true, payload,
         Ratings &amp; Reviews
       </h2>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr_auto] lg:items-center lg:gap-8">
-        <div className="text-center lg:text-left">
-          <StarRow rating={rating} />
-          <p className="mt-2 font-sans text-body-lg font-semibold text-ink">
-            {rating.toFixed(2)} out of 5
-          </p>
-          <p className="mt-1 flex items-center justify-center gap-1.5 font-sans text-body-sm text-ink-muted lg:justify-start">
-            Based on {count} reviews
-            <svg className="size-4 text-success" viewBox="0 0 24 24" fill="currentColor" aria-label="Verified">
-              <path d="M9 12.5 10.75 14.25 15 10M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-            </svg>
-          </p>
+      {summary ? (
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr_auto] lg:items-center lg:gap-8">
+          <div className="text-center lg:text-left">
+            <StarRow rating={summary.averageRating} />
+            <p className="mt-2 font-sans text-body-lg font-semibold text-ink">
+              {summary.averageRating.toFixed(2)} out of 5
+            </p>
+            <p className="mt-1 flex items-center justify-center gap-1.5 font-sans text-body-sm text-ink-muted lg:justify-start">
+              Based on {summary.totalCount} {summary.totalCount === 1 ? "review" : "reviews"}
+              <svg className="size-4 text-success" viewBox="0 0 24 24" fill="currentColor" aria-label="Verified">
+                <path d="M9 12.5 10.75 14.25 15 10M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+              </svg>
+            </p>
+          </div>
+
+          <ul className="space-y-1.5" aria-label="Rating distribution">
+            {([5, 4, 3, 2, 1] as const).map((stars) => (
+              <DistributionBar
+                key={stars}
+                stars={stars}
+                count={summary.distribution[stars]}
+                maxCount={Math.max(...Object.values(summary.distribution))}
+              />
+            ))}
+          </ul>
+
+          <div className="flex justify-center lg:justify-end">
+            <Button href="/account/reviews/new" variant="primaryForest" size="md" className="rounded-full px-6">
+              Write a product review
+            </Button>
+          </div>
         </div>
-
-        <ul className="space-y-1.5" aria-label="Rating distribution">
-          {([5, 4, 3, 2, 1] as const).map((stars) => (
-            <DistributionBar key={stars} stars={stars} count={distribution[stars]} maxCount={maxDistCount} />
-          ))}
-        </ul>
-
-        <div className="flex justify-center lg:justify-end">
+      ) : (
+        <div className="mt-6 flex justify-center">
           <Button href="/account/reviews/new" variant="primaryForest" size="md" className="rounded-full px-6">
             Write a product review
           </Button>
         </div>
-      </div>
+      )}
 
-      <ProductPdpReviewSlides className="mt-8" />
+      <ProductPdpReviewSlides reviews={reviewItems} className="mt-8" />
 
       {reviewItems.length > 0 ? (
         <ul className="mt-8 space-y-4" aria-label="Customer reviews">

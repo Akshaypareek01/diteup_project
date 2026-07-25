@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { PolicySection } from "@/components/legal/PolicySection";
-import { formatInr } from "@/lib/format-money";
-import { FREE_SHIPPING_THRESHOLD_INR } from "@/lib/storefront-policy-constants";
 
 /**
  * Shipping and delivery policy for `/shipping-policy`.
@@ -56,11 +54,11 @@ export function ShippingPolicyContent() {
           body={
             <>
               <p>
-                Orders are typically processed within{" "}
-                <span className="font-medium text-ink">1–2 business days</span> after payment
-                confirmation (excluding Sundays and public holidays observed at our warehouse).
-                High-demand launches or inventory checks may extend this slightly — we notify you if
-                there is an unusual delay.
+                Orders are usually processed within{" "}
+                <span className="font-medium text-ink">24–48 working hours</span> after successful
+                payment confirmation. Orders placed on Sundays, public holidays or during
+                high-demand periods may take slightly longer to process — we notify you if there is
+                an unusual delay.
               </p>
             </>
           }
@@ -72,13 +70,10 @@ export function ShippingPolicyContent() {
           body={
             <>
               <p>
-                Standard shipping fees (if any) are calculated at checkout based on weight,
-                dimensions, destination, and active promotions. Orders with a qualifying cart
-                subtotal of{" "}
-                <span className="font-medium text-ink">{formatInr(FREE_SHIPPING_THRESHOLD_INR)}</span>{" "}
-                or more currently receive <span className="font-medium text-ink">free standard shipping</span>
-                on eligible lanes, before taxes unless we display otherwise at checkout. The
-                threshold may change; the checkout summary is authoritative.
+                We currently offer{" "}
+                <span className="font-medium text-ink">free standard shipping on all orders</span>{" "}
+                across India — there is no minimum cart value. The checkout summary is always
+                authoritative for any charges.
               </p>
               <p className="mt-4">
                 Free shipping applies to standard service only — expedited options, if offered, may
@@ -114,10 +109,12 @@ export function ShippingPolicyContent() {
           body={
             <>
               <p>
-                Estimated delivery windows shown at checkout or in emails are{" "}
-                <span className="font-medium text-ink">estimates only</span>, not guarantees.
-                Metro and tier-1 cities often see faster transit; remote areas may take longer. Weather,
-                festivals, strikes, or customs-like inland checks can affect schedules.
+                Once shipped, orders usually take{" "}
+                <span className="font-medium text-ink">3–7 working days</span> to be delivered,
+                depending on the delivery location and courier service availability. Delivery
+                windows are <span className="font-medium text-ink">estimates only</span>, not
+                guarantees. Remote locations, non-serviceable pin codes, weather, festivals,
+                strikes, or courier delays can affect schedules.
               </p>
             </>
           }
@@ -158,10 +155,12 @@ export function ShippingPolicyContent() {
           body={
             <>
               <p>
-                Couriers usually make multiple attempts or ask you to collect from a hub. If a
-                package is returned to us as undeliverable (RTO), we may refund the product amount
-                minus shipping and restocking costs as applicable, or re-ship at your expense after
-                confirming a valid address.
+                Couriers may attempt delivery more than once, so please ensure the phone number and
+                address provided at checkout are correct. If an order cannot be delivered due to an
+                incorrect address, customer unavailability, refusal to accept delivery or failed
+                delivery attempts, it may be returned to us (RTO). In such cases, reshipping or
+                refund may be handled after reviewing the situation, and any shipping or
+                return-to-origin charges may be deducted where applicable.
               </p>
             </>
           }
@@ -173,10 +172,12 @@ export function ShippingPolicyContent() {
           body={
             <>
               <p>
-                If your outer carton arrives crushed, wet, or tampered with, refuse acceptance if
-                possible and photograph the package. If you discover concealed damage after opening,
-                email us within 48 hours with photos of the box, label, and affected items. We will
-                work with the carrier and offer a replacement or refund where appropriate.
+                If the package appears damaged, opened, leaking, tampered with or unsafe at
+                delivery, please do not use the product. Contact us within{" "}
+                <span className="font-medium text-ink">48 hours of delivery</span> with your order
+                ID, clear photos of the outer package and product, an unboxing video taken at the
+                time of delivery, and the batch / MFG details visible on the pack. After
+                verification, we may offer a replacement, refund or suitable resolution.
               </p>
             </>
           }

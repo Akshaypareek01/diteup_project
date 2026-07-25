@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { getReviewAvatarInitial } from "@/lib/pdp-mock-reviews";
 import { dur, ease } from "@/lib/motion";
-import { cn } from "@/lib/utils";
+import { cn, getReviewAvatarInitial } from "@/lib/utils";
 
 const SLIDER_INTERVAL_MS = 3500;
 const DESKTOP_VISIBLE_COUNT = 3;
@@ -13,8 +12,24 @@ export type TestimonialSlideItem = {
   id: string;
   name: string;
   text: string;
+  /** Real star rating (1–5) for this review. */
+  rating: number;
   verified: boolean;
 };
+
+/** Renders the review's real star count (filled) out of five. */
+function CardStars({ rating }: { rating: number }) {
+  const full = Math.round(Math.min(5, Math.max(0, rating)));
+
+  return (
+    <p className="mt-2 text-gold" aria-label={`${full} out of 5 stars`}>
+      <span aria-hidden>
+        {"★".repeat(full)}
+        <span className="text-gold/30">{"★".repeat(5 - full)}</span>
+      </span>
+    </p>
+  );
+}
 
 export type TestimonialsCarouselProps = {
   items: TestimonialSlideItem[];
@@ -66,9 +81,7 @@ function TestimonialCard({ item, className }: TestimonialCardProps) {
         </div>
       </div>
       <p className="mt-4 text-body text-cream/85">&ldquo;{item.text}&rdquo;</p>
-      <p className="mt-2 text-gold" aria-hidden>
-        ★★★★★
-      </p>
+      <CardStars rating={item.rating} />
     </article>
   );
 }

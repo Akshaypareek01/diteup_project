@@ -2,12 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  getReviewAvatarInitial,
-  PDP_MOCK_REVIEW_CARDS,
-} from "@/lib/pdp-mock-reviews";
+import type { PublicReviewItem } from "@/lib/types/reviews";
 import { dur, ease } from "@/lib/motion";
-import { cn } from "@/lib/utils";
+import { cn, getReviewAvatarInitial } from "@/lib/utils";
 
 const SLIDER_INTERVAL_MS = 3500;
 
@@ -78,30 +75,47 @@ function StarRow({ rating }: StarRowProps) {
 }
 
 export type ProductPdpReviewSlidesProps = {
+  /** Real, moderated reviews from the API. When empty, the carousel renders nothing. */
+  reviews: PublicReviewItem[];
   className?: string;
 };
 
 /**
  * Auto-advancing review card carousel with initials avatar, name, rating, and quote.
+ * Driven entirely by real API reviews — renders nothing when there are none.
  */
-export function ProductPdpReviewSlides({ className }: ProductPdpReviewSlidesProps) {
+export function ProductPdpReviewSlides({ reviews, className }: ProductPdpReviewSlidesProps) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
+  const count = reviews.length;
+
   /** Wraps slide index for dot navigation. */
-  const goTo = useCallback((next: number) => {
-    setIndex(((next % PDP_MOCK_REVIEW_CARDS.length) + PDP_MOCK_REVIEW_CARDS.length) % PDP_MOCK_REVIEW_CARDS.length);
-  }, []);
+  const goTo = useCallback(
+    (next: number) => {
+      if (count === 0) return;
+      setIndex(((next % count) + count) % count);
+    },
+    [count],
+  );
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || count <= 1) return;
     const id = window.setInterval(() => {
-      setIndex((current) => (current + 1) % PDP_MOCK_REVIEW_CARDS.length);
+      setIndex((current) => (current + 1) % count);
     }, SLIDER_INTERVAL_MS);
     return () => window.clearInterval(id);
-  }, [paused]);
+  }, [paused, count]);
 
-  const active = PDP_MOCK_REVIEW_CARDS[index];
+  useEffect(() => {
+    // Keep the active index valid if the review list changes size.
+    if (index >= count && count > 0) setIndex(0);
+  }, [count, index]);
+
+  if (count === 0) return null;
+
+  const safeIndex = index % count;
+  const active = reviews[safeIndex];
 
   return (
     <div
@@ -119,7 +133,7 @@ export function ProductPdpReviewSlides({ className }: ProductPdpReviewSlidesProp
     >
       <h3 className="font-sans text-body-sm font-medium text-ink-muted">What customers are saying</h3>
       <p className="sr-only" aria-live="polite">
-        Review {index + 1} of {PDP_MOCK_REVIEW_CARDS.length} by {active.name}
+        Review {safeIndex + 1} of {count} by {active.authorName}
       </p>
 
       <div className="relative mt-3 min-h-[11.5rem] overflow-hidden sm:min-h-[10.5rem]">
@@ -133,13 +147,15 @@ export function ProductPdpReviewSlides({ className }: ProductPdpReviewSlidesProp
             className="absolute inset-0 rounded-xl border border-line bg-cream/70 p-4 sm:p-5"
           >
             <div className="flex items-start gap-3">
-              <ReviewAvatar name={active.name} toneIndex={index} />
+              <ReviewAvatar name={active.authorName} toneIndex={safeIndex} />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-semibold text-forest">{active.name}</p>
-                  <span className="rounded-full bg-olive/15 px-2 py-0.5 font-mono text-eyebrow text-forest">
-                    Verified
-                  </span>
+                  <p className="font-semibold text-forest">{active.authorName}</p>
+                  {active.isVerified ? (
+                    <span className="rounded-full bg-olive/15 px-2 py-0.5 font-mono text-eyebrow text-forest">
+                      Verified
+                    </span>
+                  ) : null}
                 </div>
                 <div className="mt-1.5">
                   <StarRow rating={active.rating} />
@@ -151,22 +167,24 @@ export function ProductPdpReviewSlides({ className }: ProductPdpReviewSlidesProp
         </AnimatePresence>
       </div>
 
-      <div className="mt-4 flex justify-center gap-2" role="tablist" aria-label="Review slides">
-        {PDP_MOCK_REVIEW_CARDS.map((review, slideIndex) => (
-          <button
-            key={review.id}
-            type="button"
-            role="tab"
-            aria-selected={slideIndex === index}
-            aria-label={`Show review by ${review.name}`}
-            onClick={() => goTo(slideIndex)}
-            className={cn(
-              "size-2 rounded-full transition",
-              slideIndex === index ? "bg-forest" : "bg-line hover:bg-ink-muted",
-            )}
-          />
-        ))}
-      </div>
+      {count > 1 ? (
+        <div className="mt-4 flex justify-center gap-2" role="tablist" aria-label="Review slides">
+          {reviews.map((review, slideIndex) => (
+            <button
+              key={review.id}
+              type="button"
+              role="tab"
+              aria-selected={slideIndex === safeIndex}
+              aria-label={`Show review by ${review.authorName}`}
+              onClick={() => goTo(slideIndex)}
+              className={cn(
+                "size-2 rounded-full transition",
+                slideIndex === safeIndex ? "bg-forest" : "bg-line hover:bg-ink-muted",
+              )}
+            />
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

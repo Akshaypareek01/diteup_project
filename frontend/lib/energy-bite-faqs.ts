@@ -1,3 +1,5 @@
+import { FSSAI_LICENSE_NO } from "@/lib/brand-contact";
+
 export type EnergyBiteFaqItem = {
   question: string;
   answer: string;
@@ -130,7 +132,7 @@ export const ENERGY_BITE_FAQ_ITEMS: EnergyBiteFaqItem[] = [
   },
   {
     question: "Is DiteUp Energy Bite FSSAI certified?",
-    answer: "Yes, DiteUp Energy Bite is FSSAI licensed. FSSAI Lic. No.: 20526004000209",
+    answer: `Yes, DiteUp Energy Bite is FSSAI licensed. FSSAI Lic. No.: ${FSSAI_LICENSE_NO}`,
   },
 ];
 

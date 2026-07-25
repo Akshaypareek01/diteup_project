@@ -5,15 +5,6 @@ export type HeroBannerOverlayProps = {
   shopHref: string;
 };
 
-/** Compact gold star for review summary. */
-function StarGlyph() {
-  return (
-    <svg width={18} height={18} viewBox="0 0 24 24" fill="currentColor" aria-hidden className="text-gold">
-      <path d="M12 3.3l2.35 5.45 5.9.52-4.48 3.88 1.35 5.76L12 15.9l-5.12 3.06 1.35-5.76-4.48-3.88 5.9-.52L12 3.3z" />
-    </svg>
-  );
-}
-
 /**
  * Muscle / protein mark for the hero highlights rail.
  */
@@ -264,17 +255,6 @@ export function HeroBannerOverlay({ shopHref }: HeroBannerOverlayProps) {
               </Link>
             </div>
 
-            <p
-              className={`mt-auto flex flex-wrap items-center gap-2 border-t border-white/10 pt-6 font-sans text-body-sm text-cream/95 md:mt-5 md:border-t-0 md:pt-0 ${HERO_TEXT_SHADOW}`}
-            >
-              <span className="flex items-center gap-0.5" aria-label="4.8 out of 5 stars">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <StarGlyph key={i} />
-                ))}
-              </span>
-              <span className="font-semibold tabular-nums">4.8/5</span>
-              <span className="text-cream/80">(1,248+ reviews)</span>
-            </p>
           </div>
           </div>
         </div>

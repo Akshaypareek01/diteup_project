@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PolicySection } from "@/components/legal/PolicySection";
+import { FSSAI_LICENSE_NO } from "@/lib/brand-contact";
 import { POLICY_DETAIL_LINKS } from "@/lib/policy-nav-links";
 
 /**
@@ -60,7 +61,7 @@ export function PoliciesHubContent() {
                 <span className="font-medium text-ink">Food type:</span> Vegetarian
               </li>
               <li>
-                <span className="font-medium text-ink">FSSAI lic. no.:</span> 20526004000209
+                <span className="font-medium text-ink">FSSAI lic. no.:</span> {FSSAI_LICENSE_NO}
               </li>
               <li>
                 <span className="font-medium text-ink">MRP:</span> ₹1099

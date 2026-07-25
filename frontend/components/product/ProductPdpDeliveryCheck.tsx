@@ -15,7 +15,9 @@ export function ProductPdpDeliveryCheck({ className }: ProductPdpDeliveryCheckPr
   const [deliveryMessage, setDeliveryMessage] = useState<string | null>(null);
 
   /**
-   * Client-side stub: validates 6-digit Indian pincode and shows a static ETA.
+   * Validates a 6-digit Indian pincode format, then shows our standard PAN-India
+   * delivery promise. This is NOT a per-pincode serviceability lookup — the copy
+   * deliberately avoids implying one.
    */
   function handleCheckPincode() {
     const trimmed = pincode.trim();
@@ -23,7 +25,7 @@ export function ProductPdpDeliveryCheck({ className }: ProductPdpDeliveryCheckPr
       setDeliveryMessage("Enter a valid 6-digit pincode.");
       return;
     }
-    setDeliveryMessage("Estimated delivery: 2–3 business days to this pincode.");
+    setDeliveryMessage("We deliver PAN-India, typically within 2–3 business days.");
   }
 
   return (
@@ -83,7 +85,7 @@ export function ProductPdpDeliveryCheck({ className }: ProductPdpDeliveryCheckPr
             <path d="M12 4l8 8" strokeLinecap="round" />
           </svg>
           <span className="font-sans text-[0.6875rem] font-medium leading-snug text-ink sm:text-body-sm">
-            7 days return and refund
+            Replacement on damaged or wrong items
           </span>
         </li>
         <li className="flex flex-col items-center gap-1.5 text-center">
@@ -93,7 +95,7 @@ export function ProductPdpDeliveryCheck({ className }: ProductPdpDeliveryCheckPr
             <circle cx="17.5" cy="18" r="1.5" />
           </svg>
           <span className="font-sans text-[0.6875rem] font-medium leading-snug text-ink sm:text-body-sm">
-            FREE Shipping on orders above ₹399
+            FREE Shipping on all orders
           </span>
         </li>
       </ul>

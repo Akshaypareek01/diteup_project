@@ -1,11 +1,5 @@
 import type { ReactNode } from "react";
-
-/** Override via `NEXT_PUBLIC_FSSAI_LICENSE_NO` when the real licence is configured in deployment. */
-const FSSAI_LICENSE_NO =
-  typeof process.env.NEXT_PUBLIC_FSSAI_LICENSE_NO === "string" &&
-  process.env.NEXT_PUBLIC_FSSAI_LICENSE_NO.trim().length > 0
-    ? process.env.NEXT_PUBLIC_FSSAI_LICENSE_NO.trim()
-    : "10112233400234";
+import { FSSAI_LICENSE_NO } from "@/lib/brand-contact";
 
 /** Gold outline circle framing monoline glyphs (mock: herb bundle, shield). */
 function GoldRingGlyph({ children }: { children: ReactNode }) {

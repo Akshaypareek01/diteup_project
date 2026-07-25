@@ -398,8 +398,8 @@ export function OrderTrackingShell({ orderNumber, guestToken, initial, paymentSu
               <path d="m8 17 8-8 3 3" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M15 11h3v3" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <p className="font-semibold leading-tight text-forest">Easy returns</p>
-            <p className="text-body-sm text-ink-muted">No hassle</p>
+            <p className="font-semibold leading-tight text-forest">Damage protected</p>
+            <p className="text-body-sm text-ink-muted">Report within 48 hrs</p>
           </div>
         </div>
 

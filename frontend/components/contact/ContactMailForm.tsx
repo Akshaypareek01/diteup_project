@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-
-const SUPPORT_EMAIL = "support@diteup.com";
+import { SUPPORT_EMAIL } from "@/lib/brand-contact";
 
 /**
  * Opens the user’s mail client — no public contact API in the backend yet.

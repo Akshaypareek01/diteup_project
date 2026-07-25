@@ -1,14 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { buildPrimaryNavLinks } from "@/components/layout/site-nav-links";
+import { isRealSocialLink, SOCIAL_LINKS, SUPPORT_EMAIL } from "@/lib/brand-contact";
 import { POLICY_NAV_LINKS } from "@/lib/policy-nav-links";
 import { resolveShopNavHref } from "@/lib/resolve-shop-nav-href";
-
-const SOCIAL_LINKS = [
-  { label: "Instagram", href: "https://www.instagram.com/" },
-  { label: "Facebook", href: "https://www.facebook.com/" },
-  { label: "YouTube", href: "https://www.youtube.com/" },
-] as const;
 
 /** Outline envelope icon — inherits `currentColor`. */
 function IconMail({ className }: { className?: string }) {
@@ -103,23 +98,27 @@ export async function SiteFooter() {
               <br />
               Elevate your everyday with clean, smart fuel.
             </p>
-            <div className="mt-6 flex flex-wrap gap-3" aria-label="Social links">
-              {SOCIAL_LINKS.map((s, i) => {
-                const Glyph = SOCIAL_ICONS[i];
-                return (
-                  <Link
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex size-11 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors hover:border-forest/35 hover:bg-beige/70 hover:text-forest"
-                    aria-label={s.label}
-                  >
-                    <Glyph />
-                  </Link>
-                );
-              })}
-            </div>
+            {SOCIAL_LINKS.some(isRealSocialLink) ? (
+              <div className="mt-6 flex flex-wrap gap-3" aria-label="Social links">
+                {SOCIAL_LINKS.map((s, i) => {
+                  // Hide any social icon that has no real profile URL yet (empty href).
+                  if (!isRealSocialLink(s)) return null;
+                  const Glyph = SOCIAL_ICONS[i];
+                  return (
+                    <Link
+                      key={s.label}
+                      href={s.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex size-11 items-center justify-center rounded-full border border-ink/15 text-ink transition-colors hover:border-forest/35 hover:bg-beige/70 hover:text-forest"
+                      aria-label={s.label}
+                    >
+                      <Glyph />
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
 
           <div>
@@ -159,8 +158,8 @@ export async function SiteFooter() {
             <address className="mt-4 space-y-3 font-sans text-body-sm not-italic leading-snug text-ink-soft">
               <p className="flex items-start gap-3">
                 <IconMail className="mt-0.5 shrink-0 text-forest/85" aria-hidden />
-                <a href="mailto:info@diteup.com" className="transition-colors hover:text-forest">
-                  info@diteup.com
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="transition-colors hover:text-forest">
+                  {SUPPORT_EMAIL}
                 </a>
               </p>
               <p className="flex items-start gap-3">

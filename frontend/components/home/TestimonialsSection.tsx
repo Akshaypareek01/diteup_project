@@ -1,42 +1,32 @@
 import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
-import { PDP_MOCK_REVIEW_CARDS } from "@/lib/pdp-mock-reviews";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
-
-const quotes = [
-  { id: "home-t1", name: "Aditi K.", text: "Finally a breakfast that fits my mornings.", verified: false },
-  { id: "home-t2", name: "Rahul M.", text: "Tastes clean — not sugary like other mixes.", verified: false },
-  { id: "home-t3", name: "Neha S.", text: "Shipping was quick and the pack feels premium.", verified: false },
-];
-
-const fallbackSlides = [
-  ...quotes,
-  ...PDP_MOCK_REVIEW_CARDS.slice(3).map((item) => ({
-    id: item.id,
-    name: item.name,
-    text: item.body,
-    verified: true,
-  })),
-];
 
 export type TestimonialsSectionProps = {
   reviewsPayload: ProductReviewsPayload | null;
 };
 
 /**
- * Social proof band — uses moderated API reviews when available, else curated fallback slides.
+ * Social proof band — renders ONLY real, moderated API reviews.
+ * When there are no published reviews yet, the whole band is hidden
+ * (no invented quotes, no fake aggregate rating).
  */
 export function TestimonialsSection({ reviewsPayload }: TestimonialsSectionProps) {
-  const useApi = reviewsPayload && reviewsPayload.summary.totalCount > 0 && reviewsPayload.reviews.length > 0;
-  const summaryCount = useApi ? reviewsPayload!.summary.totalCount : 128;
-  const avg = useApi ? reviewsPayload!.summary.averageRating.toFixed(1) : "4.8";
-  const items = useApi
-    ? reviewsPayload!.reviews.slice(0, 8).map((review) => ({
-        id: review.id,
-        name: review.authorName,
-        text: review.title ? `${review.title} — ${review.body}` : review.body,
-        verified: review.isVerified,
-      }))
-    : fallbackSlides;
+  const hasReviews =
+    reviewsPayload != null &&
+    reviewsPayload.summary.totalCount > 0 &&
+    reviewsPayload.reviews.length > 0;
+
+  if (!hasReviews) return null;
+
+  const summaryCount = reviewsPayload.summary.totalCount;
+  const avg = reviewsPayload.summary.averageRating;
+  const items = reviewsPayload.reviews.slice(0, 8).map((review) => ({
+    id: review.id,
+    name: review.authorName,
+    text: review.title ? `${review.title} — ${review.body}` : review.body,
+    rating: review.rating,
+    verified: review.isVerified,
+  }));
 
   return (
     <section
@@ -49,10 +39,13 @@ export function TestimonialsSection({ reviewsPayload }: TestimonialsSectionProps
           id="reviews-heading"
           className="font-display text-display-lg text-balance text-center font-semibold text-cream"
         >
-          LOVED BY THOUSANDS
+          LOVED BY OUR CUSTOMERS
         </h2>
-        <p className="mt-3 text-center text-lg text-gold" aria-label={`Average rating ${avg} of 5`}>
-          ★★★★★ <span className="text-body-sm text-cream/70">({summaryCount} reviews)</span>
+        <p className="mt-3 text-center text-lg text-gold" aria-label={`Average rating ${avg.toFixed(1)} of 5`}>
+          {avg.toFixed(1)} ★{" "}
+          <span className="text-body-sm text-cream/70">
+            ({summaryCount} {summaryCount === 1 ? "review" : "reviews"})
+          </span>
         </p>
         <TestimonialsCarousel items={items} />
       </div>
