@@ -23,6 +23,7 @@ import {
   type CartLineRequest,
 } from "./cart.js";
 import { createRazorpayOrder, isRazorpayConfigured } from "./razorpay.js";
+import { maybeEnqueueShiprocketPushForOrder } from "./jobQueue.js";
 import { currentOrderYearKolkata, formatOrderNumber, nextOrderSequenceNo } from "./orderNumber.js";
 import {
   assertIdempotentActor,
@@ -325,6 +326,13 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrderRes
   void sideEffectsAfterPlaceOrder(orderRow.orderNumber, input.paymentMethod).catch((err) =>
     logger.error({ err, orderNumber: orderRow.orderNumber }, "post-place order notifications failed"),
   );
+
+  // COD orders are CONFIRMED immediately — hand them to Shiprocket via the job queue.
+  if (input.paymentMethod === "COD") {
+    void maybeEnqueueShiprocketPushForOrder(orderRow.id).catch((err) =>
+      logger.error({ err, orderNumber: orderRow.orderNumber }, "shiprocket push enqueue failed"),
+    );
+  }
 
   return buildPlacedOrderResult(orderRow);
 }

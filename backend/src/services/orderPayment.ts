@@ -10,6 +10,7 @@ import { prisma } from "../utils/prisma.js";
 import { NotFound, PaymentFailed, ValidationError } from "../utils/errors.js";
 import { confirmInventoryForOrder, loadInventoryIdsForOrder } from "./orderInventory.js";
 import { fireOrderConfirmedSuite } from "./orderNotify.js";
+import { maybeEnqueueShiprocketPushForOrder } from "./jobQueue.js";
 import { logger } from "../utils/logger.js";
 
 /**
@@ -50,6 +51,7 @@ export function verifyRazorpayWebhookSignature(rawBody: Buffer, signatureHeader:
 }
 
 export type ConfirmedOrderResult = {
+  orderId: string;
   orderNumber: string;
   status: string;
   alreadyConfirmed: boolean;
@@ -95,7 +97,12 @@ export async function confirmOrderFromRazorpayPayment(input: {
     }
 
     if (order.status === "CONFIRMED" && payment.status === "CAPTURED") {
-      return { orderNumber: order.orderNumber, status: order.status, alreadyConfirmed: true };
+      return {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        alreadyConfirmed: true,
+      };
     }
 
     if (order.status !== "PLACED") {
@@ -146,12 +153,20 @@ export async function confirmOrderFromRazorpayPayment(input: {
       },
     });
 
-    return { orderNumber: order.orderNumber, status: "CONFIRMED", alreadyConfirmed: false };
+    return {
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      status: "CONFIRMED",
+      alreadyConfirmed: false,
+    };
   });
 
   if (!result.alreadyConfirmed) {
     void fireOrderConfirmedSuite(result.orderNumber).catch((err) =>
       logger.error({ err, orderNumber: result.orderNumber }, "post-confirm side effects failed"),
+    );
+    void maybeEnqueueShiprocketPushForOrder(result.orderId).catch((err) =>
+      logger.error({ err, orderNumber: result.orderNumber }, "shiprocket push enqueue failed"),
     );
   }
 

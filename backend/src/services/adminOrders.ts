@@ -13,6 +13,7 @@ import { prisma } from "../utils/prisma.js";
 import { loadInventoryIdsForOrder, type OrderTx } from "./orderInventory.js";
 import { reverseCouponRedemption } from "./orderReadCancel.js";
 import { isRazorpayConfigured, refundRazorpayPayment } from "./razorpay.js";
+import { cancelShiprocketOrderBestEffort } from "./shiprocket.js";
 import {
   fireOrderCancelled,
   fireOrderDelivered,
@@ -117,6 +118,12 @@ export async function getOrderAdminById(orderId: string) {
       notes: order.notes,
       awbNumber: order.awbNumber,
       shippingCarrier: order.shippingCarrier,
+      shiprocketOrderId: order.shiprocketOrderId,
+      shiprocketShipmentId: order.shiprocketShipmentId,
+      shiprocketPushStatus: order.shiprocketPushStatus,
+      shiprocketPushError: order.shiprocketPushError,
+      shiprocketLastStatus: order.shiprocketLastStatus,
+      shiprocketStatusAt: order.shiprocketStatusAt,
       invoiceNumber: order.invoiceNumber,
       invoicePdfUrl: order.invoicePdfUrl,
       placedAt: order.placedAt,
@@ -175,23 +182,25 @@ function assertStatusTransition(from: OrderStatus, to: OrderStatus): void {
 }
 
 /**
- * Updates order fulfilment status (admin). Does not process payments.
+ * Core status transition — shared by admin actions and the Shiprocket webhook
+ * (system actor). Validates the transition, updates timestamps, appends the
+ * timeline event, and fires customer notifications. No audit log here.
  */
-export async function updateOrderStatusAdmin(input: {
+export async function applyOrderStatusTransition(input: {
   orderId: string;
   status: OrderStatus;
-  actorId: string;
+  actorId: string | null;
+  source: "ADMIN" | "SHIPROCKET";
   awbNumber?: string | null;
   shippingCarrier?: string | null;
   notes?: string | null;
-  req?: Request;
-}): Promise<void> {
+}): Promise<{ from: OrderStatus }> {
   const order = await prisma.order.findUnique({ where: { id: input.orderId } });
   if (!order) throw NotFound("Order not found");
 
   assertStatusTransition(order.status, input.status);
 
-  const data: Prisma.OrderUpdateInput = {
+  const data: Prisma.OrderUpdateManyMutationInput = {
     status: input.status,
     ...(input.awbNumber !== undefined ? { awbNumber: input.awbNumber } : {}),
     ...(input.shippingCarrier !== undefined ? { shippingCarrier: input.shippingCarrier } : {}),
@@ -212,12 +221,20 @@ export async function updateOrderStatusAdmin(input: {
   }
 
   const before = { status: order.status };
-  await prisma.order.update({ where: { id: input.orderId }, data });
+  // Conditional on the status we validated against — a concurrent admin/webhook
+  // update between read and write makes this a no-op instead of a bad state.
+  const updated = await prisma.order.updateMany({
+    where: { id: input.orderId, status: order.status },
+    data,
+  });
+  if (updated.count === 0) {
+    throw ValidationError("Order status changed concurrently — reload and retry");
+  }
 
   await prisma.orderEvent.create({
     data: {
       orderId: input.orderId,
-      type: "ADMIN_STATUS",
+      type: input.source === "SHIPROCKET" ? "SHIPROCKET_STATUS" : "ADMIN_STATUS",
       payload: {
         from: before.status,
         to: input.status,
@@ -227,31 +244,54 @@ export async function updateOrderStatusAdmin(input: {
     },
   });
 
+  // Notify only on an actual change — from === to passes the assert but must not re-send emails.
+  if (before.status !== input.status) {
+    if (input.status === "SHIPPED") {
+      void fireOrderShipped(order.orderNumber).catch(() => undefined);
+    } else if (input.status === "DELIVERED") {
+      void fireOrderDelivered(order.orderNumber).catch(() => undefined);
+    } else if (input.status === "CANCELLED") {
+      void fireOrderCancelled(
+        order.orderNumber,
+        input.notes?.trim() || "Cancelled by admin",
+      ).catch(() => undefined);
+      void cancelShiprocketOrderBestEffort(order.id);
+    }
+  }
+
+  return { from: before.status };
+}
+
+/**
+ * Updates order fulfilment status (admin). Does not process payments.
+ */
+export async function updateOrderStatusAdmin(input: {
+  orderId: string;
+  status: OrderStatus;
+  actorId: string;
+  awbNumber?: string | null;
+  shippingCarrier?: string | null;
+  notes?: string | null;
+  req?: Request;
+}): Promise<void> {
+  const { from } = await applyOrderStatusTransition({
+    orderId: input.orderId,
+    status: input.status,
+    actorId: input.actorId,
+    source: "ADMIN",
+    awbNumber: input.awbNumber,
+    shippingCarrier: input.shippingCarrier,
+    notes: input.notes,
+  });
+
   await recordAudit({
     actorId: input.actorId,
     action: "order.status",
     entity: "Order",
     entityId: input.orderId,
-    diff: { before, after: { status: input.status } },
+    diff: { before: { status: from }, after: { status: input.status } },
     req: input.req,
   });
-
-  const fullOrder = await prisma.order.findUnique({
-    where: { id: input.orderId },
-    select: { orderNumber: true },
-  });
-  if (fullOrder) {
-    if (input.status === "SHIPPED") {
-      void fireOrderShipped(fullOrder.orderNumber).catch(() => undefined);
-    } else if (input.status === "DELIVERED") {
-      void fireOrderDelivered(fullOrder.orderNumber).catch(() => undefined);
-    } else if (input.status === "CANCELLED") {
-      void fireOrderCancelled(
-        fullOrder.orderNumber,
-        input.notes?.trim() || "Cancelled by admin",
-      ).catch(() => undefined);
-    }
-  }
 }
 
 /**
@@ -395,6 +435,11 @@ export async function refundOrderAdmin(input: {
   });
 
   void fireRefundProcessed(order.orderNumber, remaining).catch(() => undefined);
+
+  // Refunding an order that never shipped abandons the shipment — cancel it remotely.
+  if (order.status === "CONFIRMED") {
+    void cancelShiprocketOrderBestEffort(order.id);
+  }
 }
 
 /**

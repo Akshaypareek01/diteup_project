@@ -8,8 +8,11 @@ import { prisma } from "../utils/prisma.js";
 import { logger } from "../utils/logger.js";
 import type { SendEmailArgs } from "./email.js";
 import { sendEmail } from "./email.js";
+import { getShiprocketConfig } from "./settings.js";
+import { pushOrderToShiprocket } from "./shiprocket.js";
 
 export const JOB_TYPE_EMAIL_SEND = "email.send";
+export const JOB_TYPE_SHIPROCKET_PUSH = "shiprocket.push";
 
 function backoffMs(attemptIndex: number): number {
   const base = 30_000;
@@ -48,6 +51,44 @@ export async function enqueueEmailSendJob(
   options?: EnqueueOptions,
 ): Promise<string> {
   return enqueueBackgroundJob(JOB_TYPE_EMAIL_SEND, args as Prisma.InputJsonValue, options);
+}
+
+/**
+ * Enqueues a Shiprocket order push with retries (idempotent — the handler
+ * no-ops when the order was already pushed).
+ */
+export async function enqueueShiprocketPushJob(
+  orderId: string,
+  options?: EnqueueOptions,
+): Promise<string> {
+  return enqueueBackgroundJob(
+    JOB_TYPE_SHIPROCKET_PUSH,
+    { orderId },
+    { maxAttempts: 6, ...options },
+  );
+}
+
+/**
+ * Marks the order PENDING and enqueues the Shiprocket push — no-op when the
+ * integration is unconfigured/disabled. Call after the order tx commits.
+ */
+export async function maybeEnqueueShiprocketPushForOrder(orderId: string): Promise<void> {
+  const config = await getShiprocketConfig();
+  if (!config) return;
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { shiprocketPushStatus: "PENDING", shiprocketPushError: null },
+  });
+  await enqueueShiprocketPushJob(orderId);
+}
+
+function isShiprocketPushPayload(raw: unknown): raw is { orderId: string } {
+  return (
+    !!raw &&
+    typeof raw === "object" &&
+    typeof (raw as Record<string, unknown>).orderId === "string" &&
+    (raw as Record<string, unknown>).orderId !== ""
+  );
 }
 
 /**
@@ -120,6 +161,13 @@ export async function dispatchBackgroundJob(job: BackgroundJob): Promise<void> {
     case JOB_TYPE_EMAIL_SEND:
       await runEmailSendPayload(job.payload);
       return;
+    case JOB_TYPE_SHIPROCKET_PUSH: {
+      if (!isShiprocketPushPayload(job.payload)) {
+        throw new Error("Invalid shiprocket.push payload");
+      }
+      await pushOrderToShiprocket(job.payload.orderId);
+      return;
+    }
     default:
       throw new Error(`Unknown job type: ${job.type}`);
   }

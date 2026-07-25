@@ -466,6 +466,13 @@ router.patch(
 );
 
 router.post(
+  "/admin/orders/:id/shiprocket/push",
+  ...adminOnly,
+  validate({ params: AdminIdParamSchema }),
+  adminFulfillment.postAdminOrderShiprocketPush,
+);
+
+router.post(
   "/admin/orders/:id/refund",
   ...adminOnly,
   validate({ params: AdminIdParamSchema, body: AdminOrderRefundBodySchema }),

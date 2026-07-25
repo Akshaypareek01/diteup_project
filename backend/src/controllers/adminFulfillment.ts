@@ -7,6 +7,8 @@ import * as adminInventory from "../services/adminInventory.js";
 import * as adminOrders from "../services/adminOrders.js";
 import * as adminPayments from "../services/adminPayments.js";
 import * as adminStockNotifications from "../services/adminStockNotifications.js";
+import { pushOrderToShiprocket } from "../services/shiprocket.js";
+import { recordAudit } from "../utils/adminAudit.js";
 import { Unauthorized } from "../utils/errors.js";
 import type {
   AdminInventoryListQueryInput,
@@ -90,6 +92,31 @@ export async function patchAdminOrderStatus(req: Request, res: Response, next: N
       req,
     });
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /v1/admin/orders/:id/shiprocket/push — push/re-push an order to Shiprocket.
+ */
+export async function postAdminOrderShiprocketPush(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    if (!req.auth) throw Unauthorized();
+    const orderId = String(req.params.id);
+    await pushOrderToShiprocket(orderId);
+    await recordAudit({
+      actorId: req.auth.userId,
+      action: "order.shiprocket_push",
+      entity: "Order",
+      entityId: orderId,
+      req,
+    });
+    res.json({ ok: true });
   } catch (err) {
     next(err);
   }

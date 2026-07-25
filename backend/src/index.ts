@@ -3,6 +3,7 @@
  * Wires middleware (security, logging, parsing), routes (mounted under /v1),
  * and global error handling. Exits cleanly on SIGINT/SIGTERM.
  */
+import compression from "compression";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { type Request, type Response } from "express";
@@ -20,6 +21,7 @@ import { startBackgroundSchedulers } from "./jobs/scheduler.js";
 import * as webhookController from "./controllers/webhooks.js";
 import * as marketingController from "./controllers/marketing.js";
 import * as resendWebhookController from "./controllers/resendWebhook.js";
+import * as shiprocketWebhookController from "./controllers/shiprocketWebhook.js";
 import authRoutes from "./routes/auth.js";
 import cartRoutes from "./routes/cart.js";
 import catalogRoutes from "./routes/catalog.js";
@@ -43,6 +45,9 @@ function createApp(): express.Application {
   app.disable("x-powered-by");
   app.set("trust proxy", 1);
 
+  // Gzip JSON responses (product payloads, review lists, admin tables).
+  app.use(compression());
+
   app.use(
     helmet({
       referrerPolicy: { policy: "strict-origin-when-cross-origin" },
@@ -65,6 +70,14 @@ function createApp(): express.Application {
     "/v1/webhooks/resend",
     express.raw({ type: "application/json", limit: "256kb" }),
     resendWebhookController.postResendWebhook,
+  );
+
+  // No HMAC from Shiprocket — plain JSON body + static token header, mounted
+  // before cookie/origin middleware so server-to-server posts pass through.
+  app.post(
+    "/v1/webhooks/shiprocket",
+    express.json({ limit: "256kb" }),
+    shiprocketWebhookController.postShiprocketWebhook,
   );
 
   app.use(express.json({ limit: "1mb" }));

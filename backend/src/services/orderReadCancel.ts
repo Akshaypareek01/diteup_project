@@ -14,6 +14,7 @@ import {
   type OrderTx,
 } from "./orderInventory.js";
 import { fireOrderCancelled } from "./orderNotify.js";
+import { cancelShiprocketOrderBestEffort } from "./shiprocket.js";
 
 /**
  * Paginated order history for the authenticated customer (offset pagination).
@@ -223,6 +224,7 @@ export async function cancelOrderForViewer(input: {
   }
 
   void fireOrderCancelled(order.orderNumber, input.reason?.trim() || undefined).catch(() => undefined);
+  void cancelShiprocketOrderBestEffort(order.id);
 }
 
 /**
@@ -278,6 +280,7 @@ export async function systemAutoCancelUnpaidOrder(orderNumber: string): Promise<
     await reverseCouponRedemption(order.id);
   }
   void fireOrderCancelled(order.orderNumber, "Payment not completed in time").catch(() => undefined);
+  void cancelShiprocketOrderBestEffort(order.id);
   return true;
 }
 
@@ -318,6 +321,8 @@ function serializeOrderDetail(order: {
   couponCode: string | null;
   shippingAddress: unknown;
   billingAddress: unknown;
+  awbNumber: string | null;
+  shippingCarrier: string | null;
   placedAt: Date;
   confirmedAt: Date | null;
   shippedAt: Date | null;
@@ -358,6 +363,8 @@ function serializeOrderDetail(order: {
       couponCode: order.couponCode,
       shippingAddress: order.shippingAddress,
       billingAddress: order.billingAddress,
+      awbNumber: order.awbNumber,
+      shippingCarrier: order.shippingCarrier,
       placedAt: order.placedAt,
       confirmedAt: order.confirmedAt,
       shippedAt: order.shippedAt,

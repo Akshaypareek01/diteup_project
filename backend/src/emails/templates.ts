@@ -32,6 +32,16 @@ const wrap = (innerHtml: string, preheader: string): string => `<!DOCTYPE html>
 
 export type EmailTemplate = { subject: string; html: string; text: string };
 
+/** Escapes text interpolated into HTML bodies (carrier/AWB come from webhook payloads). */
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function otpVerifyEmail(args: { code: string; name?: string }): EmailTemplate {
   const greeting = args.name ? `Hi ${args.name},` : "Hi,";
   const subject = `Your DiteUp verification code: ${args.code}`;
@@ -239,7 +249,7 @@ export function orderShippedEmail(args: {
     `
     <p style="font-size:16px;line-height:1.6;margin:0 0 16px;">${greeting}</p>
     <p style="font-size:16px;line-height:1.6;margin:0 0 16px;">Great news — order <strong>#${args.orderNumber}</strong> is on the way.</p>
-    ${track ? `<p style="font-size:14px;color:#3A4A41;margin:0 0 16px;">Carrier / AWB: <strong>${track}</strong></p>` : ""}
+    ${track ? `<p style="font-size:14px;color:#3A4A41;margin:0 0 16px;">Carrier / AWB: <strong>${escapeHtml(track)}</strong></p>` : ""}
     <p style="margin:0 0 24px;"><a href="${args.siteUrl}" style="background:#C8A24A;color:#1F3D2E;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;display:inline-block;">Track delivery</a></p>
     `,
     subject,

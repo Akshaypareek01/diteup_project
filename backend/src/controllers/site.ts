@@ -19,6 +19,7 @@ export async function getSiteMode(_req: Request, res: Response, next: NextFuncti
 export async function getSiteIntegrations(_req: Request, res: Response, next: NextFunction) {
   try {
     const metaPixelId = await getPublicMetaPixelId();
+    res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     res.status(200).json({ metaPixelId });
   } catch (err) {
     next(err);
@@ -29,6 +30,7 @@ export async function getSiteIntegrations(_req: Request, res: Response, next: Ne
 export async function getSiteSeo(_req: Request, res: Response, next: NextFunction) {
   try {
     const siteSeo = await getPublicSiteSeo();
+    res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     res.status(200).json(siteSeo);
   } catch (err) {
     next(err);

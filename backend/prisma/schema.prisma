@@ -385,6 +385,16 @@ model Order {
   awbNumber       String?
   shippingCarrier String?
 
+  /** Shiprocket order/shipment ids returned by the adhoc create API. */
+  shiprocketOrderId    String?
+  shiprocketShipmentId String?
+  /** PENDING | PUSHED | FAILED — null when never enqueued. */
+  shiprocketPushStatus String?
+  shiprocketPushError  String?
+  /** Last raw status received from a Shiprocket webhook (e.g. "IN TRANSIT"). */
+  shiprocketLastStatus String?
+  shiprocketStatusAt   DateTime?
+
   metaPixelEventId String?
 
   /** GST invoice no. — format `DU/YY-YY/NNNN` per PRD §9.4 (India FY, Asia-Kolkata). */

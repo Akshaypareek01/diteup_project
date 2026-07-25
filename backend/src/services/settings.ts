@@ -3,6 +3,7 @@
  */
 import { prisma } from "../utils/prisma.js";
 import { env } from "../config/env.js";
+import { decryptSettingsSecret, isSettingsEncryptionConfigured } from "../utils/settingsCrypto.js";
 
 export type MetaAdsSettingJson = {
   pixelId?: string;
@@ -38,6 +39,109 @@ export async function getPublicMetaPixelId(): Promise<string | null> {
       : {};
   const pixelId = String(fromDb.pixelId || env.META_PIXEL_ID || "").trim();
   return pixelId || null;
+}
+
+/** `Setting` key `shiprocket` (plaintext JSON — no secrets). */
+export type ShiprocketSettingJson = {
+  /** Master switch; default true when credentials exist. */
+  enabled?: boolean;
+  /** Must exactly match a pickup location nickname in the Shiprocket dashboard. */
+  pickupLocation?: string;
+  /** Used when a variant has no `weightGm` (kg). */
+  defaultWeightKg?: number;
+  /** Package dimensions sent with every order (cm). */
+  defaultDimensionsCm?: { length?: number; breadth?: number; height?: number };
+};
+
+/** `Setting` key `shiprocketSecret` (encrypted at rest when `SETTINGS_ENCRYPTION_KEY` set). */
+export type ShiprocketSecretJson = {
+  email?: string;
+  password?: string;
+  webhookToken?: string;
+};
+
+export type ShiprocketConfig = {
+  email: string;
+  password: string;
+  webhookToken: string | null;
+  pickupLocation: string;
+  defaultWeightKg: number;
+  defaultDimensionsCm: { length: number; breadth: number; height: number };
+};
+
+const defaultShiprocketDims = { length: 15, breadth: 15, height: 10 };
+
+/**
+ * Shiprocket integration config — `Setting` rows `shiprocket` + `shiprocketSecret`
+ * override env vars. Returns null when disabled or credentials are missing.
+ */
+async function readShiprocketSecrets(): Promise<ShiprocketSecretJson> {
+  const secretRow = await prisma.setting.findUnique({ where: { key: "shiprocketSecret" } });
+  const rawSecret = secretRow?.value;
+  if (typeof rawSecret === "string" && rawSecret.startsWith("v1:")) {
+    if (isSettingsEncryptionConfigured()) {
+      try {
+        const parsed = JSON.parse(decryptSettingsSecret(rawSecret)) as unknown;
+        if (parsed && typeof parsed === "object") return parsed as ShiprocketSecretJson;
+      } catch {
+        // Corrupt/undecryptable row — fall through to env credentials.
+      }
+    }
+  } else if (rawSecret && typeof rawSecret === "object") {
+    return rawSecret as ShiprocketSecretJson;
+  }
+  return {};
+}
+
+/**
+ * Webhook token, independent of the enabled flag / API credentials — in-transit
+ * shipments must keep delivering webhooks even when pushing is switched off.
+ */
+export async function getShiprocketWebhookToken(): Promise<string | null> {
+  const secrets = await readShiprocketSecrets();
+  const token = String(secrets.webhookToken || env.SHIPROCKET_WEBHOOK_TOKEN || "").trim();
+  return token || null;
+}
+
+export async function getShiprocketConfig(): Promise<ShiprocketConfig | null> {
+  const [row, secrets] = await Promise.all([
+    prisma.setting.findUnique({ where: { key: "shiprocket" } }),
+    readShiprocketSecrets(),
+  ]);
+
+  const fromDb =
+    row?.value && typeof row.value === "object" && row.value !== null
+      ? (row.value as ShiprocketSettingJson)
+      : {};
+
+  if (fromDb.enabled === false) return null;
+
+  const email = String(secrets.email || env.SHIPROCKET_EMAIL || "").trim();
+  const password = String(secrets.password || env.SHIPROCKET_PASSWORD || "").trim();
+  if (!email || !password) return null;
+
+  const webhookToken = String(secrets.webhookToken || env.SHIPROCKET_WEBHOOK_TOKEN || "").trim();
+  const dims = fromDb.defaultDimensionsCm ?? {};
+  const weight = Number(fromDb.defaultWeightKg);
+
+  return {
+    email,
+    password,
+    webhookToken: webhookToken || null,
+    pickupLocation:
+      strOr(fromDb.pickupLocation, "") || String(env.SHIPROCKET_PICKUP_LOCATION || "").trim() || "Primary",
+    defaultWeightKg: Number.isFinite(weight) && weight > 0 ? weight : 0.5,
+    defaultDimensionsCm: {
+      length: posOr(dims.length, defaultShiprocketDims.length),
+      breadth: posOr(dims.breadth, defaultShiprocketDims.breadth),
+      height: posOr(dims.height, defaultShiprocketDims.height),
+    },
+  };
+}
+
+function posOr(raw: unknown, fallback: number): number {
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
 export type PincodePolicy = {

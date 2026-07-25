@@ -50,6 +50,14 @@ const EnvSchema = z.object({
   META_PIXEL_ID: z.string().optional(),
   META_CAPI_ACCESS_TOKEN: z.string().optional(),
 
+  /** Shiprocket API user (panel Settings > API > Configure) — overridden by `Setting` keys `shiprocket`/`shiprocketSecret`. */
+  SHIPROCKET_EMAIL: z.string().optional(),
+  SHIPROCKET_PASSWORD: z.string().optional(),
+  /** Static token Shiprocket webhooks must send in the `x-api-key` header. */
+  SHIPROCKET_WEBHOOK_TOKEN: z.string().optional(),
+  /** Must exactly match a pickup location nickname in the Shiprocket dashboard. */
+  SHIPROCKET_PICKUP_LOCATION: z.string().optional(),
+
   /** Public site URL (marketing unsubscribe links, order tracking in emails). */
   PUBLIC_SITE_URL: z.string().url().optional(),
 

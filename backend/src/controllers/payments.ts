@@ -28,7 +28,11 @@ export async function postVerifyPayment(req: Request, res: Response, next: NextF
       razorpayOrderId: req.body.razorpay_order_id,
       razorpayPaymentId: req.body.razorpay_payment_id,
     });
-    res.json(result);
+    res.json({
+      orderNumber: result.orderNumber,
+      status: result.status,
+      alreadyConfirmed: result.alreadyConfirmed,
+    });
   } catch (err) {
     next(err);
   }
