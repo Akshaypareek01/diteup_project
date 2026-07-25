@@ -11,6 +11,7 @@ import { NotFound, ServiceUnavailable, ValidationError } from "../utils/errors.j
 import { moneyNumber, roundMoney } from "../utils/money.js";
 import { prisma } from "../utils/prisma.js";
 import { loadInventoryIdsForOrder, type OrderTx } from "./orderInventory.js";
+import { maybeEnqueueShiprocketPushForOrder } from "./jobQueue.js";
 import { reverseCouponRedemption } from "./orderReadCancel.js";
 import { isRazorpayConfigured, refundRazorpayPayment } from "./razorpay.js";
 import { cancelShiprocketOrderBestEffort } from "./shiprocket.js";
@@ -20,6 +21,7 @@ import {
   fireOrderShipped,
   fireRefundProcessed,
 } from "./orderNotify.js";
+import { logger } from "../utils/logger.js";
 
 export type AdminOrderListQuery = {
   page: number;
@@ -292,6 +294,12 @@ export async function updateOrderStatusAdmin(input: {
     diff: { before: { status: from }, after: { status: input.status } },
     req: input.req,
   });
+
+  if (input.status === "CONFIRMED" && from !== "CONFIRMED") {
+    void maybeEnqueueShiprocketPushForOrder(input.orderId).catch((err) =>
+      logger.error({ err, orderId: input.orderId }, "shiprocket push enqueue failed (admin confirm)"),
+    );
+  }
 }
 
 /**
