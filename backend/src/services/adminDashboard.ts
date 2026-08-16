@@ -3,6 +3,7 @@
  */
 import { Prisma } from "@prisma/client";
 
+import { startOfIstDay } from "../utils/ist.js";
 import { prisma } from "../utils/prisma.js";
 import { moneyNumber } from "../utils/money.js";
 
@@ -11,8 +12,7 @@ import { moneyNumber } from "../utils/money.js";
  */
 export async function getAdminDashboardStats() {
   const now = new Date();
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
+  const startOfDay = startOfIstDay(now);
   const start7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const start30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const paidStatuses = ["CONFIRMED", "SHIPPED", "DELIVERED", "RETURNED"] as const;

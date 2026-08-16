@@ -8,7 +8,7 @@
  *  - 74: requesting a new OTP invalidates the previous one for that email+purpose
  *  - 75: email change — handled in services/me.ts (dual OTP + password)
  *  - 84: tokenVersion bumped on logout-all / password reset to invalidate refresh tokens
- *  - 95: account enumeration prevention — signup + forgot-password return same shape for new vs existing
+ *  - 95: forgot-password returns the same shape for new vs existing emails (anti-enumeration)
  */
 import type { Prisma, OTPPurpose } from "@prisma/client";
 
@@ -25,6 +25,7 @@ import {
 import {
   AccountLocked,
   AppError,
+  Conflict,
   OtpExpired,
   OtpInvalid,
   OtpLocked,
@@ -177,8 +178,7 @@ export type AuthResult = {
 
 /**
  * POST /v1/auth/signup
- * Creates a new user (or returns the same response if email exists — enumeration safe).
- * Always sends an EMAIL_VERIFY OTP. Caller can call resend-otp if user lost the email.
+ * Creates a new user. Verified emails are rejected so the shopper can log in instead of waiting on a code that is never sent.
  */
 export async function signup(input: {
   email: string;
@@ -191,10 +191,7 @@ export async function signup(input: {
   const existing = await findUserByEmail(email);
 
   if (existing && existing.emailVerified) {
-    // Anti-enumeration: do not reveal that email exists. Return the same shape
-    // as a fresh signup. No OTP is sent.
-    logger.info({ email }, "signup attempt on verified existing email (silent)");
-    return { requiresOtp: true, email };
+    throw Conflict("An account with this email already exists. Log in or try a different email.");
   }
 
   if (existing && !existing.emailVerified) {

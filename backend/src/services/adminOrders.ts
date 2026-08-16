@@ -1,5 +1,5 @@
 /**
- * Admin order management — list, detail, status, bulk, refund, Excel export (PRD §8.2).
+ * Admin order management — detail, status, bulk, refund, Excel import (PRD §8.2).
  */
 import { Prisma } from "@prisma/client";
 import type { OrderStatus } from "@prisma/client";
@@ -22,70 +22,10 @@ import {
   fireRefundProcessed,
 } from "./orderNotify.js";
 import { logger } from "../utils/logger.js";
+import { adminCustomerFields } from "./adminOrderCustomer.js";
 
-export type AdminOrderListQuery = {
-  page: number;
-  pageSize: number;
-  status?: OrderStatus;
-  q?: string;
-  placedFrom?: Date;
-  placedTo?: Date;
-};
-
-/**
- * Paginated admin order list with light includes.
- */
-export async function listOrdersAdmin(input: AdminOrderListQuery) {
-  const take = input.pageSize;
-  const skip = (input.page - 1) * take;
-  const where: Prisma.OrderWhereInput = {};
-
-  if (input.status) where.status = input.status;
-  if (input.placedFrom || input.placedTo) {
-    where.placedAt = {};
-    if (input.placedFrom) where.placedAt.gte = input.placedFrom;
-    if (input.placedTo) where.placedAt.lte = input.placedTo;
-  }
-  if (input.q?.trim()) {
-    const q = input.q.trim();
-    where.OR = [
-      { orderNumber: { contains: q, mode: "insensitive" } },
-      { guestEmail: { contains: q, mode: "insensitive" } },
-      { id: { equals: q } },
-    ];
-  }
-
-  const [total, rows] = await prisma.$transaction([
-    prisma.order.count({ where }),
-    prisma.order.findMany({
-      where,
-      orderBy: { placedAt: "desc" },
-      skip,
-      take,
-      select: {
-        id: true,
-        orderNumber: true,
-        status: true,
-        paymentMethod: true,
-        total: true,
-        currency: true,
-        placedAt: true,
-        userId: true,
-        guestEmail: true,
-      },
-    }),
-  ]);
-
-  return {
-    total,
-    page: input.page,
-    pageSize: take,
-    orders: rows.map((o) => ({
-      ...o,
-      total: moneyNumber(o.total),
-    })),
-  };
-}
+export type { AdminOrderListQuery } from "./adminOrderList.js";
+export { exportOrdersXlsx, listOrdersAdmin } from "./adminOrderList.js";
 
 /**
  * Full order detail for admin (no guest gate).
@@ -136,6 +76,7 @@ export async function getOrderAdminById(orderId: string) {
       guestEmail: order.guestEmail,
       guestPhone: order.guestPhone,
       user: order.user,
+      ...adminCustomerFields(order),
     },
     items: order.items.map((it) => ({
       id: it.id,
@@ -448,58 +389,6 @@ export async function refundOrderAdmin(input: {
   if (order.status === "CONFIRMED") {
     void cancelShiprocketOrderBestEffort(order.id);
   }
-}
-
-/**
- * Builds an XLSX workbook of orders matching filters (max 5000 rows).
- */
-export async function exportOrdersXlsx(input: Omit<AdminOrderListQuery, "page" | "pageSize">): Promise<Buffer> {
-  const where: Prisma.OrderWhereInput = {};
-  if (input.status) where.status = input.status;
-  if (input.placedFrom || input.placedTo) {
-    where.placedAt = {};
-    if (input.placedFrom) where.placedAt.gte = input.placedFrom;
-    if (input.placedTo) where.placedAt.lte = input.placedTo;
-  }
-  if (input.q?.trim()) {
-    const q = input.q.trim();
-    where.OR = [
-      { orderNumber: { contains: q, mode: "insensitive" } },
-      { guestEmail: { contains: q, mode: "insensitive" } },
-    ];
-  }
-
-  const rows = await prisma.order.findMany({
-    where,
-    orderBy: { placedAt: "desc" },
-    take: 5000,
-    select: {
-      orderNumber: true,
-      status: true,
-      paymentMethod: true,
-      total: true,
-      currency: true,
-      placedAt: true,
-      guestEmail: true,
-      userId: true,
-    },
-  });
-
-  const sheet = rows.map((r) => ({
-    orderNumber: r.orderNumber,
-    status: r.status,
-    paymentMethod: r.paymentMethod,
-    total: moneyNumber(r.total),
-    currency: r.currency,
-    placedAt: r.placedAt.toISOString(),
-    guestEmail: r.guestEmail ?? "",
-    userId: r.userId ?? "",
-  }));
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.json_to_sheet(sheet);
-  XLSX.utils.book_append_sheet(wb, ws, "Orders");
-  return XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
 }
 
 /**
