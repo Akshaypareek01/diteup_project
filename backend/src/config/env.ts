@@ -5,6 +5,26 @@
 import "dotenv/config";
 import { z } from "zod";
 
+/**
+ * Parses env flags. `z.coerce.boolean()` treats the string `"false"` as `true`.
+ */
+function envFlag(defaultValue: boolean) {
+  return z.preprocess((val) => {
+    if (val === undefined || val === "") return defaultValue;
+    if (typeof val === "boolean") return val;
+    const s = String(val).trim().toLowerCase();
+    if (["1", "true", "yes", "on"].includes(s)) return true;
+    if (["0", "false", "no", "off"].includes(s)) return false;
+    return defaultValue;
+  }, z.boolean());
+}
+
+/** Drops blank strings so optional secrets/config don't override defaults. */
+const optStr = z.preprocess(
+  (val) => (typeof val === "string" && val.trim() === "" ? undefined : val),
+  z.string().optional(),
+);
+
 const EnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
@@ -30,14 +50,18 @@ const EnvSchema = z.object({
   EMAIL_FROM: z.string().min(3).default("DiteUp <no-reply@diteup.com>"),
 
   /** When set, transactional email uses SMTP (`nodemailer`). Takes priority over Resend. */
-  SMTP_HOST: z.string().optional(),
+  SMTP_HOST: optStr,
   SMTP_PORT: z.coerce.number().int().positive().max(65535).default(587),
   /** Implicit TLS (e.g. port 465). If unset, true when `SMTP_PORT === 465`. */
-  SMTP_SECURE: z.coerce.boolean().optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASSWORD: z.string().optional(),
+  SMTP_SECURE: envFlag(false),
+  SMTP_USER: optStr,
+  SMTP_PASSWORD: z.preprocess((val) => {
+    if (typeof val !== "string") return undefined;
+    const t = val.replace(/\s+/g, "");
+    return t === "" ? undefined : t;
+  }, z.string().optional()),
   /** Set `false` only for dev (self-signed MITM-risk). Production should stay `true`. */
-  SMTP_TLS_REJECT_UNAUTHORIZED: z.coerce.boolean().default(true),
+  SMTP_TLS_REJECT_UNAUTHORIZED: envFlag(true),
 
   R2_ENDPOINT: z.string().optional(),
   R2_ACCESS_KEY_ID: z.string().optional(),
@@ -64,9 +88,9 @@ const EnvSchema = z.object({
   PUBLIC_SITE_URL: z.string().url().optional(),
 
   /** GST invoice header overrides (PRD §9.4). */
-  INVOICE_SELLER_NAME: z.string().optional(),
-  INVOICE_SELLER_GSTIN: z.string().optional(),
-  INVOICE_SELLER_STATE: z.string().optional(),
+  INVOICE_SELLER_NAME: optStr,
+  INVOICE_SELLER_GSTIN: optStr,
+  INVOICE_SELLER_STATE: optStr,
 
   /** When set, distributed rate limiter uses Redis (`redis` package). */
   REDIS_URL: z.string().optional(),
@@ -84,7 +108,7 @@ const EnvSchema = z.object({
   SETTINGS_ENCRYPTION_KEY: z.string().min(16).optional(),
 
   /** Enable in-process timers (Phase 10). Set false for some tests / workers. */
-  ENABLE_BACKGROUND_JOBS: z.coerce.boolean().default(true),
+  ENABLE_BACKGROUND_JOBS: envFlag(true),
   /** Unpaid Razorpay `PLACED` order sweep interval (PRD §10.2, default 15 min). */
   STALE_ORDER_JOB_INTERVAL_MS: z.coerce.number().int().positive().default(900_000),
   /** How often to drain `BackgroundJob` email rows (PRD §10.4). */
@@ -96,7 +120,7 @@ const EnvSchema = z.object({
   BACKUP_VERIFY_URL: z.string().optional(),
 
   // Feature toggles
-  ENABLE_DEBUG_LOGS: z.coerce.boolean().default(false),
+  ENABLE_DEBUG_LOGS: envFlag(false),
 });
 
 const parsed = EnvSchema.safeParse(process.env);

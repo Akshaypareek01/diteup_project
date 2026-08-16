@@ -6,6 +6,17 @@
  * deliver via Resend (HTML preferred) or downgrade to text-only if needed.
  */
 
+import { env } from "../config/env.js";
+
+/**
+ * Seller line in the transactional email footer (env overrides).
+ */
+function sellerFooterLine(): string {
+  const name = env.INVOICE_SELLER_NAME?.trim() || "NVHO Tech Pvt. Ltd.";
+  const gstin = env.INVOICE_SELLER_GSTIN?.trim() || "08AAJCN8501H1ZC";
+  return `${name} · GSTIN ${gstin}`;
+}
+
 const wrap = (innerHtml: string, preheader: string): string => `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>DiteUp</title></head>
@@ -22,7 +33,7 @@ const wrap = (innerHtml: string, preheader: string): string => `<!DOCTYPE html>
       <tr><td style="padding:16px 32px 32px;border-top:1px solid #D9CFB8;">
         <p style="font-size:12px;color:#6B7B72;margin:0;">
           If you didn't request this, you can ignore this email.<br>
-          NVHO Tech Pvt. Ltd. · GSTIN 08AAJCN8501H1ZC
+          ${sellerFooterLine()}
         </p>
       </td></tr>
     </table>

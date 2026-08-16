@@ -118,7 +118,8 @@ export async function fireOrderConfirmedSuite(orderNumber: string): Promise<void
         attachments = [
           { filename: `invoice-${order.orderNumber}.pdf`, contentBase64: pdfBuf.toString("base64") },
         ];
-      } catch {
+      } catch (err) {
+        logger.error({ err, orderId: order.id }, "invoice PDF attach failed — sending confirmation without PDF");
         attachments = undefined;
       }
 
@@ -129,7 +130,7 @@ export async function fireOrderConfirmedSuite(orderNumber: string): Promise<void
         invoiceUrl: inv?.invoicePdfUrl,
         siteUrl: buildOrderTrackingUrl(order.orderNumber),
       });
-      await sendEmail({
+      const sendArgs = {
         to,
         subject: tpl.subject,
         html: tpl.html,
@@ -138,7 +139,12 @@ export async function fireOrderConfirmedSuite(orderNumber: string): Promise<void
         refType: "ORDER",
         refId: order.id,
         attachments,
-      });
+      };
+      const sent = await sendEmail(sendArgs);
+      if (!sent.ok && !sent.suppressed) {
+        await enqueueEmailSendJob(sendArgs);
+        logger.error({ to, orderId: order.id, error: sent.error }, "order confirmed email failed — queued retry");
+      }
     });
   }
 

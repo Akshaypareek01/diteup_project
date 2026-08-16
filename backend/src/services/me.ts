@@ -17,7 +17,7 @@ import {
   Unauthorized,
   ValidationError,
 } from "../utils/errors.js";
-import { sendEmail } from "./email.js";
+import { sendEmailOrThrow } from "./email.js";
 import { consumeOtp, issueOtp } from "./auth.js";
 import { presignUpload, buildPublicUrl, isStorageConfigured } from "./storage.js";
 import type {
@@ -134,7 +134,7 @@ export async function changeEmail(
       name: user.name ?? undefined,
       sentTo: "new",
     });
-    await sendEmail({
+    await sendEmailOrThrow({
       to: newEmail,
       ...tpl,
       template: "email_change_new",
@@ -159,7 +159,7 @@ export async function changeEmail(
       name: user.name ?? undefined,
       sentTo: "current",
     });
-    await sendEmail({
+    await sendEmailOrThrow({
       to: user.email,
       ...tpl,
       template: "email_change_old",

@@ -18,6 +18,7 @@ import { requestContext } from "./middleware/requestContext.js";
 import { requireBrowserOriginForCookieAuth } from "./middleware/originCheck.js";
 import { requireHealthcheckSecret } from "./middleware/healthcheckGate.js";
 import { startBackgroundSchedulers } from "./jobs/scheduler.js";
+import { verifySmtpConnection } from "./services/email.js";
 import * as webhookController from "./controllers/webhooks.js";
 import * as marketingController from "./controllers/marketing.js";
 import * as resendWebhookController from "./controllers/resendWebhook.js";
@@ -129,6 +130,7 @@ async function startServer(): Promise<void> {
   });
 
   startBackgroundSchedulers();
+  void verifySmtpConnection();
 
   const shutdown = async (signal: string) => {
     logger.info({ signal }, "Shutting down");

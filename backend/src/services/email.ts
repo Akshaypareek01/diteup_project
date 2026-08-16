@@ -11,12 +11,14 @@
 import nodemailer from "nodemailer";
 import { Resend } from "resend";
 import { env } from "../config/env.js";
+import { ServiceUnavailable } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
 import { prisma } from "../utils/prisma.js";
 
 const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 
-const smtpSecure = env.SMTP_SECURE ?? env.SMTP_PORT === 465;
+/** Port 465 is implicit TLS; `"false"` in env used to coerce to `true` via Zod. */
+const smtpSecure = env.SMTP_PORT === 465 ? true : env.SMTP_SECURE;
 
 const smtpTransporter = env.SMTP_HOST
   ? nodemailer.createTransport({
@@ -180,5 +182,51 @@ export async function sendEmail(args: SendEmailArgs): Promise<SendEmailResult> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown email error";
     return logEmailFailure(args, to, "resend", msg);
+  }
+}
+
+/**
+ * Same as `sendEmail` but throws when the provider rejects the message.
+ * Use for OTP / anything the user is waiting on.
+ */
+export async function sendEmailOrThrow(args: SendEmailArgs): Promise<SendEmailResult> {
+  const result = await sendEmail(args);
+  if (!result.ok && !result.suppressed) {
+    throw ServiceUnavailable(
+      result.error?.includes("535") || result.error?.toLowerCase().includes("invalid login")
+        ? "Email server rejected login. Set a Gmail App Password on SMTP_PASSWORD and set EMAIL_FROM to that mailbox."
+        : (result.error ?? "Could not send email"),
+    );
+  }
+  return result;
+}
+
+/**
+ * Checks SMTP auth at boot so OTP/invoice failures are obvious in logs.
+ */
+export async function verifySmtpConnection(): Promise<void> {
+  if (!smtpTransporter) {
+    if (env.RESEND_API_KEY) {
+      logger.info("Email via Resend (SMTP_HOST unset)");
+      return;
+    }
+    logger.warn("No SMTP_HOST or RESEND_API_KEY — emails are stubbed to the API console");
+    return;
+  }
+  try {
+    await smtpTransporter.verify();
+    logger.info({ host: env.SMTP_HOST, port: env.SMTP_PORT, from: env.EMAIL_FROM }, "SMTP ready");
+    const fromAddr = env.EMAIL_FROM.match(/<([^>]+)>/)?.[1] ?? env.EMAIL_FROM;
+    if (env.SMTP_USER && fromAddr.toLowerCase() !== env.SMTP_USER.toLowerCase()) {
+      logger.warn(
+        { from: fromAddr, smtpUser: env.SMTP_USER },
+        "EMAIL_FROM does not match SMTP_USER — Gmail will often reject or rewrite the From header",
+      );
+    }
+  } catch (err) {
+    logger.error(
+      { err, host: env.SMTP_HOST, user: env.SMTP_USER, from: env.EMAIL_FROM },
+      "SMTP verify failed — OTP and invoices will not send. Gmail: enable 2FA, create an App Password, put it in SMTP_PASSWORD, and set EMAIL_FROM to SMTP_USER.",
+    );
   }
 }

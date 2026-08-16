@@ -162,13 +162,15 @@ export async function confirmOrderFromRazorpayPayment(input: {
   });
 
   if (!result.alreadyConfirmed) {
-    void fireOrderConfirmedSuite(result.orderNumber).catch((err) =>
-      logger.error({ err, orderNumber: result.orderNumber }, "post-confirm side effects failed"),
-    );
     void maybeEnqueueShiprocketPushForOrder(result.orderId).catch((err) =>
       logger.error({ err, orderNumber: result.orderNumber }, "shiprocket push enqueue failed"),
     );
   }
+  // Always attempt invoice + confirmation email — deduped per order. Skipping this
+  // on `alreadyConfirmed` dropped mail when the first SMTP attempt failed.
+  void fireOrderConfirmedSuite(result.orderNumber).catch((err) =>
+    logger.error({ err, orderNumber: result.orderNumber }, "post-confirm side effects failed"),
+  );
 
   return result;
 }

@@ -31,7 +31,7 @@ import {
   Unauthorized,
   ValidationError,
 } from "../utils/errors.js";
-import { sendEmail } from "./email.js";
+import { sendEmail, sendEmailOrThrow } from "./email.js";
 import {
   otpVerifyEmail,
   passwordResetEmail,
@@ -201,7 +201,7 @@ export async function signup(input: {
     // User signed up before but never verified. Resend OTP, don't recreate row.
     const code = await issueOtp(email, "EMAIL_VERIFY", input.ip, existing.id);
     const tpl = otpVerifyEmail({ code, name: existing.name ?? undefined });
-    await sendEmail({ to: email, ...tpl, template: "otp_verify", refType: "USER", refId: existing.id });
+    await sendEmailOrThrow({ to: email, ...tpl, template: "otp_verify", refType: "USER", refId: existing.id });
     return { requiresOtp: true, email };
   }
 
@@ -219,7 +219,7 @@ export async function signup(input: {
 
   const code = await issueOtp(email, "EMAIL_VERIFY", input.ip, user.id);
   const tpl = otpVerifyEmail({ code });
-  await sendEmail({ to: email, ...tpl, template: "otp_verify", refType: "USER", refId: user.id });
+  await sendEmailOrThrow({ to: email, ...tpl, template: "otp_verify", refType: "USER", refId: user.id });
 
   return { requiresOtp: true, email };
 }
@@ -296,7 +296,7 @@ export async function resendOtp(input: {
     input.purpose === "EMAIL_VERIFY"
       ? otpVerifyEmail({ code, name: user!.name ?? undefined })
       : passwordResetEmail({ code, name: user!.name ?? undefined });
-  await sendEmail({
+  await sendEmailOrThrow({
     to: input.email,
     ...tpl,
     template: input.purpose === "EMAIL_VERIFY" ? "otp_verify" : "password_reset",
@@ -419,7 +419,7 @@ export async function forgotPassword(input: { email: string; ip?: string }): Pro
   }
   const code = await issueOtp(input.email.toLowerCase(), "PASSWORD_RESET", input.ip, user.id);
   const tpl = passwordResetEmail({ code, name: user.name ?? undefined });
-  await sendEmail({ to: input.email, ...tpl, template: "password_reset", refType: "USER", refId: user.id });
+  await sendEmailOrThrow({ to: input.email, ...tpl, template: "password_reset", refType: "USER", refId: user.id });
   return { sent: true };
 }
 

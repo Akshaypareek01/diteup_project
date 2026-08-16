@@ -6,6 +6,7 @@ import { Prisma } from "@prisma/client";
 
 import { env } from "../config/env.js";
 import { NotFound } from "../utils/errors.js";
+import { logger } from "../utils/logger.js";
 import { roundMoney } from "../utils/money.js";
 import { prisma } from "../utils/prisma.js";
 import { uploadPublicBuffer } from "./storage.js";
@@ -32,6 +33,37 @@ const SELLER_DEFAULT = {
   state: "Rajasthan",
   address: "India",
 };
+
+/** GSTIN first two digits → Indian state (invoice header / CGST vs IGST). */
+const GSTIN_STATE: Record<string, string> = {
+  "01": "Jammu and Kashmir",
+  "02": "Himachal Pradesh",
+  "03": "Punjab",
+  "04": "Chandigarh",
+  "05": "Uttarakhand",
+  "06": "Haryana",
+  "07": "Delhi",
+  "08": "Rajasthan",
+  "09": "Uttar Pradesh",
+  "10": "Bihar",
+  "21": "Odisha",
+  "22": "Chhattisgarh",
+  "23": "Madhya Pradesh",
+  "24": "Gujarat",
+  "27": "Maharashtra",
+  "29": "Karnataka",
+  "32": "Kerala",
+  "33": "Tamil Nadu",
+  "36": "Telangana",
+  "37": "Andhra Pradesh",
+};
+
+/**
+ * Resolves seller state from GSTIN prefix when `INVOICE_SELLER_STATE` is blank.
+ */
+function indianStateFromGstin(gstin: string): string | undefined {
+  return GSTIN_STATE[gstin.trim().slice(0, 2)];
+}
 
 /**
  * Builds PDF bytes for a confirmed order; does not persist.
@@ -116,11 +148,16 @@ export async function ensureOrderInvoice(orderId: string): Promise<{
   const full = await loadOrderForInvoice(orderId, invoiceNumber);
   const pdfBuf = await renderInvoicePdf(full, invoiceNumber);
   const keySafe = `invoices/${full.orderNumber}/${invoiceNumber.replace(/\//g, "-")}.pdf`;
-  const publicUrl = await uploadPublicBuffer({
-    key: keySafe,
-    buffer: pdfBuf,
-    contentType: "application/pdf",
-  });
+  let publicUrl: string | null = null;
+  try {
+    publicUrl = await uploadPublicBuffer({
+      key: keySafe,
+      buffer: pdfBuf,
+      contentType: "application/pdf",
+    });
+  } catch (err) {
+    logger.error({ err, orderId, keySafe }, "invoice PDF upload failed — email can still attach the PDF");
+  }
 
   await prisma.order.update({
     where: { id: orderId },
@@ -157,9 +194,12 @@ async function renderInvoicePdf(
   order: Awaited<ReturnType<typeof loadOrderForInvoice>>,
   invoiceNumber: string,
 ): Promise<Buffer> {
-  const sellerGstin = env.INVOICE_SELLER_GSTIN ?? SELLER_DEFAULT.gstin;
-  const sellerState = env.INVOICE_SELLER_STATE ?? SELLER_DEFAULT.state;
-  const sellerName = env.INVOICE_SELLER_NAME ?? SELLER_DEFAULT.name;
+  const sellerGstin = env.INVOICE_SELLER_GSTIN?.trim() || SELLER_DEFAULT.gstin;
+  const sellerName = env.INVOICE_SELLER_NAME?.trim() || SELLER_DEFAULT.name;
+  const sellerState =
+    env.INVOICE_SELLER_STATE?.trim() ||
+    indianStateFromGstin(sellerGstin) ||
+    SELLER_DEFAULT.state;
   const ship = order.shippingAddress as ShipAddr;
   const buyerState = String(ship.state ?? "").trim().toLowerCase();
   const sellerStateNorm = sellerState.trim().toLowerCase();
@@ -176,7 +216,7 @@ async function renderInvoicePdf(
     doc.moveDown(0.5);
     doc.fontSize(10).fillColor("#333");
     doc.text(`${sellerName}`);
-    doc.text(`GSTIN: ${sellerGstin} · State: ${sellerState}`);
+    doc.text(`GSTIN: ${sellerGstin}`);
     doc.text(`Invoice No: ${invoiceNumber}`);
     doc.text(
       `Date: ${(order.confirmedAt ?? order.placedAt).toLocaleString("en-IN", {
