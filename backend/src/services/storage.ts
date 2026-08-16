@@ -12,6 +12,7 @@
  *   r2://diteup-media/avatars/{userId}/{uuid}.{ext}
  *   r2://diteup-media/reviews/{reviewId}/{uuid}.{ext}
  *   r2://diteup-media/products/{productId}/{uuid}.{ext}
+ *   r2://diteup-media/banners/{ownerId}/{uuid}.{ext}
  */
 import { randomUUID } from "node:crypto";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -62,7 +63,7 @@ export type PresignResult = {
  * Returns `null` if storage is not configured — caller should 503.
  */
 export async function presignUpload(args: {
-  scope: "avatars" | "reviews" | "products";
+  scope: "avatars" | "reviews" | "products" | "banners";
   ownerId: string;          // userId, reviewId, or productId
   contentType: keyof typeof CONTENT_TYPE_TO_EXT | string;
   expiresIn?: number;       // default 5 minutes

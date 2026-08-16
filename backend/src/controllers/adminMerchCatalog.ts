@@ -5,7 +5,7 @@ import type { Request, Response, NextFunction } from "express";
 
 import * as adminProducts from "../services/adminProducts.js";
 import * as adminUsers from "../services/adminUsers.js";
-import { Unauthorized } from "../utils/errors.js";
+import { ServiceUnavailable, Unauthorized } from "../utils/errors.js";
 import type {
   AdminProductListQueryInput,
   AdminUserListQueryInput,
@@ -254,6 +254,26 @@ export async function postAdminProductVariant(req: Request, res: Response, next:
       req,
     });
     res.json(data);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /v1/admin/products/:id/media/upload-url
+ */
+export async function postAdminProductMediaPresign(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.auth) throw Unauthorized();
+    const result = await adminProducts.presignProductMediaAdmin({
+      productId: String(req.params.id),
+      contentType: String(req.body.contentType),
+    });
+    if (!result) {
+      next(ServiceUnavailable("File uploads are not configured"));
+      return;
+    }
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }

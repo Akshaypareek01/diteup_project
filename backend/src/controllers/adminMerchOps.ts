@@ -7,7 +7,8 @@ import * as adminAuditLog from "../services/adminAuditLog.js";
 import * as adminBroadcast from "../services/adminBroadcast.js";
 import * as adminCoupons from "../services/adminCoupons.js";
 import * as adminSettings from "../services/adminSettings.js";
-import { Unauthorized } from "../utils/errors.js";
+import { presignHomepageBanner } from "../services/homepageBanners.js";
+import { ServiceUnavailable, Unauthorized } from "../utils/errors.js";
 import type {
   AdminAuditListQueryInput,
   AdminBroadcastListQueryInput,
@@ -343,6 +344,23 @@ export async function putAdminSetting(req: Request, res: Response, next: NextFun
       req,
     });
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /v1/admin/banners/upload-url
+ */
+export async function postAdminBannerPresign(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.auth) throw Unauthorized();
+    const result = await presignHomepageBanner(String(req.body.contentType));
+    if (!result) {
+      next(ServiceUnavailable("File uploads are not configured"));
+      return;
+    }
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }

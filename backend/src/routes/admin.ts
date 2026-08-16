@@ -18,6 +18,7 @@ import {
 } from "../validators/admin.js";
 import {
   AdminAuditListQuerySchema,
+  AdminBannerPresignBodySchema,
   AdminBroadcastCreateBodySchema,
   AdminBroadcastListQuerySchema,
   AdminBroadcastPreviewQuerySchema,
@@ -43,6 +44,7 @@ import {
   AdminProductCreateBodySchema,
   AdminProductListQuerySchema,
   AdminProductMediaBodySchema,
+  AdminProductMediaPresignBodySchema,
   AdminProductUpdateBodySchema,
   AdminReconcileQuerySchema,
   AdminSettingKeyParamSchema,
@@ -111,6 +113,13 @@ router.put(
   ...adminOnly,
   validate({ body: AdminSettingUpsertBodySchema }),
   adminOps.putAdminSetting,
+);
+
+router.post(
+  "/admin/banners/upload-url",
+  ...adminOnly,
+  validate({ body: AdminBannerPresignBodySchema }),
+  adminOps.postAdminBannerPresign,
 );
 
 // ---- Email suppressions + logs + broadcasts ----
@@ -284,6 +293,13 @@ router.post(
   ...adminOnly,
   validate({ params: AdminIdParamSchema, body: AdminVariantUpsertBodySchema }),
   adminCatalog.postAdminProductVariant,
+);
+
+router.post(
+  "/admin/products/:id/media/upload-url",
+  ...adminOnly,
+  validate({ params: AdminIdParamSchema, body: AdminProductMediaPresignBodySchema }),
+  adminCatalog.postAdminProductMediaPresign,
 );
 
 router.post(

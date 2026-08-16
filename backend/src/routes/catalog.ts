@@ -21,6 +21,7 @@ const router = Router();
 router.get("/site/mode", siteController.getSiteMode);
 router.get("/site/integrations", siteController.getSiteIntegrations);
 router.get("/site/seo", siteController.getSiteSeo);
+router.get("/site/banners", siteController.getSiteBanners);
 
 router.get("/products/featured", catalogController.getFeatured);
 

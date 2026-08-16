@@ -12,6 +12,9 @@ import type { Request } from "express";
 import { recordAudit } from "../utils/adminAudit.js";
 import { NotFound, ValidationError } from "../utils/errors.js";
 import { prisma } from "../utils/prisma.js";
+import { presignUpload, type PresignResult } from "./storage.js";
+
+export const MAX_PRODUCT_IMAGES = 8;
 
 function dec2(n: number): Prisma.Decimal {
   return new Prisma.Decimal(Number(n).toFixed(2));
@@ -330,6 +333,31 @@ export async function upsertVariantAdmin(input: {
 }
 
 /**
+ * Presigned PUT for a product gallery image (`scope: products`).
+ * Returns `null` when R2 is not configured so the controller can 503.
+ */
+export async function presignProductMediaAdmin(input: {
+  productId: string;
+  contentType: string;
+}): Promise<PresignResult | null> {
+  const product = await prisma.product.findUnique({ where: { id: input.productId } });
+  if (!product) throw NotFound("Product not found");
+
+  const imageCount = await prisma.productMedia.count({
+    where: { productId: input.productId, type: "IMAGE" },
+  });
+  if (imageCount >= MAX_PRODUCT_IMAGES) {
+    throw ValidationError(`Maximum ${MAX_PRODUCT_IMAGES} images per product`);
+  }
+
+  return presignUpload({
+    scope: "products",
+    ownerId: input.productId,
+    contentType: input.contentType,
+  });
+}
+
+/**
  * Adds media asset reference.
  */
 export async function addProductMediaAdmin(input: {
@@ -343,6 +371,15 @@ export async function addProductMediaAdmin(input: {
 }): Promise<void> {
   const product = await prisma.product.findUnique({ where: { id: input.productId } });
   if (!product) throw NotFound("Product not found");
+
+  if (input.type === "IMAGE") {
+    const imageCount = await prisma.productMedia.count({
+      where: { productId: input.productId, type: "IMAGE" },
+    });
+    if (imageCount >= MAX_PRODUCT_IMAGES) {
+      throw ValidationError(`Maximum ${MAX_PRODUCT_IMAGES} images per product`);
+    }
+  }
 
   const maxOrder = await prisma.productMedia.aggregate({
     where: { productId: input.productId },

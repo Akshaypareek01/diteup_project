@@ -200,6 +200,36 @@ export const AdminProductMediaBodySchema = z.object({
   order: z.coerce.number().int().min(0).optional(),
 });
 
+export const AdminProductMediaPresignBodySchema = z.object({
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+});
+
+const BannerHrefSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(500)
+  .refine((s) => s.startsWith("/") || /^https?:\/\//i.test(s), {
+    message: "Link must be a site path like /product/energy-bite-750g or a full URL",
+  });
+
+export const HomepageBannerSlideSchema = z.object({
+  id: z.string().min(1).max(80),
+  desktopUrl: z.string().trim().min(1).max(2048),
+  mobileUrl: z.string().trim().min(1).max(2048),
+  href: BannerHrefSchema,
+  alt: z.string().max(200).optional().default(""),
+  order: z.coerce.number().int().min(0),
+});
+
+export const HomepageBannersSettingSchema = z.object({
+  slides: z.array(HomepageBannerSlideSchema).max(8),
+});
+
+export const AdminBannerPresignBodySchema = z.object({
+  contentType: z.enum(["image/jpeg", "image/png", "image/webp"]),
+});
+
 export const AdminInventoryListQuerySchema = AdminPaginationQuerySchema.extend({
   lowStockOnly: z.coerce.boolean().optional(),
   q: z.string().optional(),

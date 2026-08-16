@@ -11,7 +11,7 @@ import {
   encryptSettingsSecret,
   isSettingsEncryptionConfigured,
 } from "../utils/settingsCrypto.js";
-import { SiteModeSettingSchema } from "../validators/adminExpanded.js";
+import { SiteModeSettingSchema, HomepageBannersSettingSchema } from "../validators/adminExpanded.js";
 import { prisma } from "../utils/prisma.js";
 
 /**
@@ -77,6 +77,15 @@ export async function upsertSettingAdmin(input: {
     const parsed = SiteModeSettingSchema.safeParse(input.value);
     if (!parsed.success) {
       const msg = parsed.error.issues.map((i) => i.message).join("; ") || "Invalid siteMode value";
+      throw ValidationError(msg);
+    }
+    input.value = parsed.data;
+  }
+
+  if (key === "homepageBanners") {
+    const parsed = HomepageBannersSettingSchema.safeParse(input.value);
+    if (!parsed.success) {
+      const msg = parsed.error.issues.map((i) => i.message).join("; ") || "Invalid homepageBanners value";
       throw ValidationError(msg);
     }
     input.value = parsed.data;

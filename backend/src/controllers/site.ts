@@ -4,6 +4,7 @@
 import type { Request, Response, NextFunction } from "express";
 
 import { getEffectiveSiteMode, getPublicMetaPixelId, getPublicSiteSeo } from "../services/settings.js";
+import { getPublicHomepageBanners } from "../services/homepageBanners.js";
 
 /** GET /v1/site/mode — active site mode for banners and checkout gating. */
 export async function getSiteMode(_req: Request, res: Response, next: NextFunction) {
@@ -32,6 +33,17 @@ export async function getSiteSeo(_req: Request, res: Response, next: NextFunctio
     const siteSeo = await getPublicSiteSeo();
     res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
     res.status(200).json(siteSeo);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/** GET /v1/site/banners — homepage hero slides (image + click-through link). */
+export async function getSiteBanners(_req: Request, res: Response, next: NextFunction) {
+  try {
+    const banners = await getPublicHomepageBanners();
+    res.set("Cache-Control", "public, max-age=30, stale-while-revalidate=120");
+    res.status(200).json(banners);
   } catch (err) {
     next(err);
   }
