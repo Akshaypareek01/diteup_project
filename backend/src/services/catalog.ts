@@ -116,6 +116,25 @@ function mapVariant(variant: VariantStock) {
 }
 
 /**
+ * Seed/dev placeholder hosts must not appear on the storefront gallery.
+ */
+function isPlaceholderMediaUrl(url: string): boolean {
+  return /placehold\.co/i.test(url);
+}
+
+/**
+ * Drops empty and placeholder media rows from the public product payload.
+ */
+function publicMedia(media: unknown[]): unknown[] {
+  return media.filter((item) => {
+    if (!item || typeof item !== "object") return false;
+    const url = (item as { url?: unknown }).url;
+    if (typeof url !== "string" || !url.trim()) return false;
+    return !isPlaceholderMediaUrl(url);
+  });
+}
+
+/**
  * Shapes a stored product + variants for anonymous/API consumers (no admin-only fields leaked).
  */
 export function toPublicProductPayload(
@@ -138,7 +157,7 @@ export function toPublicProductPayload(
     effectiveVisibility,
     buyable,
     visibilityNote: product.visibilityNote,
-    media: product.media,
+    media: publicMedia(product.media),
     variants: product.variants.filter((v) => v.isActive).map(mapVariant),
     faqs: product.faqs,
     seo: product.seo,

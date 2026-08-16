@@ -414,6 +414,15 @@ export async function addProductMediaAdmin(input: {
   const product = await prisma.product.findUnique({ where: { id: input.productId } });
   if (!product) throw NotFound("Product not found");
 
+  if (input.type === "IMAGE" && !/placehold\.co/i.test(input.url)) {
+    await prisma.productMedia.deleteMany({
+      where: {
+        productId: input.productId,
+        url: { contains: "placehold.co" },
+      },
+    });
+  }
+
   if (input.type === "IMAGE") {
     const imageCount = await prisma.productMedia.count({
       where: { productId: input.productId, type: "IMAGE" },
