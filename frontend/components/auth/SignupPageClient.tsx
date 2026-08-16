@@ -1,19 +1,24 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { pickApiMessage } from "@/lib/client-api";
 import { pixelCompleteRegistration } from "@/lib/meta-pixel-events";
+import { safeNextPath } from "@/lib/safe-next-path";
 
 function SignupFlow() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = safeNextPath(searchParams.get("next"), "/account");
   const [phase, setPhase] = useState<"register" | "verify">("register");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [emailTaken, setEmailTaken] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -25,6 +30,7 @@ function SignupFlow() {
   async function register(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setEmailTaken(false);
     setLoading(true);
     try {
       const res = await fetch("/v1/auth/signup", {
@@ -41,6 +47,7 @@ function SignupFlow() {
       }
       if (!res.ok) {
         setError(pickApiMessage(data, "Sign up failed"));
+        setEmailTaken(res.status === 409);
         return;
       }
       setPhase("verify");
@@ -73,7 +80,7 @@ function SignupFlow() {
         return;
       }
       pixelCompleteRegistration();
-      router.push("/account");
+      router.push(next);
       router.refresh();
     } catch {
       setError("Network error");
@@ -132,14 +139,27 @@ function SignupFlow() {
     );
   }
 
+  const loginHref = `/login?next=${encodeURIComponent(next)}`;
+
   return (
     <form className="mt-6 space-y-4" onSubmit={register} aria-label="Sign up">
       <Input name="email" label="Email" type="email" autoComplete="email" value={email} onChange={(ev) => setEmail(ev.target.value)} required />
       <Input name="password" label="Password" type="password" autoComplete="new-password" value={password} onChange={(ev) => setPassword(ev.target.value)} required />
       {error ? (
-        <p className="text-body-sm text-error" role="alert">
-          {error}
-        </p>
+        <div className="space-y-1" role="alert">
+          <p className="text-body-sm text-error">{error}</p>
+          {emailTaken ? (
+            <p className="text-body-sm text-ink-muted">
+              <Link href={loginHref} className="font-semibold text-forest underline">
+                Log in
+              </Link>
+              {" · "}
+              <Link href="/forgot-password" className="font-semibold text-forest underline">
+                Forgot password
+              </Link>
+            </p>
+          ) : null}
+        </div>
       ) : null}
       <Button type="submit" variant="primaryGold" size="lg" className="w-full" disabled={loading}>
         {loading ? "Sending code…" : "Create account"}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AdminProductDeleteButton } from "@/components/admin/AdminProductDeleteButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { formatIstDateTime } from "@/lib/format-ist";
 import { formatInr, moneyNumber } from "@/lib/format-money";
 import { adminGet } from "@/lib/admin-json";
 
@@ -79,7 +80,7 @@ export default async function AdminProductsPage() {
                       </td>
                       <td className="px-4 py-3">{stock}</td>
                       <td className="px-4 py-3">{formatInr(price)}</td>
-                      <td className="px-4 py-3 text-ink-muted">{new Date(p.updatedAt).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-ink-muted">{formatIstDateTime(p.updatedAt)}</td>
                       <td className="px-4 py-3 text-right">
                         <AdminProductDeleteButton
                           productId={p.id}

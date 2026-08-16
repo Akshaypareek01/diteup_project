@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { AdminBroadcastCreateForm } from "@/components/admin/AdminBroadcastCreateForm";
 import { AdminBroadcastRowActions } from "@/components/admin/AdminBroadcastRowActions";
 import { adminGet } from "@/lib/admin-json";
+import { formatIstDateTime } from "@/lib/format-ist";
 
 type BroadcastRow = {
   id: string;
@@ -41,7 +42,7 @@ export default async function AdminBroadcastsPage() {
               <li key={b.id} className="py-4">
                 <p className="font-medium text-forest">{b.subject}</p>
                 <p className="font-mono text-xs text-ink-muted">
-                  {b.status} · {b.id} · {new Date(b.createdAt).toLocaleString()}
+                  {b.status} · {b.id} · {formatIstDateTime(b.createdAt)}
                 </p>
                 <AdminBroadcastRowActions broadcastId={b.id} status={b.status} />
               </li>

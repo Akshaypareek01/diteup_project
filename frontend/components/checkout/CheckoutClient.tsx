@@ -13,6 +13,7 @@ import { ApiError, clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
 import type { PincodeCheckPayload } from "@/lib/types/pincode";
 import { pixelAddPaymentInfo, pixelInitiateCheckout } from "@/lib/meta-pixel-events";
+import { CheckoutErrorDialog, CheckoutOrderErrorBanner } from "@/components/checkout/CheckoutErrorDialog";
 import { CheckoutFormSections } from "@/components/checkout/CheckoutFormSections";
 import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
 import type { CheckoutAddressRow } from "@/components/checkout/CheckoutShippingPanel";
@@ -48,6 +49,7 @@ export function CheckoutClient() {
   const [couponCode, setCouponCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [errDialogOpen, setErrDialogOpen] = useState(false);
   const [paymentNotice, setPaymentNotice] = useState<string | null>(null);
   const [pendingOrder, setPendingOrder] = useState<{ orderNumber: string; guestToken?: string } | null>(null);
 
@@ -312,18 +314,44 @@ export function CheckoutClient() {
     return `/order/${encodeURIComponent(pendingOrder.orderNumber)}${q ? `?${q}` : ""}`;
   }, [pendingOrder]);
 
+  /**
+   * Surfaces a checkout error in the popup and the Place-order banners.
+   */
+  const reportCheckoutError = useCallback((message: string) => {
+    setErr(message);
+    setErrDialogOpen(true);
+  }, []);
+
+  /**
+   * Closes the error popup and scrolls to the form section that failed validation.
+   */
+  const dismissCheckoutErrorDialog = useCallback(() => {
+    setErrDialogOpen(false);
+    if (!err) return;
+    const sectionId = /address|PIN|Shipping/i.test(err)
+      ? "co-ship"
+      : /email|cart/i.test(err)
+        ? "co-contact"
+        : null;
+    if (!sectionId) return;
+    window.requestAnimationFrame(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [err]);
+
   const placeOrder = useCallback(async () => {
     setErr(null);
+    setErrDialogOpen(false);
     setPaymentNotice(null);
     const items = previewPayload();
     if (items.length === 0) {
-      setErr("Your cart is empty.");
+      reportCheckoutError("Your cart is empty.");
       return;
     }
 
     const email = emailForPricing;
     if (!userEmail && !email) {
-      setErr("Email is required for guest checkout.");
+      reportCheckoutError("Email is required for guest checkout.");
       return;
     }
 
@@ -333,7 +361,7 @@ export function CheckoutClient() {
 
     if (!shippingWithSavedAddress) {
       if (!shipName.trim() || !shipPhone.trim() || !line1.trim() || !city.trim() || !stateField.trim()) {
-        setErr("Please complete all required address fields.");
+        reportCheckoutError("Please complete all required address fields.");
         return;
       }
     }
@@ -344,13 +372,13 @@ export function CheckoutClient() {
         : pincode.trim();
 
     if (!/^\d{6}$/.test(pinForOrder)) {
-      setErr("PIN code must be 6 digits for delivery.");
+      reportCheckoutError("PIN code must be 6 digits for delivery.");
       return;
     }
     if (!pinStatus?.serviceable) {
       const checked = await validatePinForCart(pinForOrder);
       if (!checked?.serviceable) {
-        setErr("Validate your PIN for delivery — scroll to Shipping.");
+        reportCheckoutError("Validate your PIN for delivery — scroll to Shipping.");
         return;
       }
     }
@@ -395,7 +423,7 @@ export function CheckoutClient() {
 
       const { razorpayOrderId, razorpayKeyId, amountPaise } = placed.payment;
       if (!razorpayOrderId || !razorpayKeyId || !amountPaise) {
-        setErr("Online payment is not available for this order. Please try again later.");
+        reportCheckoutError("Online payment is not available for this order. Please try again later.");
         setBusy(false);
         return;
       }
@@ -403,13 +431,13 @@ export function CheckoutClient() {
       try {
         await loadRazorpayCheckout();
       } catch {
-        setErr("Payment SDK not loaded — refresh and try again.");
+        reportCheckoutError("Payment SDK not loaded — refresh and try again.");
         setBusy(false);
         return;
       }
 
       if (!window.Razorpay) {
-        setErr("Payment SDK not loaded — refresh and try again.");
+        reportCheckoutError("Payment SDK not loaded — refresh and try again.");
         setBusy(false);
         return;
       }
@@ -450,7 +478,7 @@ export function CheckoutClient() {
           } catch (e) {
             const msg = e instanceof ApiError ? e.message : "Payment verification failed.";
             setPaymentNotice(null);
-            setErr(
+            reportCheckoutError(
               `${msg} Order #${placed.order.orderNumber} is saved as payment pending — open your order page to check status or try again.`,
             );
             setBusy(false);
@@ -472,14 +500,14 @@ export function CheckoutClient() {
           response.error?.reason?.trim() ||
           "Payment failed. Please try again.";
         setPaymentNotice(null);
-        setErr(`${reason} Order #${placed.order.orderNumber} is still pending payment.`);
+        reportCheckoutError(`${reason} Order #${placed.order.orderNumber} is still pending payment.`);
         setBusy(false);
       });
 
       rzp.open();
     } catch (e) {
       const msg = e instanceof ApiError ? e.message : "Could not place order.";
-      setErr(msg);
+      reportCheckoutError(msg);
       setBusy(false);
     }
   }, [
@@ -502,6 +530,7 @@ export function CheckoutClient() {
     selectedSavedAddressId,
     savedAddresses,
     validatePinForCart,
+    reportCheckoutError,
   ]);
 
   const pinStatusSummary = useMemo(() => {
@@ -598,7 +627,7 @@ export function CheckoutClient() {
     "flex h-14 w-full items-center justify-center rounded-2xl bg-gold font-sans text-button font-semibold uppercase tracking-wide text-forest shadow-lg transition hover:bg-gold-soft disabled:opacity-50";
 
   return (
-    <div className="min-h-screen bg-cream pb-28 lg:pb-12">
+    <div className={`min-h-screen bg-cream lg:pb-12 ${err ? "pb-44" : "pb-28"}`}>
       <RazorpayCheckoutScript />
       {siteMode.active ? <SiteModeStrip siteMode={siteMode} withShell /> : null}
       <FlowHeader backHref="/cart" />
@@ -624,11 +653,6 @@ export function CheckoutClient() {
 
           <div className="space-y-8 lg:col-span-7 xl:col-span-8">
             {formSectionsEl}
-            {err ? (
-              <p className="text-body-sm text-error" role="alert">
-                {err}
-              </p>
-            ) : null}
             {paymentNotice ? (
               <div
                 className="rounded-xl border border-warning/40 bg-warning/10 px-4 py-3 text-body-sm text-forest"
@@ -654,6 +678,7 @@ export function CheckoutClient() {
               previewErr={previewErr}
               lines={lines}
             />
+            <CheckoutOrderErrorBanner message={err} />
             <button
               type="button"
               className={placeOrderBtnClass}
@@ -664,17 +689,27 @@ export function CheckoutClient() {
             </button>
           </aside>
 
-          <button
-            type="button"
-            className={`${placeOrderBtnClass} fixed inset-x-4 bottom-4 z-30 lg:hidden`}
+          <div
+            className="fixed inset-x-4 z-30 space-y-2 lg:hidden"
             style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
-            disabled={busy || !preview || checkoutBlocked}
-            onClick={() => void placeOrder()}
           >
-            {busy ? "Processing…" : "Place order"}
-          </button>
+            <CheckoutOrderErrorBanner message={err} />
+            <button
+              type="button"
+              className={placeOrderBtnClass}
+              disabled={busy || !preview || checkoutBlocked}
+              onClick={() => void placeOrder()}
+            >
+              {busy ? "Processing…" : "Place order"}
+            </button>
+          </div>
         </div>
       </div>
+      <CheckoutErrorDialog
+        message={err}
+        open={errDialogOpen}
+        onClose={dismissCheckoutErrorDialog}
+      />
     </div>
   );
 }

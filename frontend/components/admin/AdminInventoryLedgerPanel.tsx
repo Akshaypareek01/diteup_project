@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ApiError, clientApiJson } from "@/lib/client-api";
+import { formatIstDateTime } from "@/lib/format-ist";
 
 type LedgerEntry = {
   id: string;
@@ -52,7 +53,7 @@ export function AdminInventoryLedgerPanel({ inventoryId, sku }: AdminInventoryLe
         <ul className="mt-2 max-h-40 space-y-1 overflow-auto rounded border border-line bg-cream p-2 text-xs">
           {entries.map((e) => (
             <li key={e.id}>
-              <span className="font-mono">{new Date(e.createdAt).toLocaleString()}</span>
+              <span className="font-mono">{formatIstDateTime(e.createdAt)}</span>
               {" · "}
               <span className={e.delta >= 0 ? "text-success" : "text-error"}>
                 {e.delta >= 0 ? "+" : ""}

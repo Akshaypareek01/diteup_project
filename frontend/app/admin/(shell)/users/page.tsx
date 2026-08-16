@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { adminGet } from "@/lib/admin-json";
+import { formatIstDate } from "@/lib/format-ist";
 
 type UserRow = {
   id: string;
@@ -122,7 +123,7 @@ export default async function AdminUsersPage({
                         <Badge variant="warning">Inactive</Badge>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-ink-muted">{new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-ink-muted">{formatIstDate(u.createdAt)}</td>
                   </tr>
                 ))
               )}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { formatIstDateTime } from "@/lib/format-ist";
 import { formatInr } from "@/lib/format-money";
 import { adminGet } from "@/lib/admin-json";
 
@@ -150,7 +151,7 @@ export default async function AdminCouponAnalyticsPage({ params }: Props) {
               ) : (
                 redemptions.map((r) => (
                   <tr key={r.id} className="border-t border-line">
-                    <td className="px-3 py-2 text-ink-muted">{new Date(r.redeemedAt).toLocaleString()}</td>
+                    <td className="px-3 py-2 text-ink-muted">{formatIstDateTime(r.redeemedAt)}</td>
                     <td className="px-3 py-2 font-mono">{r.order?.orderNumber ?? "—"}</td>
                     <td className="px-3 py-2">{formatInr(r.discountAmount)}</td>
                     <td className="px-3 py-2">{r.isReversed ? "Yes" : "No"}</td>

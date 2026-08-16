@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PaymentRefundPanel } from "@/components/admin/PaymentRefundPanel";
+import { formatIstDateTime } from "@/lib/format-ist";
 import { formatInr } from "@/lib/format-money";
 import { adminGet } from "@/lib/admin-json";
 
@@ -78,7 +79,7 @@ export default async function AdminPaymentDetailPage({ params }: Props) {
           <div>
             <dt className="font-mono text-eyebrow text-ink-muted">Times</dt>
             <dd>
-              {new Date(p.createdAt).toLocaleString()} → {new Date(p.updatedAt).toLocaleString()}
+              {formatIstDateTime(p.createdAt)} → {formatIstDateTime(p.updatedAt)}
             </dd>
           </div>
         </dl>

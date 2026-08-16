@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { adminGet } from "@/lib/admin-json";
 import { settingsSections } from "@/lib/admin-nav";
+import { formatIstDateTime } from "@/lib/format-ist";
 
 type SettingsListResponse = {
   settings: Array<{ key: string; value: unknown; updatedAt: string }>;
@@ -65,7 +66,7 @@ export default async function AdminSettingsIndexPage() {
                   <td className="max-w-md truncate px-4 py-3 text-ink-muted">
                     {typeof r.value === "object" ? JSON.stringify(r.value) : String(r.value)}
                   </td>
-                  <td className="px-4 py-3 text-ink-muted">{new Date(r.updatedAt).toLocaleString()}</td>
+                  <td className="px-4 py-3 text-ink-muted">{formatIstDateTime(r.updatedAt)}</td>
                 </tr>
               ))}
             </tbody>

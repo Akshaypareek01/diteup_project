@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { adminGet } from "@/lib/admin-json";
+import { formatIstDateTime } from "@/lib/format-ist";
 
 type LogRow = {
   id: string;
@@ -80,7 +81,7 @@ export default async function AdminEmailLogPage({
                 rows.map((r) => (
                   <tr key={r.id} className="border-t border-line">
                     <td className="px-4 py-3 whitespace-nowrap text-ink-muted">
-                      {new Date(r.sentAt).toLocaleString()}
+                      {formatIstDateTime(r.sentAt)}
                     </td>
                     <td className="px-4 py-3">{r.to}</td>
                     <td className="px-4 py-3 font-mono text-xs">{r.template}</td>

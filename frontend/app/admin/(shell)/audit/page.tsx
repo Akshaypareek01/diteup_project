@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { adminGet } from "@/lib/admin-json";
+import { formatIstDateTime } from "@/lib/format-ist";
 
 type AuditEntry = {
   id: string;
@@ -57,7 +58,7 @@ export default async function AdminAuditPage({
                 rows.map((e) => (
                   <tr key={e.id} className="border-t border-line">
                     <td className="px-4 py-3 whitespace-nowrap text-ink-muted">
-                      {new Date(e.createdAt).toLocaleString()}
+                      {formatIstDateTime(e.createdAt)}
                     </td>
                     <td className="px-4 py-3 font-mono text-xs">{e.actorId ?? "—"}</td>
                     <td className="px-4 py-3 font-mono text-xs">{e.action}</td>

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { pickApiMessage } from "@/lib/client-api";
+import { safeNextPath } from "@/lib/safe-next-path";
 
 /**
  * Customer login — `POST /v1/auth/login` via same-origin `/v1` proxy.
@@ -13,9 +14,7 @@ import { pickApiMessage } from "@/lib/client-api";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const raw = searchParams.get("next") ?? "/account";
-  const next =
-    raw.startsWith("/") && !raw.includes("://") && !raw.includes("//") ? raw : "/account";
+  const next = safeNextPath(searchParams.get("next"), "/account");
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -72,7 +71,10 @@ export function LoginForm() {
       </p>
       <p className="text-body-sm">
         New here?{" "}
-        <Link href="/signup" className="font-semibold text-forest underline">
+        <Link
+          href={`/signup?next=${encodeURIComponent(next)}`}
+          className="font-semibold text-forest underline"
+        >
           Create account
         </Link>
       </p>

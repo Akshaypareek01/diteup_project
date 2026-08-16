@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { UserRestrictionsPanel } from "@/components/admin/UserRestrictionsPanel";
+import { formatIstDateTime } from "@/lib/format-ist";
 import { formatInr } from "@/lib/format-money";
 import { adminGet } from "@/lib/admin-json";
 
@@ -97,7 +98,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
             </div>
             <div>
               <dt className="font-mono text-eyebrow text-ink-muted">Last login</dt>
-              <dd>{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString() : "—"}</dd>
+              <dd>{u.lastLoginAt ? formatIstDateTime(u.lastLoginAt) : "—"}</dd>
             </div>
           </dl>
         </Card>
@@ -142,7 +143,7 @@ export default async function AdminUserDetailPage({ params }: Props) {
                         <Badge variant="outline">{o.status}</Badge>
                       </td>
                       <td className="px-2 py-2">{formatInr(o.total)}</td>
-                      <td className="px-2 py-2 text-ink-muted">{new Date(o.placedAt).toLocaleString()}</td>
+                      <td className="px-2 py-2 text-ink-muted">{formatIstDateTime(o.placedAt)}</td>
                     </tr>
                   ))}
                 </tbody>

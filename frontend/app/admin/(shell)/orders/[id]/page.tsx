@@ -3,7 +3,9 @@ import { notFound } from "next/navigation";
 import { AdminOrderShiprocketPanel } from "@/components/admin/AdminOrderShiprocketPanel";
 import { AdminOrderStatusPanel } from "@/components/admin/AdminOrderStatusPanel";
 import { Card } from "@/components/ui/Card";
+import { formatIstDateTime } from "@/lib/format-ist";
 import { formatInr } from "@/lib/format-money";
+import { shippingSnapshotLines } from "@/lib/format-order-address";
 import { serverApiFetch, tryGetServerApiBase } from "@/lib/server-api";
 
 type Props = { params: { id: string } };
@@ -36,8 +38,12 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       paymentMethod: string;
       total: number;
       guestEmail: string | null;
+      customerName: string | null;
+      customerEmail: string | null;
+      isGuest: boolean;
       shippingAddress: unknown;
       user: { email?: string; name?: string | null } | null;
+      placedAt: string;
       awbNumber: string | null;
       shippingCarrier: string | null;
       shiprocketOrderId: string | null;
@@ -66,7 +72,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           <p className="font-mono text-body-sm text-ink-muted">Order</p>
           <h1 className="font-display text-display-md font-semibold text-forest">{order.orderNumber}</h1>
           <p className="text-body-sm text-ink-muted">
-            {order.status} · {order.paymentMethod} · {formatInr(order.total)}
+            {order.status} · {order.paymentMethod} · {formatInr(order.total)} · {formatIstDateTime(order.placedAt)} IST
           </p>
         </div>
       </div>
@@ -99,12 +105,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
         <Card>
           <h2 className="font-semibold text-forest">Customer &amp; shipping</h2>
           <p className="mt-3 text-body-sm text-forest">
-            {order.user?.email ?? order.guestEmail ?? "—"}
-            {order.user?.name ? ` · ${order.user.name}` : ""}
+            {order.customerName ?? "—"}
+            {order.isGuest ? " · Guest" : ""}
           </p>
-          <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded border border-line bg-cream p-3 font-sans text-body-sm text-ink-muted">
-            {JSON.stringify(order.shippingAddress, null, 2)}
-          </pre>
+          <p className="text-body-sm text-ink-muted">{order.customerEmail ?? "—"}</p>
+          <ul className="mt-3 space-y-1 text-body-sm text-ink-muted">
+            {shippingSnapshotLines(order.shippingAddress).map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
         </Card>
         <Card className="lg:col-span-2">
           <h2 className="font-semibold text-forest">Line items</h2>
@@ -128,7 +137,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
                 <span className="font-medium text-forest">{e.type.replace(/_/g, " ")}</span>
                 <span className="text-ink-muted">
                   {" "}
-                  · {new Date(e.at).toLocaleString()} {e.actorId ? ` · actor ${e.actorId.slice(0, 8)}…` : ""}
+                  · {formatIstDateTime(e.at)} {e.actorId ? ` · actor ${e.actorId.slice(0, 8)}…` : ""}
                 </span>
               </li>
             ))}

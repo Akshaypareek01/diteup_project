@@ -10,14 +10,14 @@ import { SiteNavHashLink } from "@/components/layout/SiteNavHashLink";
 import type { SiteNavLink } from "@/components/layout/site-nav-links";
 
 /** Magnifying glass outline — inherits `currentColor`. */
-function IconSearch({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" width={22} height={22} fill="none" aria-hidden>
-      <circle cx={11} cy={11} r={7} stroke="currentColor" strokeWidth={1.5} />
-      <path d="M20 20l-4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" />
-    </svg>
-  );
-}
+// function IconSearch({ className }: { className?: string }) {
+//   return (
+//     <svg className={className} viewBox="0 0 24 24" width={22} height={22} fill="none" aria-hidden>
+//       <circle cx={11} cy={11} r={7} stroke="currentColor" strokeWidth={1.5} />
+//       <path d="M20 20l-4-4" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" />
+//     </svg>
+//   );
+// }
 
 /** User silhouette outline — inherits `currentColor`. */
 function IconUser({ className }: { className?: string }) {
@@ -71,7 +71,7 @@ export type SiteHeaderBarProps = {
 };
 
 /**
- * Cream nav row: on small viewports — menu | centered logo | cart; on `lg+` — logo left, links center, search/account/cart right.
+ * Cream nav row: on small viewports — menu | centered logo | cart; on `lg+` — logo left, links center, account/cart right.
  */
 export function SiteHeaderBar({ isCompact = false, navLinks }: SiteHeaderBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -136,13 +136,13 @@ export function SiteHeaderBar({ isCompact = false, navLinks }: SiteHeaderBarProp
             )}
             <div className="flex items-center gap-0.5 sm:gap-1">
               {/* <HeroBannerArtworkToggle /> */}
-              <button
+              {/* <button
                 type="button"
                 className="inline-flex size-10 items-center justify-center rounded-md text-ink transition-colors hover:bg-beige/90"
                 aria-label="Search products"
               >
                 <IconSearch />
-              </button>
+              </button> */}
               <Link
                 href="/account"
                 className="inline-flex size-10 items-center justify-center rounded-md text-ink transition-colors hover:bg-beige/90"

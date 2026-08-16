@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { AdminCustomerCell } from "@/components/admin/AdminCustomerCell";
 import { AdminXlsxUploadForm } from "@/components/admin/AdminXlsxUploadForm";
+import { formatIstDateTime } from "@/lib/format-ist";
 import { formatInr } from "@/lib/format-money";
 import { serverApiFetch, tryGetServerApiBase } from "@/lib/server-api";
 
@@ -46,6 +48,9 @@ export default async function AdminOrdersPage({
       id: string;
       orderNumber: string;
       guestEmail: string | null;
+      customerName: string | null;
+      customerEmail: string | null;
+      isGuest: boolean;
       total: number;
       status: string;
       paymentMethod: string;
@@ -91,7 +96,7 @@ export default async function AdminOrdersPage({
           id="order-q"
           name="q"
           defaultValue={q ?? ""}
-          placeholder="Order #, email…"
+          placeholder="Order #, name, email…"
           className="h-11 min-w-[200px] rounded-lg border border-line bg-paper px-3 text-body-sm"
         />
         <label className="sr-only" htmlFor="order-status">
@@ -155,13 +160,17 @@ export default async function AdminOrdersPage({
                       {o.orderNumber}
                     </Link>
                   </td>
-                  <td className="px-4 py-3">{o.guestEmail ?? "—"}</td>
+                  <AdminCustomerCell
+                    customerName={o.customerName}
+                    customerEmail={o.customerEmail}
+                    isGuest={o.isGuest}
+                  />
                   <td className="px-4 py-3">{formatInr(o.total)}</td>
                   <td className="px-4 py-3">{o.paymentMethod}</td>
                   <td className="px-4 py-3">
                     <Badge variant="outline">{o.status}</Badge>
                   </td>
-                  <td className="px-4 py-3 text-ink-muted">{new Date(o.placedAt).toLocaleString()}</td>
+                  <td className="px-4 py-3 text-ink-muted">{formatIstDateTime(o.placedAt)}</td>
                 </tr>
               ))
             )}

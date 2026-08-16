@@ -29,6 +29,7 @@ export function useFormAutofillSync(
      * Reads named controls and updates React only when the value actually changed.
      */
     function syncFromDom(): void {
+      if (!form) return;
       const map = fieldsRef.current;
       for (const [name, binding] of Object.entries(map)) {
         if (binding.skip) continue;

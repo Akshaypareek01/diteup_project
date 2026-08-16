@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { formatIstDateTime } from "@/lib/format-ist";
 import { formatInr } from "@/lib/format-money";
 import { adminGet } from "@/lib/admin-json";
 
@@ -157,7 +158,7 @@ export default async function AdminPaymentsPage({
                         <span className="ml-1 text-xs text-ink-muted">(ref {formatInr(p.refundedAmount)})</span>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 text-ink-muted">{new Date(p.createdAt).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-ink-muted">{formatIstDateTime(p.createdAt)}</td>
                   </tr>
                 ))
               )}

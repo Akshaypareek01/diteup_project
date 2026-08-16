@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ApiError, clientApiJson } from "@/lib/client-api";
+import { formatIstDateTime } from "@/lib/format-ist";
 
 export type ShiprocketPushStatus = "PENDING" | "PUSHED" | "FAILED";
 
@@ -80,7 +81,7 @@ export function AdminOrderShiprocketPanel({
     rows.push({
       label: "Last webhook status",
       value: shiprocketStatusAt
-        ? `${shiprocketLastStatus} · ${new Date(shiprocketStatusAt).toLocaleString()}`
+        ? `${shiprocketLastStatus} · ${formatIstDateTime(shiprocketStatusAt)}`
         : shiprocketLastStatus,
     });
   }
