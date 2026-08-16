@@ -104,6 +104,49 @@ async function sendClientApiJsonOnce<T>(path: string, init: ClientJsonInit): Pro
 }
 
 /**
+ * Browser POST of a raw image to proxied `/v1` (same-origin, cookies). Used so R2 CORS is not required.
+ */
+export async function clientApiUploadFile<T>(path: string, file: File): Promise<T> {
+  const url = path.startsWith("/v1/") ? path : `/v1${path.startsWith("/") ? path : `/${path}`}`;
+  const contentType = file.type || "application/octet-stream";
+
+  async function sendOnce(): Promise<T> {
+    const res = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": contentType },
+      body: file,
+    });
+    const text = await res.text();
+    let parsed: unknown = null;
+    if (text) {
+      try {
+        parsed = JSON.parse(text) as unknown;
+      } catch {
+        parsed = { raw: text };
+      }
+    }
+    if (!res.ok) {
+      throw new ApiError(res.status, pickApiMessage(parsed, `Request failed (${res.status})`), parsed);
+    }
+    return parsed as T;
+  }
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      return await sendOnce();
+    } catch (e) {
+      const canRefresh =
+        attempt === 0 && e instanceof ApiError && e.status === 401 && isExpiredAccessMessage(e.message);
+      if (!canRefresh) throw e;
+      const ok = await refreshAccessToken();
+      if (!ok) throw e;
+    }
+  }
+  throw new Error("clientApiUploadFile retry exhausted");
+}
+
+/**
  * Browser fetch to proxied `/v1` with cookies — same origin as the Next app.
  * On a 401 “Access token expired”, calls `POST /v1/auth/refresh` once and retries the request.
  */

@@ -1,15 +1,13 @@
-import { ApiError, clientApiJson } from "@/lib/client-api";
+import { clientApiUploadFile } from "@/lib/client-api";
 
 export const MAX_PRODUCT_IMAGES = 8;
 export const MAX_PRODUCT_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const ALLOWED_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-export type PresignProductImageResponse = {
-  uploadUrl: string;
+export type UploadedProductImage = {
   publicUrl: string;
   key: string;
-  expiresIn: number;
 };
 
 /**
@@ -38,35 +36,14 @@ export function validateProductImageFiles(files: File[], alreadyUploaded: number
 }
 
 /**
- * Presign + PUT one file to R2, then return the public URL for `POST .../media`.
+ * POST the file to the API, which writes it to R2 (no browser CORS).
  */
 export async function presignAndUploadProductImage(productId: string, file: File): Promise<string> {
   const contentType = file.type || "image/jpeg";
   if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
     throw new Error("Unsupported image type.");
   }
-
-  const path = `/v1/admin/products/${encodeURIComponent(productId)}/media/upload-url`;
-  const presign = await clientApiJson<PresignProductImageResponse>(path, {
-    method: "POST",
-    json: { contentType },
-  });
-
-  try {
-    const putRes = await fetch(presign.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": contentType },
-      body: file,
-    });
-    if (!putRes.ok) {
-      const snippet = await putRes.text().catch(() => "");
-      throw new ApiError(putRes.status, `Image upload failed (${putRes.status}).`, snippet);
-    }
-  } catch (e) {
-    if (e instanceof ApiError) throw e;
-    if (e instanceof Error) throw e;
-    throw new Error("Image upload failed.");
-  }
-
-  return presign.publicUrl;
+  const path = `/v1/admin/products/${encodeURIComponent(productId)}/media/upload`;
+  const stored = await clientApiUploadFile<UploadedProductImage>(path, file);
+  return stored.publicUrl;
 }
