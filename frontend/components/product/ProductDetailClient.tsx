@@ -13,6 +13,7 @@ import { formatInr, moneyNumber } from "@/lib/format-money";
 import type { PublicProduct } from "@/lib/types/catalog";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
 import { pixelAddToCart } from "@/lib/meta-pixel-events";
+import { ProductImageGallery } from "@/components/product/ProductImageGallery";
 import { NotifyMeForm } from "@/components/product/NotifyMeForm";
 import { ProductPdpAccordions } from "@/components/product/ProductPdpAccordions";
 import { ProductPdpAplusContent } from "@/components/product/ProductPdpAplusContent";
@@ -26,8 +27,7 @@ import {
   findBestValueVariantId,
 } from "@/lib/pdp-variant-pricing";
 
-const PACKAGING_FALLBACK_SRC = "/assets/Images/product_.webp";
-/** Clean packaging cutout for cart / summaries (Energy Bite). */
+/** Clean packaging cutout for cart / summaries when CMS media is empty. */
 const ENERGY_CART_PACKAGING_SRC = "/assets/Images/prodcut_clean.webp";
 
 export type ProductDetailClientProps = {
@@ -36,32 +36,17 @@ export type ProductDetailClientProps = {
 };
 
 /**
- * Picks hero image: packaging shot for Energy Bite; otherwise CMS media, then local fallback.
- */
-function resolveHeroImageSrc(product: PublicProduct): { src: string; alt: string } {
-  const first = product.media?.[0];
-  const slugIsEnergy = product.slug.includes("energy-bite");
-  if (slugIsEnergy) {
-    return { src: PACKAGING_FALLBACK_SRC, alt: `${product.name} packaging` };
-  }
-  if (first?.url) {
-    return { src: first.url, alt: first.altText ?? product.name };
-  }
-  return { src: PACKAGING_FALLBACK_SRC, alt: `${product.name} packaging` };
-}
-
-/**
- * Thumbnail for cart rows: clean Energy Bite asset when applicable, else CMS or fallback.
+ * Thumbnail for cart rows: first CMS image, else local packaging fallback.
  */
 function resolveCartLineImage(product: PublicProduct): { imageSrc: string; imageAlt: string } {
-  if (product.slug.includes("energy-bite")) {
-    return { imageSrc: ENERGY_CART_PACKAGING_SRC, imageAlt: `${product.name} — packaging` };
-  }
-  const first = product.media?.[0];
+  const first = (product.media ?? [])
+    .filter((m) => Boolean(m?.url) && (m.type ?? "IMAGE").toUpperCase() !== "VIDEO")
+    .slice()
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0];
   if (first?.url) {
     return { imageSrc: first.url, imageAlt: first.altText ?? product.name };
   }
-  return { imageSrc: PACKAGING_FALLBACK_SRC, imageAlt: `${product.name} packaging` };
+  return { imageSrc: ENERGY_CART_PACKAGING_SRC, imageAlt: `${product.name} — packaging` };
 }
 
 /**
@@ -89,8 +74,6 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
   const sale = selected ? moneyNumber(selected.priceSale) : 0;
   const mrp = selected ? moneyNumber(selected.priceMrp) : 0;
   const off = mrp > sale ? Math.round(((mrp - sale) / mrp) * 100) : 0;
-
-  const hero = resolveHeroImageSrc(product);
 
   function handleAddToCart() {
     if (!selected || !product.buyable || siteBlocksPurchase) return;
@@ -159,23 +142,7 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
 
         <div className="lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-8 xl:gap-x-12">
           <div className="lg:col-span-6 xl:col-span-7 lg:flex lg:justify-center xl:justify-end xl:pr-4">
-            <div className="relative mx-auto mt-4 w-full max-w-[520px] lg:mx-0 lg:mt-8 lg:max-w-[480px] xl:max-w-[540px]">
-              <div className="relative overflow-hidden rounded-[1.125rem] border border-line/70 bg-gradient-to-b from-paper to-cream shadow-xs">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={hero.src}
-                  alt={hero.alt}
-                  fetchPriority="high"
-                  decoding="async"
-                  className="aspect-square w-full object-contain p-4 sm:p-8 lg:p-10"
-                />
-                {product.displayBadge ? (
-                  <span className="absolute left-3 top-3 rounded-md bg-[#E89B2A] px-2.5 py-1 text-body-sm font-semibold text-ink shadow-sm">
-                    {product.displayBadge}
-                  </span>
-                ) : null}
-              </div>
-            </div>
+            <ProductImageGallery product={product} />
           </div>
 
           <div className="lg:sticky lg:top-24 lg:z-10 lg:col-span-6 xl:col-span-5 lg:self-start lg:pt-8">

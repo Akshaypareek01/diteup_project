@@ -1,5 +1,6 @@
 import { serverApiFetch, tryGetServerApiBase } from "@/lib/server-api";
 import type { PublicProduct } from "@/lib/types/catalog";
+import type { HomepageBannerSlide, HomepageBannersPayload } from "@/lib/types/homepage-banners";
 import { INACTIVE_SITE_MODE, type PublicSiteMode } from "@/lib/types/site-mode";
 
 /**
@@ -92,6 +93,21 @@ export async function fetchSitemapProducts(): Promise<
     if (!res.ok) return [];
     const data = (await res.json()) as { products?: Array<{ slug: string; updatedAt: string }> };
     return data.products ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Homepage hero banners from admin (`Setting` key `homepageBanners`).
+ */
+export async function fetchHomepageBanners(): Promise<HomepageBannerSlide[]> {
+  if (!tryGetServerApiBase()) return [];
+  try {
+    const res = await serverApiFetch("/v1/site/banners", { forwardCookies: false, revalidate: 30 });
+    if (!res.ok) return [];
+    const data = (await res.json()) as HomepageBannersPayload;
+    return Array.isArray(data.slides) ? data.slides : [];
   } catch {
     return [];
   }

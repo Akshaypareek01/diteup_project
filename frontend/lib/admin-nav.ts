@@ -32,7 +32,8 @@ export const settingsSections: { slug: string; label: string; blurb: string }[] 
   { slug: "meta", label: "Meta ads", blurb: "Pixel, CAPI, consent" },
   { slug: "email", label: "Email", blurb: "Resend, from/reply, DKIM" },
   { slug: "seo", label: "SEO", blurb: "Titles, OG, robots" },
-  { slug: "site", label: "Site-wide mode", blurb: "Maintenance, banners" },
+  { slug: "banners", label: "Homepage banners", blurb: "Hero images + click-through links" },
+  { slug: "site", label: "Site-wide mode", blurb: "Maintenance, announcement strip" },
   { slug: "security", label: "Audit & security", blurb: "IP allowlist, backup hooks" },
 ];
 

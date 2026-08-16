@@ -10,7 +10,7 @@ import { TrustBarSection } from "@/components/home/TrustBarSection";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { FaqJsonLd } from "@/components/seo/FaqJsonLd";
 import { buildHomeMetadata, resolveSiteSeo } from "@/lib/seo/resolve-site-seo";
-import { fetchFeaturedProduct } from "@/lib/storefront-api";
+import { fetchFeaturedProduct, fetchHomepageBanners } from "@/lib/storefront-api";
 import { fetchProductReviewsBySlug } from "@/lib/storefront-reviews";
 
 /**
@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const featured = await fetchFeaturedProduct();
+  const [featured, banners] = await Promise.all([fetchFeaturedProduct(), fetchHomepageBanners()]);
   const reviewsPayload =
     featured?.slug != null && featured.slug.length > 0
       ? await fetchProductReviewsBySlug(featured.slug)
@@ -31,7 +31,7 @@ export default async function HomePage() {
   return (
     <SiteShell>
       <FaqJsonLd items={HOME_FAQ_ITEMS} />
-      <HeroSection featured={featured} />
+      <HeroSection featured={featured} banners={banners} />
       <WhyChoosePressSection />
       <TrustBarSection />
       <PerfectForEveryYouSection />

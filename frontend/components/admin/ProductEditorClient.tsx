@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { ProductMediaManager } from "@/components/admin/ProductMediaManager";
 import { ProductVariantManager } from "@/components/admin/ProductVariantManager";
 import { ApiError, clientApiJson } from "@/lib/client-api";
 import { cn } from "@/lib/utils";
@@ -373,18 +374,7 @@ export function ProductEditorClient({ productId, initialProduct }: ProductEditor
             </div>
           ) : null}
 
-          {tab === "media" ? (
-            <div className="mt-6 space-y-6">
-              <ul className="space-y-2 text-body-sm">
-                {media.map((m) => (
-                  <li key={str(m.id)} className="rounded border border-line bg-cream px-3 py-2">
-                    <span className="font-mono text-xs">{str(m.type)}</span> · {str(m.url)}
-                  </li>
-                ))}
-              </ul>
-              <MediaAddForm productId={productId} />
-            </div>
-          ) : null}
+          {tab === "media" ? <ProductMediaManager productId={productId} media={media} /> : null}
 
           {tab === "faqs" ? (
             <pre className="mt-6 max-h-80 overflow-auto rounded border border-line bg-cream p-3 text-xs">
@@ -411,58 +401,6 @@ export function ProductEditorClient({ productId, initialProduct }: ProductEditor
       <Link href="/admin/products" className="text-body-sm text-gold-deep hover:underline">
         ← Products
       </Link>
-    </div>
-  );
-}
-
-function MediaAddForm({ productId }: { productId: string }) {
-  const router = useRouter();
-  const [url, setUrl] = useState("");
-  const [altText, setAltText] = useState("");
-  const [order, setOrder] = useState("0");
-  const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-
-  async function add() {
-    setMsg(null);
-    setBusy(true);
-    try {
-      await clientApiJson(`/v1/admin/products/${encodeURIComponent(productId)}/media`, {
-        method: "POST",
-        json: {
-          type: "IMAGE",
-          url: url.trim(),
-          altText: altText.trim() || null,
-          order: Number(order) || 0,
-        },
-      });
-      setUrl("");
-      setAltText("");
-      setOrder("0");
-      router.refresh();
-    } catch (e) {
-      setMsg(e instanceof ApiError ? e.message : "Failed");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div className="rounded-lg border border-dashed border-line p-4">
-      <h3 className="font-semibold text-forest">Add media (image URL)</h3>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <Input className="sm:col-span-2" label="URL" value={url} onChange={(e) => setUrl(e.target.value)} />
-        <Input label="Alt text" value={altText} onChange={(e) => setAltText(e.target.value)} />
-        <Input label="Order" value={order} onChange={(e) => setOrder(e.target.value)} />
-      </div>
-      {msg ? (
-        <p className="mt-2 text-body-sm text-error" role="alert">
-          {msg}
-        </p>
-      ) : null}
-      <Button type="button" className="mt-3" variant="secondary" size="sm" disabled={busy} onClick={() => void add()}>
-        {busy ? "Adding…" : "Add media"}
-      </Button>
     </div>
   );
 }

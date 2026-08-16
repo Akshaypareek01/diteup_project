@@ -14,6 +14,7 @@ export const SETTINGS_SECTION_KEYS: Record<string, string[]> = {
   inventory: [],
   orders: [],
   seo: ["siteSeo"],
+  banners: ["homepageBanners"],
   site: ["siteMode"],
   security: [],
 };

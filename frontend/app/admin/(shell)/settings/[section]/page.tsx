@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { AdminHomepageBannersPanel } from "@/components/admin/AdminHomepageBannersPanel";
 import { AdminSettingJsonEditor } from "@/components/admin/AdminSettingJsonEditor";
 import { AdminSiteModePanel } from "@/components/admin/AdminSiteModePanel";
 import { settingsSections } from "@/lib/admin-nav";
@@ -57,6 +58,8 @@ export default async function AdminSettingsSectionPage({ params }: Props) {
       <div className="space-y-6">
         {params.section === "site" ? (
           <AdminSiteModePanel initialValue={(entries.find((e) => e.key === "siteMode")?.value ?? {}) as SiteModeSetting} />
+        ) : params.section === "banners" ? (
+          <AdminHomepageBannersPanel initialValue={entries.find((e) => e.key === "homepageBanners")?.value ?? {}} />
         ) : (
           entries.map((e) => (
             <AdminSettingJsonEditor key={e.key} settingKey={e.key} initialValue={e.value} />
