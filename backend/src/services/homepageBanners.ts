@@ -2,7 +2,8 @@
  * Homepage hero banners — `Setting` key `homepageBanners`.
  */
 import { prisma } from "../utils/prisma.js";
-import { presignUpload, type PresignResult } from "./storage.js";
+import { ServiceUnavailable, ValidationError } from "../utils/errors.js";
+import { presignUpload, uploadScopedObject, type PresignResult, type StoredObject } from "./storage.js";
 
 export const MAX_HOMEPAGE_BANNERS = 8;
 
@@ -61,4 +62,34 @@ export async function presignHomepageBanner(contentType: string): Promise<Presig
     ownerId: "homepage",
     contentType,
   });
+}
+
+const ALLOWED_BANNER_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+/**
+ * Admin banner bytes → R2 via the API (no browser CORS).
+ */
+export async function uploadHomepageBannerImage(input: {
+  contentType: string;
+  buffer: Buffer;
+}): Promise<StoredObject> {
+  if (!ALLOWED_BANNER_TYPES.has(input.contentType)) {
+    throw ValidationError("Use JPEG, PNG, or WebP images only.");
+  }
+  if (!input.buffer?.length) {
+    throw ValidationError("Empty image upload.");
+  }
+  if (input.buffer.length > 8 * 1024 * 1024) {
+    throw ValidationError("Each banner must be 8MB or smaller.");
+  }
+  const stored = await uploadScopedObject({
+    scope: "banners",
+    ownerId: "homepage",
+    contentType: input.contentType,
+    buffer: input.buffer,
+  });
+  if (!stored) {
+    throw ServiceUnavailable("File uploads are not configured");
+  }
+  return stored;
 }

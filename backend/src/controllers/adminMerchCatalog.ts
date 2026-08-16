@@ -280,6 +280,28 @@ export async function postAdminProductMediaPresign(req: Request, res: Response, 
 }
 
 /**
+ * POST /v1/admin/products/:id/media/upload — raw image body, server-side R2 PUT.
+ */
+export async function postAdminProductMediaUpload(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.auth) throw Unauthorized();
+    const contentType = String(req.headers["content-type"] ?? "")
+      .split(";")[0]
+      .trim()
+      .toLowerCase();
+    const buffer = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    const stored = await adminProducts.uploadProductImageAdmin({
+      productId: String(req.params.id),
+      contentType,
+      buffer,
+    });
+    res.status(200).json(stored);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * POST /v1/admin/products/:id/media
  */
 export async function postAdminProductMedia(req: Request, res: Response, next: NextFunction) {

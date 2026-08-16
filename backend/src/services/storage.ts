@@ -19,6 +19,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { env } from "../config/env.js";
+import { ValidationError } from "../utils/errors.js";
 import { logger } from "../utils/logger.js";
 
 const hasStorageConfig =
@@ -58,6 +59,11 @@ export type PresignResult = {
   expiresIn: number;        // seconds
 };
 
+export type StoredObject = {
+  publicUrl: string;
+  key: string;
+};
+
 /**
  * Generate a presigned PUT URL for direct client upload.
  * Returns `null` if storage is not configured — caller should 503.
@@ -88,10 +94,39 @@ export async function presignUpload(args: {
 
 /** Build the permanent read URL for an uploaded key. */
 export function buildPublicUrl(key: string): string {
-  // R2 public URLs use the public dev domain or a custom CNAME.
-  // Configure CDN_BASE in the future; for now derive from endpoint.
+  const publicBase = env.R2_PUBLIC_BASE?.replace(/\/$/, "");
+  if (publicBase) return `${publicBase}/${key}`;
+  // S3 API endpoint is not publicly readable — callers should set R2_PUBLIC_BASE.
   const base = env.R2_ENDPOINT?.replace(/\/$/, "") ?? "";
   return `${base}/${env.R2_BUCKET}/${key}`;
+}
+
+/**
+ * Server-side PUT to R2 (admin uploads). Avoids browser CORS against the S3 API endpoint.
+ */
+export async function uploadScopedObject(args: {
+  scope: "avatars" | "reviews" | "products" | "banners";
+  ownerId: string;
+  contentType: string;
+  buffer: Buffer;
+}): Promise<StoredObject | null> {
+  if (!client || !hasStorageConfig) return null;
+  if (!env.R2_PUBLIC_BASE?.trim()) {
+    throw ValidationError(
+      "R2_PUBLIC_BASE is not set. In Cloudflare R2: bucket → Settings → enable Public development URL, then add R2_PUBLIC_BASE=https://pub-….r2.dev to backend/.env and restart the API.",
+    );
+  }
+  const ext = CONTENT_TYPE_TO_EXT[args.contentType] ?? "bin";
+  const key = `${args.scope}/${args.ownerId}/${randomUUID()}.${ext}`;
+  await client.send(
+    new PutObjectCommand({
+      Bucket: env.R2_BUCKET!,
+      Key: key,
+      Body: args.buffer,
+      ContentType: args.contentType,
+    }),
+  );
+  return { publicUrl: buildPublicUrl(key), key };
 }
 
 /**

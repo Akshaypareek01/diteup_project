@@ -7,7 +7,7 @@ import * as adminAuditLog from "../services/adminAuditLog.js";
 import * as adminBroadcast from "../services/adminBroadcast.js";
 import * as adminCoupons from "../services/adminCoupons.js";
 import * as adminSettings from "../services/adminSettings.js";
-import { presignHomepageBanner } from "../services/homepageBanners.js";
+import { presignHomepageBanner, uploadHomepageBannerImage } from "../services/homepageBanners.js";
 import { ServiceUnavailable, Unauthorized } from "../utils/errors.js";
 import type {
   AdminAuditListQueryInput,
@@ -361,6 +361,24 @@ export async function postAdminBannerPresign(req: Request, res: Response, next: 
       return;
     }
     res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * POST /v1/admin/banners/upload — raw image body, server-side R2 PUT.
+ */
+export async function postAdminBannerUpload(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.auth) throw Unauthorized();
+    const contentType = String(req.headers["content-type"] ?? "")
+      .split(";")[0]
+      .trim()
+      .toLowerCase();
+    const buffer = Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0);
+    const stored = await uploadHomepageBannerImage({ contentType, buffer });
+    res.status(200).json(stored);
   } catch (err) {
     next(err);
   }

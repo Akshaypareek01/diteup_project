@@ -10,9 +10,9 @@ import type {
 import type { Request } from "express";
 
 import { recordAudit } from "../utils/adminAudit.js";
-import { NotFound, ValidationError } from "../utils/errors.js";
+import { NotFound, ServiceUnavailable, ValidationError } from "../utils/errors.js";
 import { prisma } from "../utils/prisma.js";
-import { presignUpload, type PresignResult } from "./storage.js";
+import { presignUpload, uploadScopedObject, type PresignResult } from "./storage.js";
 
 export const MAX_PRODUCT_IMAGES = 8;
 
@@ -355,6 +355,48 @@ export async function presignProductMediaAdmin(input: {
     ownerId: input.productId,
     contentType: input.contentType,
   });
+}
+
+const ALLOWED_PRODUCT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+/**
+ * Admin product image bytes → R2 via the API (no browser CORS).
+ */
+export async function uploadProductImageAdmin(input: {
+  productId: string;
+  contentType: string;
+  buffer: Buffer;
+}): Promise<{ publicUrl: string; key: string }> {
+  const product = await prisma.product.findUnique({ where: { id: input.productId } });
+  if (!product) throw NotFound("Product not found");
+
+  if (!ALLOWED_PRODUCT_IMAGE_TYPES.has(input.contentType)) {
+    throw ValidationError("Use JPEG, PNG, or WebP images only.");
+  }
+  if (!input.buffer?.length) {
+    throw ValidationError("Empty image upload.");
+  }
+  if (input.buffer.length > 8 * 1024 * 1024) {
+    throw ValidationError("Each image must be 8MB or smaller.");
+  }
+
+  const imageCount = await prisma.productMedia.count({
+    where: { productId: input.productId, type: "IMAGE" },
+  });
+  if (imageCount >= MAX_PRODUCT_IMAGES) {
+    throw ValidationError(`Maximum ${MAX_PRODUCT_IMAGES} images per product`);
+  }
+
+  const stored = await uploadScopedObject({
+    scope: "products",
+    ownerId: input.productId,
+    contentType: input.contentType,
+    buffer: input.buffer,
+  });
+  if (!stored) {
+    throw ServiceUnavailable("File uploads are not configured");
+  }
+  return stored;
 }
 
 /**

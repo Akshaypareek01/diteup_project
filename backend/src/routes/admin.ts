@@ -62,6 +62,11 @@ const adminOnly = [authRequired, roleRequired("ADMIN")];
 
 /** XLSX uploads — raw body; place only on import routes. */
 const rawXlsx = express.raw({ limit: "15mb", type: () => true });
+/** Admin image uploads — raw body so the API PUTs to R2 (avoids browser CORS). */
+const rawImage = express.raw({
+  limit: "8mb",
+  type: ["image/jpeg", "image/png", "image/webp"],
+});
 
 // ---- Dashboard + reviews (existing) ----
 router.get("/admin/dashboard/stats", ...adminOnly, adminController.getDashboardStats);
@@ -120,6 +125,13 @@ router.post(
   ...adminOnly,
   validate({ body: AdminBannerPresignBodySchema }),
   adminOps.postAdminBannerPresign,
+);
+
+router.post(
+  "/admin/banners/upload",
+  ...adminOnly,
+  rawImage,
+  adminOps.postAdminBannerUpload,
 );
 
 // ---- Email suppressions + logs + broadcasts ----
@@ -300,6 +312,14 @@ router.post(
   ...adminOnly,
   validate({ params: AdminIdParamSchema, body: AdminProductMediaPresignBodySchema }),
   adminCatalog.postAdminProductMediaPresign,
+);
+
+router.post(
+  "/admin/products/:id/media/upload",
+  ...adminOnly,
+  validate({ params: AdminIdParamSchema }),
+  rawImage,
+  adminCatalog.postAdminProductMediaUpload,
 );
 
 router.post(

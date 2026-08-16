@@ -43,6 +43,8 @@ const EnvSchema = z.object({
   R2_ACCESS_KEY_ID: z.string().optional(),
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET: z.string().optional(),
+  /** Public read base (r2.dev or custom domain). Required for browser-visible images. Restart API after changing `.env`. */
+  R2_PUBLIC_BASE: z.string().url().optional(),
 
   SENTRY_DSN: z.string().optional(),
 
