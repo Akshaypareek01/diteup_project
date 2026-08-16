@@ -3,9 +3,9 @@ import { TermsOfServiceContent } from "@/components/legal/TermsOfServiceContent"
 import { SiteShell } from "@/components/layout/SiteShell";
 
 export const metadata: Metadata = {
-  title: "Terms & conditions · DiteUp",
+  title: "Terms & Conditions · DiteUp",
   description:
-    "Terms governing orders, payments, shipping, returns, and use of the DiteUp website and services.",
+    "Terms & Conditions for www.diteup.com: product details, orders, payments, shipping, returns, and use of the DiteUp website.",
 };
 
 export default function TermsConditionsPage() {

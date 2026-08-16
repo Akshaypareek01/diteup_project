@@ -3,9 +3,9 @@ import { ShippingPolicyContent } from "@/components/legal/ShippingPolicyContent"
 import { SiteShell } from "@/components/layout/SiteShell";
 
 export const metadata: Metadata = {
-  title: "Shipping policy · DiteUp",
+  title: "Shipping Policy · DiteUp",
   description:
-    "DiteUp shipping coverage across India, processing times, free shipping thresholds, and delivery expectations.",
+    "DiteUp Shipping Policy: order processing, delivery times, free shipping, tracking, and damaged package handling.",
 };
 
 export default function ShippingPolicyPage() {

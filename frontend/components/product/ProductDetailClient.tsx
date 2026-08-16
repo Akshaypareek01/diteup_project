@@ -283,7 +283,7 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
               </Button>
             </div>
 
-            <ProductPdpDeliveryCheck className="mt-8" />
+            <ProductPdpDeliveryCheck className="mt-8" productId={product.id} />
           </div>
         </div>
 

@@ -1,7 +1,11 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import type { PublicProduct } from "@/lib/types/catalog";
-import { getHomePreviewFaqItems } from "@/lib/energy-bite-faqs";
+import { ProductPdpDescriptionContent } from "@/components/product/ProductPdpDescriptionContent";
+import { ProductPdpFaqContent } from "@/components/product/ProductPdpFaqContent";
+import { ProductPdpHowToUseContent } from "@/components/product/ProductPdpHowToUseContent";
+import { ProductPdpIngredientsContent } from "@/components/product/ProductPdpIngredientsContent";
+import { ProductPdpNutritionContent } from "@/components/product/ProductPdpNutritionContent";
+import { ProductPdpWhoIsThisForContent } from "@/components/product/ProductPdpWhoIsThisForContent";
 import { cn } from "@/lib/utils";
 
 export type ProductPdpAccordionsProps = {
@@ -38,54 +42,29 @@ function AccordionRow({ title, children }: RowProps) {
   );
 }
 
-const previewFaqs = getHomePreviewFaqItems();
-
 /**
- * Expandable product information blocks (description through FAQ preview).
+ * Expandable product information blocks (description through FAQ).
  */
-export function ProductPdpAccordions({ product, className }: ProductPdpAccordionsProps) {
-  const description =
-    product.description?.trim() ||
-    product.shortDesc?.trim() ||
-    "Energy Bite is a clean, everyday snack mix crafted with nuts, seeds, and legumes — designed for steady energy without the junk.";
-
-  const ingredients =
-    product.shortDesc?.trim() ||
-    "Almonds, cashews, roasted chickpeas, seeds, and natural seasonings. See pack label for the full ingredient statement.";
-
+export function ProductPdpAccordions({ className }: ProductPdpAccordionsProps) {
   return (
     <section aria-label="Product details" className={cn(className)}>
-      <AccordionRow title="Description">{description}</AccordionRow>
-      <AccordionRow title="Ingredients">{ingredients}</AccordionRow>
+      <AccordionRow title="Description">
+        <ProductPdpDescriptionContent />
+      </AccordionRow>
+      <AccordionRow title="Ingredients">
+        <ProductPdpIngredientsContent />
+      </AccordionRow>
       <AccordionRow title="Nutrition facts">
-        Values are approximate per serving. Refer to the physical pack for the authoritative nutrition panel, allergens, and
-        batch details.
+        <ProductPdpNutritionContent />
       </AccordionRow>
       <AccordionRow title="How to use">
-        Enjoy a small handful between meals, post-workout, or whenever you want a satisfying crunch. Pair with fruit or yogurt
-        for a fuller snack.
+        <ProductPdpHowToUseContent />
       </AccordionRow>
       <AccordionRow title="Who is this for?">
-        Busy professionals, students, travelers, and anyone who wants a pantry-stable, high-protein snack without added sugar
-        or preservatives.
+        <ProductPdpWhoIsThisForContent />
       </AccordionRow>
       <AccordionRow title="FAQ">
-        <dl className="space-y-4">
-          {previewFaqs.map((item) => (
-            <div key={item.question}>
-              <dt className="font-semibold text-forest">{item.question}</dt>
-              <dd className="mt-1">{item.answer}</dd>
-            </div>
-          ))}
-        </dl>
-        <div className="mt-6 flex justify-center">
-          <Link
-            href="/faq"
-            className="inline-flex h-10 min-w-[8rem] items-center justify-center rounded-md border border-forest bg-transparent px-6 font-sans text-xs font-semibold uppercase tracking-wide text-forest transition hover:bg-forest/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
-          >
-            More
-          </Link>
-        </div>
+        <ProductPdpFaqContent />
       </AccordionRow>
     </section>
   );

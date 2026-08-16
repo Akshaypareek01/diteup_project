@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { formatInr } from "@/lib/format-money";
 import { adminGet } from "@/lib/admin-json";
 
@@ -35,7 +36,12 @@ export default async function AdminCouponsPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-display-md font-semibold text-forest">Coupons</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-display-md font-semibold text-forest">Coupons</h1>
+        <Button variant="primaryGold" size="md" type="button" href="/admin/coupons/new">
+          Add coupon
+        </Button>
+      </div>
       {!ok ? (
         <p className="text-error">Could not load coupons.</p>
       ) : (
@@ -54,7 +60,7 @@ export default async function AdminCouponsPage({
               {rows.length === 0 ? (
                 <tr className="border-t border-line">
                   <td colSpan={5} className="px-4 py-8 text-center text-ink-muted">
-                    No coupons yet.
+                    No coupons yet. Use Add coupon to create one.
                   </td>
                 </tr>
               ) : (

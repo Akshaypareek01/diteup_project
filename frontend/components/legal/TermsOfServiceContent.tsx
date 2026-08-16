@@ -3,7 +3,8 @@ import { PolicySection } from "@/components/legal/PolicySection";
 import { FSSAI_LICENSE_NO, SUPPORT_EMAIL } from "@/lib/brand-contact";
 
 /**
- * Full terms of service body for `/terms-conditions` — counsel should review before production reliance.
+ * Terms & Conditions body for `/terms-conditions`.
+ * Content mirrors the client's authoritative policy document.
  */
 export function TermsOfServiceContent() {
   return (
@@ -12,60 +13,43 @@ export function TermsOfServiceContent() {
       aria-labelledby="terms-title"
     >
       <header className="max-w-[66ch] border-b border-line pb-8">
-        <h1 id="terms-title" className="font-display text-balance text-display-lg font-semibold text-forest">
-          Terms of service
+        <h1
+          id="terms-title"
+          className="font-display text-balance text-display-lg font-semibold text-forest"
+        >
+          Terms &amp; Conditions
         </h1>
         <p className="mt-4 text-body-sm text-ink-muted">
-          Last updated: 17 May 2026 · Governs your access to and use of DiteUp’s website, checkout,
-          and related customer services (collectively, the “Services”).
+          Last updated: 16 August 2026 · Governs your use of www.diteup.com and your purchase of
+          products from our website.
+        </p>
+        <p className="mt-4 text-body text-ink-soft">Welcome to DiteUp.</p>
+        <p className="mt-4 text-body text-ink-soft">
+          These Terms &amp; Conditions govern your use of www.diteup.com and your purchase of
+          products from our website.
         </p>
         <p className="mt-4 text-body text-ink-soft">
-          By placing an order, creating an account, or browsing our site, you agree to these Terms
-          and our{" "}
-          <Link
-            href="/privacy-policy"
-            className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
-          >
-            Privacy policy
-          </Link>
-          . If you do not agree, please do not use the Services.
+          By using this website or placing an order, you agree to these Terms &amp; Conditions.
         </p>
       </header>
 
       <div className="mx-auto max-w-[66ch]">
         <PolicySection
-          id="terms-definitions"
-          title="Definitions"
-          body={
-            <>
-              <p>
-                <span className="font-medium text-ink">“DiteUp”</span>,{" "}
-                <span className="font-medium text-ink">“we”</span>,{" "}
-                <span className="font-medium text-ink">“us”</span> or{" "}
-                <span className="font-medium text-ink">“our”</span> refers to the operator of this
-                storefront. <span className="font-medium text-ink">“You”</span> means the visitor or
-                customer using the Services.
-              </p>
-            </>
-          }
-        />
-
-        <PolicySection
           id="terms-business"
-          title="Business information"
+          title="Business Information"
           body={
             <ul className="list-disc space-y-2 pl-5">
               <li>
-                <span className="font-medium text-ink">Brand name:</span> DiteUp
+                <span className="font-medium text-ink">Brand Name:</span> DiteUp
               </li>
               <li>
-                <span className="font-medium text-ink">Product name:</span> DiteUp Energy Bite
+                <span className="font-medium text-ink">Product Name:</span> DiteUp Energy Bite
               </li>
               <li>
                 <span className="font-medium text-ink">Website:</span> www.diteup.com
               </li>
               <li>
-                <span className="font-medium text-ink">Contact email:</span>{" "}
+                <span className="font-medium text-ink">Contact Email:</span>{" "}
                 <a
                   href={`mailto:${SUPPORT_EMAIL}`}
                   className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
@@ -74,247 +58,294 @@ export function TermsOfServiceContent() {
                 </a>
               </li>
               <li>
-                <span className="font-medium text-ink">FSSAI lic. no.:</span> {FSSAI_LICENSE_NO}
+                <span className="font-medium text-ink">FSSAI Lic. No.:</span> {FSSAI_LICENSE_NO}
               </li>
             </ul>
           }
         />
 
         <PolicySection
-          id="terms-eligibility"
-          title="Eligibility & accounts"
+          id="terms-product-info"
+          title="Product Information"
           body={
             <>
               <p>
-                You represent that you are at least 18 years old and capable of entering a binding
-                contract under applicable law. You are responsible for safeguarding your account
-                credentials and for activity under your account. Notify us promptly at{" "}
-                <a
-                  href="mailto:info@diteup.com"
-                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
-                >
-                  info@diteup.com
-                </a>{" "}
-                if you suspect unauthorized access.
+                We make reasonable efforts to display product details accurately, including product
+                name, ingredients, net weight, price, usage instructions and storage instructions.
+              </p>
+              <p>
+                However, product packaging, design, images, color and presentation may slightly vary
+                from website images due to photography, screen display, packaging updates or
+                manufacturing changes.
               </p>
             </>
           }
         />
 
         <PolicySection
-          id="terms-products"
-          title="Products, descriptions & availability"
+          id="terms-product-details"
+          title="Product Details"
           body={
             <>
               <p>
-                We strive to describe products accurately (including ingredients, usage, and imagery).
-                Slight variation in colour, texture, or packaging may occur between batches or
-                screens. We may limit quantities, refuse orders, or cancel orders where we believe
-                there is fraud, stock unavailability, pricing error, or legal restriction.
+                DiteUp Energy Bite is a vegetarian food product made with chana, moong, peanut,
+                cashew, almond, raisin, pumpkin seeds and sunflower seeds.
               </p>
-            </>
-          }
-        />
-
-        <PolicySection
-          id="terms-orders"
-          title="Orders, pricing & taxes"
-          body={
-            <>
-              <p>
-                Product prices are shown in Indian Rupees (INR). Current product pricing for DiteUp
-                Energy Bite is an <span className="font-medium text-ink">MRP of ₹1099</span> and a{" "}
-                <span className="font-medium text-ink">selling price of ₹799</span>. Prices, offers,
-                discounts and availability may change without prior notice; the final price shown at
-                checkout will apply to your order. An order is an offer to purchase — we accept it
-                when we confirm shipment or send an order confirmation, subject to payment
-                authorization.
-              </p>
-            </>
-          }
-        />
-
-        <PolicySection
-          id="terms-payment"
-          title="Payment"
-          body={
-            <>
-              <p>
-                Payment options shown at checkout (including cash on delivery where offered) are
-                provided by you and our payment / logistics partners under their terms. You agree to
-                pay all charges for accepted orders. Failed payments, chargebacks, or COD refusals
-                may result in cancelled shipments, account restrictions, or recovery of costs where
-                permitted by law.
-              </p>
-            </>
-          }
-        />
-
-        <PolicySection
-          id="terms-shipping-refunds"
-          title="Shipping, delivery & returns"
-          body={
-            <>
-              <p>
-                Shipping, delivery timelines, free shipping on all orders (see{" "}
-                <Link
-                  href="/shipping-policy"
-                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
-                >
-                  Shipping policy
-                </Link>
-                ), and returns are explained in our{" "}
-                <Link
-                  href="/shipping-policy"
-                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
-                >
-                  Shipping policy
-                </Link>{" "}
-                and{" "}
-                <Link
-                  href="/return-refund-policy"
-                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
-                >
-                  Refund policy
-                </Link>
-                , which are incorporated into these Terms by reference. Because DiteUp Energy Bite
-                is a food product,{" "}
-                <span className="font-medium text-ink">
-                  returns are not accepted once the product is opened, used or consumed
-                </span>
-                . A replacement or refund may be considered only for wrong, damaged, expired,
-                missing, tampered or quality-issue items with valid proof.
-              </p>
-            </>
-          }
-        />
-
-        <PolicySection
-          id="terms-risk"
-          title="Risk of loss"
-          body={
-            <>
-              <p>
-                Risk of loss and title for physical goods pass to you upon delivery to the carrier,
-                except where applicable law requires otherwise.
-              </p>
-            </>
-          }
-        />
-
-        <PolicySection
-          id="terms-promotions"
-          title="Coupons & promotions"
-          body={
-            <>
-              <p>
-                Promotional codes, bundles, or limited offers may have additional rules shown at the
-                point of sale. We may void promotions that appear to be abused, duplicated, or used
-                in breach of stated limits.
-              </p>
-            </>
-          }
-        />
-
-        <PolicySection
-          id="terms-ip"
-          title="Intellectual property"
-          body={
-            <>
-              <p>
-                All content on the Services — text, graphics, logos, photographs, packaging design,
-                and software — is owned by DiteUp or our licensors and protected by copyright,
-                trademark, and other intellectual property laws. You may not copy, scrape, resell, or
-                exploit our content or trademarks without prior written permission.
-              </p>
-            </>
-          }
-        />
-
-        <PolicySection
-          id="terms-acceptable-use"
-          title="Acceptable use"
-          body={
-            <>
-              <p>You agree not to:</p>
               <ul className="list-disc space-y-2 pl-5">
-                <li>Interfere with or disrupt the Services or underlying systems;</li>
-                <li>Attempt unauthorized access to accounts, data, or infrastructure;</li>
-                <li>Use the Services for fraud, harassment, or unlawful activity;</li>
-                <li>Circumvent security, rate limits, or geographic restrictions we apply.</li>
+                <li>
+                  <span className="font-medium text-ink">Net Weight:</span> 750g
+                </li>
+                <li>
+                  <span className="font-medium text-ink">Pack Size:</span> 15 mini sachets × 50g
+                </li>
+                <li>
+                  <span className="font-medium text-ink">Usage:</span> Soak at night and eat in the
+                  morning.
+                </li>
+                <li>
+                  <span className="font-medium text-ink">Storage:</span> Store in a cool, dry place.
+                  Keep away from direct sunlight.
+                </li>
               </ul>
             </>
           }
         />
 
         <PolicySection
-          id="terms-wellness"
-          title="Wellness & non-medical disclaimer"
+          id="terms-allergy"
+          title="Allergy Disclaimer"
           body={
             <>
+              <p>This product contains peanuts, nuts, seeds.</p>
               <p>
-                Our products are foods or consumer wellness items for general use unless labelled
-                otherwise. They are <span className="font-medium text-ink">not</span> intended to
-                diagnose, treat, cure, or prevent any disease. Consult a qualified professional for
-                medical or dietary advice, especially if pregnant, nursing, or managing a health
-                condition.
+                Customers with allergies, food sensitivities or dietary restrictions should read the
+                ingredient list carefully before purchasing or consuming the product.
               </p>
-              <p className="mt-4">
-                DiteUp Energy Bite contains{" "}
-                <span className="font-medium text-ink">peanuts, nuts and seeds</span>. Customers with
-                allergies, food sensitivities or dietary restrictions should read the ingredient
-                list carefully before purchasing or consuming the product. DiteUp is not responsible
-                for allergic reactions caused by ingredients clearly mentioned on the product label
-                or website.
+              <p>
+                DiteUp is not responsible for allergic reactions caused by ingredients clearly
+                mentioned on the product label or website.
               </p>
             </>
           }
         />
 
         <PolicySection
-          id="terms-warranty"
-          title="Disclaimer of warranties"
+          id="terms-health"
+          title="Health Disclaimer"
+          body={
+            <>
+              <p>DiteUp Energy Bite is a food product and not a medicine.</p>
+              <p>It is not intended to diagnose, treat, cure or prevent any disease.</p>
+              <p>
+                Individual results may vary depending on diet, lifestyle, health condition and
+                usage.
+              </p>
+              <p>
+                If you have any medical condition, allergy, pregnancy-related concern or specific
+                dietary restriction, please consult a qualified healthcare professional before use.
+              </p>
+            </>
+          }
+        />
+
+        <PolicySection
+          id="terms-pricing"
+          title="Pricing"
+          body={
+            <>
+              <p>All prices listed on the website are in Indian Rupees.</p>
+              <p>Current product pricing:</p>
+              <ul className="list-disc space-y-2 pl-5">
+                <li>
+                  <span className="font-medium text-ink">MRP:</span> ₹1099
+                </li>
+                <li>
+                  <span className="font-medium text-ink">Selling Price:</span> ₹799
+                </li>
+              </ul>
+              <p>Prices, offers, discounts and availability may change without prior notice.</p>
+              <p>The final price shown at checkout will apply to your order.</p>
+            </>
+          }
+        />
+
+        <PolicySection
+          id="terms-orders"
+          title="Orders"
           body={
             <>
               <p>
-                To the fullest extent permitted by law, the Services and products are provided{" "}
-                <span className="font-medium text-ink">“as is”</span> and{" "}
-                <span className="font-medium text-ink">“as available”</span> without warranties of
-                any kind, whether express or implied, including merchantability, fitness for a
-                particular purpose, or non-infringement. Some jurisdictions do not allow certain
-                disclaimers; in those cases our warranties are limited to the minimum permitted.
+                After placing an order, you may receive an order confirmation by email, SMS or
+                WhatsApp.
+              </p>
+              <p>We reserve the right to cancel or refuse an order in cases such as:</p>
+              <ul className="list-disc space-y-2 pl-5">
+                <li>Payment failure</li>
+                <li>Incorrect pricing</li>
+                <li>Stock unavailability</li>
+                <li>Incomplete address</li>
+                <li>Suspicious or fraudulent order</li>
+                <li>Misuse of offer or coupon</li>
+                <li>Serviceability issue at delivery pin code</li>
+              </ul>
+              <p>
+                If a prepaid order is cancelled by us, the eligible refund will be processed to the
+                original payment method.
               </p>
             </>
+          }
+        />
+
+        <PolicySection
+          id="terms-payments"
+          title="Payments"
+          body={
+            <>
+              <p>
+                We may accept payment methods shown at checkout, including UPI, cards, net banking,
+                wallets or other payment options supported by our payment partner.
+              </p>
+              <p>
+                Payment processing is handled by third-party payment gateway providers. DiteUp does
+                not store full card, UPI PIN or bank login details.
+              </p>
+            </>
+          }
+        />
+
+        <PolicySection
+          id="terms-shipping"
+          title="Shipping"
+          body={
+            <>
+              <p>
+                Shipping timelines, delivery availability, delays and related details are governed
+                by our{" "}
+                <Link
+                  href="/shipping-policy"
+                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
+                >
+                  Shipping Policy
+                </Link>
+                .
+              </p>
+              <p>
+                Please ensure that the shipping address and contact number entered at checkout are
+                correct.
+              </p>
+            </>
+          }
+        />
+
+        <PolicySection
+          id="terms-returns"
+          title="Return, Refund and Cancellation"
+          body={
+            <>
+              <p>
+                Return, refund and cancellation requests are governed by our{" "}
+                <Link
+                  href="/return-refund-policy"
+                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
+                >
+                  Return &amp; Refund Policy
+                </Link>
+                .
+              </p>
+              <p>
+                Due to the nature of food products, returns are not accepted once the product is
+                opened, used or consumed.
+              </p>
+            </>
+          }
+        />
+
+        <PolicySection
+          id="terms-offers"
+          title="Offers and Discounts"
+          body={
+            <>
+              <p>Any offer, discount or coupon is valid only for the period mentioned.</p>
+              <p>
+                DiteUp reserves the right to modify, withdraw or cancel any offer without prior
+                notice.
+              </p>
+              <p>Offers may not be combined unless clearly stated.</p>
+            </>
+          }
+        />
+
+        <PolicySection
+          id="terms-content"
+          title="Website Content"
+          body={
+            <>
+              <p>
+                All website content, including logos, product images, graphics, designs, text,
+                banners, icons, product packaging visuals and brand elements, belongs to DiteUp or
+                its authorized owners.
+              </p>
+              <p>
+                You may not copy, reproduce, modify, distribute or use any content from this website
+                without written permission.
+              </p>
+            </>
+          }
+        />
+
+        <PolicySection
+          id="terms-conduct"
+          title="User Conduct"
+          body={
+            <p>
+              You agree not to misuse the website, attempt unauthorized access, place fraudulent
+              orders, upload harmful code, copy website content or use the website for unlawful
+              purposes.
+            </p>
           }
         />
 
         <PolicySection
           id="terms-liability"
-          title="Limitation of liability"
+          title="Limitation of Liability"
           body={
             <>
               <p>
-                To the fullest extent permitted by law, DiteUp and our directors, employees, and
-                partners will not be liable for indirect, incidental, special, consequential, or
-                punitive damages, or loss of profits, goodwill, or data. Our aggregate liability for
-                claims arising from the Services or products will not exceed the amount you paid to
-                DiteUp for the specific order giving rise to the claim during the three (3) months
-                before the event, except where law prohibits such a cap (including consumer rights
-                that cannot be waived in India).
+                DiteUp is not liable for indirect, incidental or consequential losses arising from
+                use of the website or product, except where required by applicable law.
+              </p>
+              <p>
+                Our responsibility for any valid claim is limited to the value of the product
+                purchased by the customer.
               </p>
             </>
           }
         />
 
         <PolicySection
-          id="terms-indemnity"
-          title="Indemnity"
+          id="terms-force-majeure"
+          title="Force Majeure"
+          body={
+            <p>
+              DiteUp will not be responsible for delays or failure to perform obligations due to
+              events beyond our reasonable control, including natural disasters, strikes, courier
+              disruption, lockdowns, government restrictions, technical failures or other unexpected
+              events.
+            </p>
+          }
+        />
+
+        <PolicySection
+          id="terms-changes"
+          title="Changes to Terms"
           body={
             <>
               <p>
-                You will defend and indemnify DiteUp against third-party claims, damages, and costs
-                arising from your misuse of the Services, violation of these Terms, or violation of
-                third-party rights, to the extent permitted by law.
+                We may update these Terms &amp; Conditions from time to time. The updated version
+                will be posted on this website.
+              </p>
+              <p>
+                Continued use of the website after updates means you accept the revised terms.
               </p>
             </>
           }
@@ -322,55 +353,28 @@ export function TermsOfServiceContent() {
 
         <PolicySection
           id="terms-law"
-          title="Governing law & disputes"
+          title="Governing Law"
           body={
-            <>
-              <p>
-                These Terms &amp; Conditions are governed by the laws of India. Nothing in these
-                Terms limits mandatory consumer protection rights available to you under applicable
-                Indian law.
-              </p>
-            </>
-          }
-        />
-
-        <PolicySection
-          id="terms-changes"
-          title="Changes"
-          body={
-            <>
-              <p>
-                We may modify these Terms from time to time by posting an updated version on this
-                page and revising the “Last updated” date. Continued use after changes constitutes
-                acceptance unless applicable law requires additional consent.
-              </p>
-            </>
+            <p>These Terms &amp; Conditions are governed by the laws of India.</p>
           }
         />
 
         <PolicySection
           id="terms-contact"
-          title="Contact"
+          title="Contact Us"
           body={
-            <>
-              <p>
-                Questions about these Terms:{" "}
-                <a
-                  href="mailto:info@diteup.com"
-                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
-                >
-                  info@diteup.com
-                </a>{" "}
-                or{" "}
-                <Link
-                  href="/contact"
-                  className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
-                >
-                  Contact
-                </Link>
-                .
-              </p>
-            </>
+            <p>
+              For any questions, contact:
+              <br />
+              Email:{" "}
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                className="font-medium text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:decoration-gold-deep"
+              >
+                {SUPPORT_EMAIL}
+              </a>
+              .
+            </p>
           }
         />
       </div>

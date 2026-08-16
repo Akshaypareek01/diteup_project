@@ -16,6 +16,7 @@ import { pixelAddPaymentInfo, pixelInitiateCheckout } from "@/lib/meta-pixel-eve
 import { CheckoutFormSections } from "@/components/checkout/CheckoutFormSections";
 import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
 import type { CheckoutAddressRow } from "@/components/checkout/CheckoutShippingPanel";
+import { sanitizePincode } from "@/lib/india-locations";
 
 type MeResponse = { user?: { id: string; email: string } };
 
@@ -175,15 +176,15 @@ export function CheckoutClient() {
     pixelAddPaymentInfo({ value: previewTotal, currency: "INR" });
   }, [previewTotal]);
 
-  /** Validates delivery for entered or saved PIN. */
+  /** Validates delivery for entered or saved PIN. Returns the API payload, or null on failure. */
   const validatePinForCart = useCallback(
-    async (pinOverride?: string) => {
+    async (pinOverride?: string): Promise<PincodeCheckPayload | null> => {
       const p = (pinOverride ?? pincode).trim();
       setPinErr(null);
       setPinStatus(null);
       if (!/^\d{6}$/.test(p)) {
         setPinErr("Enter a valid 6-digit PIN.");
-        return;
+        return null;
       }
       const productId = checkoutProductId;
       setCheckingPin(true);
@@ -196,8 +197,10 @@ export function CheckoutClient() {
         if (!body.serviceable) {
           setPinErr("We can't deliver to this PIN right now.");
         }
+        return body;
       } catch (e) {
         setPinErr(e instanceof ApiError ? e.message : "PIN check failed.");
+        return null;
       } finally {
         setCheckingPin(false);
       }
@@ -215,6 +218,20 @@ export function CheckoutClient() {
     lastValidatedProductPin.current = `${key}:${pin}`;
     void validatePinForCart(pin);
   }, [savedAddresses, selectedSavedAddressId, checkoutProductId, validatePinForCart, loadingSavedAddresses]);
+
+  /** Autofill / typing: check as soon as PIN is 6 digits (Chrome never blurs the field). */
+  useEffect(() => {
+    if (selectedSavedAddressId) return;
+    const pin = pincode.trim();
+    if (!/^\d{6}$/.test(pin)) return;
+    const key = `${checkoutProductId ?? "_noPid"}:${pin}`;
+    if (lastValidatedProductPin.current === key) return;
+    const t = window.setTimeout(() => {
+      lastValidatedProductPin.current = key;
+      void validatePinForCart(pin);
+    }, 280);
+    return () => window.clearTimeout(t);
+  }, [pincode, checkoutProductId, selectedSavedAddressId, validatePinForCart]);
 
   /** Apply a `/v1/me/addresses` row and PIN-check it. */
   const handleSelectSavedAddress = useCallback(
@@ -331,8 +348,11 @@ export function CheckoutClient() {
       return;
     }
     if (!pinStatus?.serviceable) {
-      setErr("Validate your PIN for delivery — scroll to Shipping.");
-      return;
+      const checked = await validatePinForCart(pinForOrder);
+      if (!checked?.serviceable) {
+        setErr("Validate your PIN for delivery — scroll to Shipping.");
+        return;
+      }
     }
 
     setBusy(true);
@@ -481,6 +501,7 @@ export function CheckoutClient() {
     redirectAfterOrder,
     selectedSavedAddressId,
     savedAddresses,
+    validatePinForCart,
   ]);
 
   const pinStatusSummary = useMemo(() => {
@@ -557,7 +578,7 @@ export function CheckoutClient() {
       onCityChange={(v) => setCity(v)}
       onStateChange={(v) => setStateField(v)}
       onPincodeChange={(v) => {
-        setPincode(v);
+        setPincode(sanitizePincode(v));
         lastValidatedProductPin.current = null;
         setPinErr(null);
         setPinStatus(null);
@@ -568,7 +589,7 @@ export function CheckoutClient() {
       checkingPin={checkingPin}
       pinErr={pinErr}
       couponCode={couponCode}
-      onCouponCodeChange={(v) => setCouponCode(v)}
+      onCouponCodeChange={(v) => setCouponCode(v.toUpperCase())}
       preview={preview}
     />
   );

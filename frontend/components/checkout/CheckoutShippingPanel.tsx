@@ -262,15 +262,17 @@ export function CheckoutShippingPanel({
               label="PIN code"
               name="pincode"
               inputMode="numeric"
-              autoComplete="postal-code"
+              autoComplete="shipping postal-code"
               value={pincode}
               onChange={(e) => onPincodeChange(e.target.value)}
+              onInput={(e) => onPincodeChange((e.target as HTMLInputElement).value)}
               onBlur={onPincodeBlur}
               required
               maxLength={6}
             />
             <p className="text-body-sm text-ink-muted">
-              We validate serviceability automatically on blur.{checkingPin ? " Checking…" : ""}
+              PIN is checked automatically when you type or when the browser fills your address.
+              {checkingPin ? " Checking…" : ""}
             </p>
             {pinStatusSummary}
             {pinErr ? (

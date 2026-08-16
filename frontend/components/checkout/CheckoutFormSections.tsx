@@ -1,7 +1,14 @@
 "use client";
 
+import { useRef } from "react";
 import { Input } from "@/components/ui/Input";
 import { CheckoutShippingPanel, type CheckoutAddressRow } from "@/components/checkout/CheckoutShippingPanel";
+import { useFormAutofillSync } from "@/hooks/useFormAutofillSync";
+import {
+  normalizeCheckoutCountry,
+  normalizeIndianState,
+  sanitizePincode,
+} from "@/lib/india-locations";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
 import type { ReactNode } from "react";
 
@@ -79,8 +86,28 @@ export function CheckoutFormSections({
   onCouponCodeChange,
   preview,
 }: CheckoutFormSectionsProps) {
+  const formRef = useRef<HTMLFormElement>(null);
+  useFormAutofillSync(formRef, {
+    email: { value: guestEmail, set: onGuestEmailChange, skip: Boolean(userEmail) },
+    phone: { value: guestPhone, set: onGuestPhoneChange },
+    "ship-name": { value: shipName, set: onShipNameChange },
+    "ship-phone": { value: shipPhone, set: onShipPhoneChange },
+    line1: { value: line1, set: onLine1Change },
+    line2: { value: line2, set: onLine2Change },
+    city: { value: city, set: onCityChange },
+    state: { value: stateField, set: onStateChange, sanitize: normalizeIndianState },
+    pincode: { value: pincode, set: onPincodeChange, sanitize: sanitizePincode },
+    country: { value: country, set: onCountryChange, sanitize: normalizeCheckoutCountry },
+    coupon: { value: couponCode, set: onCouponCodeChange, sanitize: (s) => s.trim().toUpperCase() },
+  });
+
   return (
-    <>
+    <form
+      ref={formRef}
+      autoComplete="on"
+      className="space-y-8"
+      onSubmit={(e) => e.preventDefault()}
+    >
       <section className="rounded-lg border border-line bg-paper p-5 lg:rounded-2xl lg:p-6" aria-labelledby="co-contact">
         <h2 id="co-contact" className="font-semibold text-forest">
           Contact
@@ -144,7 +171,14 @@ export function CheckoutFormSections({
           Pay online via Razorpay — UPI, cards, and netbanking.
         </p>
         <div className="mt-4">
-          <Input label="Coupon (optional)" name="coupon" value={couponCode} onChange={(e) => onCouponCodeChange(e.target.value)} />
+          <Input
+            label="Coupon (optional)"
+            name="coupon"
+            autoComplete="off"
+            value={couponCode}
+            onChange={(e) => onCouponCodeChange(e.target.value.toUpperCase())}
+            hint="Totals update as you type."
+          />
           {preview?.coupon?.message ? (
             <p className="mt-2 text-body-sm text-ink-muted" role="status">
               {preview.coupon.message}
@@ -152,6 +186,6 @@ export function CheckoutFormSections({
           ) : null}
         </div>
       </section>
-    </>
+    </form>
   );
 }

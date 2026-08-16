@@ -3,9 +3,9 @@ import { PrivacyPolicyContent } from "@/components/legal/PrivacyPolicyContent";
 import { SiteShell } from "@/components/layout/SiteShell";
 
 export const metadata: Metadata = {
-  title: "Privacy policy · DiteUp",
+  title: "Privacy Policy",
   description:
-    "How DiteUp collects, uses, and protects personal data — including cookies, orders, and your rights.",
+    "How DiteUp collects, uses, stores and protects your information when you visit or shop from www.diteup.com.",
 };
 
 export default function PrivacyPolicyPage() {

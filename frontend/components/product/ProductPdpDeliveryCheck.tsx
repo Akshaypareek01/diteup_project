@@ -1,32 +1,82 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ApiError, clientApiJson } from "@/lib/client-api";
+import { useFormAutofillSync } from "@/hooks/useFormAutofillSync";
+import { sanitizePincode } from "@/lib/india-locations";
+import type { PincodeCheckPayload } from "@/lib/types/pincode";
 import { cn } from "@/lib/utils";
 
 export type ProductPdpDeliveryCheckProps = {
   className?: string;
+  /** When set, `/v1/pincode/check` applies product-level shipping restrictions. */
+  productId?: string;
 };
 
 /**
- * Delivery promise, pincode checker (UI stub), and trust markers (CRO issue 6).
+ * Delivery promise + live PIN serviceability (`POST /v1/pincode/check`).
+ * Autofill is synced so Chrome-filled PINs still run the check.
  */
-export function ProductPdpDeliveryCheck({ className }: ProductPdpDeliveryCheckProps) {
+export function ProductPdpDeliveryCheck({ className, productId }: ProductPdpDeliveryCheckProps) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [pincode, setPincode] = useState("");
-  const [deliveryMessage, setDeliveryMessage] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [ok, setOk] = useState<boolean | null>(null);
+  const lastChecked = useRef<string | null>(null);
+
+  useFormAutofillSync(formRef, {
+    pincode: { value: pincode, set: setPincode, sanitize: sanitizePincode },
+  });
 
   /**
-   * Validates a 6-digit Indian pincode format, then shows our standard PAN-India
-   * delivery promise. This is NOT a per-pincode serviceability lookup — the copy
-   * deliberately avoids implying one.
+   * Looks up serviceability for a 6-digit PIN.
    */
-  function handleCheckPincode() {
-    const trimmed = pincode.trim();
-    if (!/^\d{6}$/.test(trimmed)) {
-      setDeliveryMessage("Enter a valid 6-digit pincode.");
+  const checkPin = useCallback(
+    async (raw: string) => {
+      const pin = sanitizePincode(raw);
+      if (!/^\d{6}$/.test(pin)) {
+        setOk(false);
+        setMessage("Enter a valid 6-digit pincode.");
+        return;
+      }
+      if (lastChecked.current === pin) return;
+      lastChecked.current = pin;
+      setChecking(true);
+      setMessage(null);
+      try {
+        const body = await clientApiJson<PincodeCheckPayload>("/v1/pincode/check", {
+          method: "POST",
+          json: productId ? { pincode: pin, productId } : { pincode: pin },
+        });
+        setOk(body.serviceable);
+        setMessage(
+          body.serviceable
+            ? `We deliver to ${pin} — typically within ${body.etaDays} business day${body.etaDays === 1 ? "" : "s"}.`
+            : "We can't deliver to this pincode right now.",
+        );
+      } catch (e) {
+        lastChecked.current = null;
+        setOk(false);
+        setMessage(e instanceof ApiError ? e.message : "Could not check this pincode.");
+      } finally {
+        setChecking(false);
+      }
+    },
+    [productId],
+  );
+
+  useEffect(() => {
+    const pin = sanitizePincode(pincode);
+    if (!/^\d{6}$/.test(pin)) {
+      lastChecked.current = null;
       return;
     }
-    setDeliveryMessage("We deliver PAN-India, typically within 2–3 business days.");
-  }
+    const t = window.setTimeout(() => {
+      void checkPin(pin);
+    }, 280);
+    return () => window.clearTimeout(t);
+  }, [pincode, checkPin]);
 
   return (
     <section
@@ -35,7 +85,16 @@ export function ProductPdpDeliveryCheck({ className }: ProductPdpDeliveryCheckPr
     >
       <p className="font-sans text-body font-bold text-ink">95% orders are delivered within 3 days</p>
 
-      <div className="mt-3 flex gap-2">
+      <form
+        ref={formRef}
+        className="mt-3 flex gap-2"
+        autoComplete="on"
+        onSubmit={(e) => {
+          e.preventDefault();
+          lastChecked.current = null;
+          void checkPin(pincode);
+        }}
+      >
         <label htmlFor="pdp-pincode" className="sr-only">
           Enter pincode
         </label>
@@ -53,29 +112,39 @@ export function ProductPdpDeliveryCheck({ className }: ProductPdpDeliveryCheckPr
           </svg>
           <input
             id="pdp-pincode"
+            name="pincode"
             type="text"
             inputMode="numeric"
+            autoComplete="postal-code"
             maxLength={6}
             placeholder="Enter Pincode"
             value={pincode}
-            onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => setPincode(sanitizePincode(e.target.value))}
+            onInput={(e) => setPincode(sanitizePincode((e.target as HTMLInputElement).value))}
             className="h-11 w-full rounded-lg border border-line bg-paper pl-10 pr-3 font-sans text-body text-ink placeholder:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
           />
         </div>
         <button
-          type="button"
-          onClick={handleCheckPincode}
-          className="shrink-0 rounded-lg border border-forest bg-transparent px-4 font-sans text-body-sm font-semibold text-forest transition hover:bg-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40"
+          type="submit"
+          className="shrink-0 rounded-lg border border-forest bg-transparent px-4 font-sans text-body-sm font-semibold text-forest transition hover:bg-forest/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/40 disabled:opacity-50"
+          disabled={checking}
         >
-          Check
+          {checking ? "…" : "Check"}
         </button>
-      </div>
+      </form>
 
-      {deliveryMessage ? (
-        <p className="mt-2 font-sans text-body-sm text-ink-soft" role="status">
-          {deliveryMessage}
+      {message ? (
+        <p
+          className={cn("mt-2 font-sans text-body-sm", ok ? "text-forest" : "text-ink-soft")}
+          role="status"
+        >
+          {message}
         </p>
-      ) : null}
+      ) : (
+        <p className="mt-2 font-sans text-body-sm text-ink-muted">
+          Browser-filled pincodes are checked automatically — no need to retype.
+        </p>
+      )}
 
       <ul className="mt-4 grid grid-cols-2 gap-3 border-t border-forest/15 pt-4">
         <li className="flex flex-col items-center gap-1.5 text-center">

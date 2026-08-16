@@ -5,29 +5,19 @@ export type EnergyBiteFaqItem = {
   answer: string;
 };
 
-/** Full Energy Bite FAQ copy from DITEUP _ POLICIES.docx. */
+/** Full Energy Bite FAQ copy shown on the PDP accordion and `/faq`. */
 export const ENERGY_BITE_FAQ_ITEMS: EnergyBiteFaqItem[] = [
   {
     question: "What is DiteUp Energy Bite?",
     answer:
-      "DiteUp Energy Bite is a pre-portioned soaked breakfast pack made for busy mornings. It contains 15 mini sachets that you can soak at night and eat fresh in the morning.",
+      "DiteUp Energy Bite is a pre-portioned soaked breakfast pack made for busy mornings. It contains 15 mini sachets that you can soak at night and eat in the morning.",
   },
   {
-    question: "How do I use DiteUp Energy Bite?",
-    answer:
-      "Open one mini pouch, add water, soak it overnight and eat it in the morning. It is designed to make your morning breakfast routine simple and hassle-free.",
+    question: "How many sachets are inside one pack?",
+    answer: "One DiteUp Energy Bite pack contains 15 mini sachets.",
   },
   {
-    question: "How long should I soak it?",
-    answer:
-      "For best texture and taste, soak it overnight. You can soak it before sleeping and consume it the next morning.",
-  },
-  {
-    question: "How many sachets are inside one DiteUp Energy Bite pack?",
-    answer: "One DiteUp Energy Bite pack contains 15 pre-portioned mini sachets.",
-  },
-  {
-    question: "What is the weight of one mini sachet?",
+    question: "What is the weight of one sachet?",
     answer: "Each mini sachet contains 50g of Energy Bite mix.",
   },
   {
@@ -35,13 +25,18 @@ export const ENERGY_BITE_FAQ_ITEMS: EnergyBiteFaqItem[] = [
     answer: "The total net weight is 750g.",
   },
   {
-    question: "What ingredients are used in DiteUp Energy Bite?",
+    question: "How do I use it?",
     answer:
-      "DiteUp Energy Bite contains: Chana, Moong, Peanut, Cashew, Almond, Raisin, Pumpkin Seeds and Sunflower Seeds.",
+      "Open one mini sachet, pour it into the bowl, add clean drinking water, soak it overnight and eat it in the morning.",
   },
   {
-    question: "Is DiteUp Energy Bite vegetarian?",
-    answer: "Yes, DiteUp Energy Bite is a vegetarian product.",
+    question: "Can I eat it without soaking?",
+    answer:
+      "We recommend soaking it overnight for better texture, taste and eating experience.",
+  },
+  {
+    question: "Is bowl and spoon included?",
+    answer: "Yes, a free bowl and spoon are included inside the pack.",
   },
   {
     question: "Does it contain added sugar?",
@@ -56,104 +51,69 @@ export const ENERGY_BITE_FAQ_ITEMS: EnergyBiteFaqItem[] = [
     answer: "No, DiteUp Energy Bite has no added additives.",
   },
   {
-    question: "Is it high in protein?",
+    question: "Is it vegetarian?",
+    answer: "Yes, DiteUp Energy Bite is a vegetarian product.",
+  },
+  {
+    question: "What ingredients are used?",
     answer:
-      "Yes, DiteUp Energy Bite is made with protein-rich ingredients like chana, moong, peanuts, almonds, cashews and seeds.",
+      "It contains chana, moong, peanut, cashew, almond, raisin, pumpkin seeds and sunflower seeds.",
   },
   {
-    question: "Is it rich in fiber?",
-    answer: "Yes, it contains fiber-rich ingredients like chana, moong, seeds and nuts.",
-  },
-  {
-    question: "Is bowl and spoon included?",
-    answer: "Yes, DiteUp Energy Bite comes with a free bowl and spoon.",
-  },
-  {
-    question: "Is it ready to eat?",
-    answer: "It is ready to eat after soaking. Just soak it at night and eat it in the morning.",
-  },
-  {
-    question: "Can I eat it without soaking?",
+    question: "Is it suitable for gym users?",
     answer:
-      "We recommend soaking it overnight for better texture, taste and eating experience.",
+      "Yes, it can be used by gym and fitness users as a breakfast or pre-workout meal option depending on their diet routine.",
   },
   {
-    question: "Can students use it?",
-    answer:
-      "Yes, it is suitable for students looking for a quick and simple breakfast option before classes.",
-  },
-  {
-    question: "Is it suitable for gym and fitness users?",
-    answer:
-      "Yes, it can be used by gym and fitness users as a clean breakfast or pre-workout meal option, depending on their diet routine.",
-  },
-  {
-    question: "Is it suitable for office workers?",
-    answer:
-      "Yes, it is made for busy mornings and can help office workers avoid the hassle of daily breakfast preparation.",
-  },
-  {
-    question: "Is it suitable for kids?",
-    answer:
-      "It contains nuts and seeds. For kids, parents should check the ingredients carefully and decide based on the child's age, chewing ability and allergy history.",
+    question: "Is it suitable for students?",
+    answer: "Yes, it is suitable for students who want a quick and simple breakfast routine.",
   },
   {
     question: "Does it contain nuts?",
     answer:
-      "Yes. It contains peanuts, almonds and cashews. People with nut allergies should not consume it without checking with a healthcare professional.",
+      "Yes, it contains peanuts, almonds and cashews. People with nut allergies should avoid it or consult a healthcare professional before use.",
   },
   {
     question: "How should I store it?",
-    answer: "Store it in a cool, dry place. Keep it away from direct sunlight and moisture.",
+    answer: "Store in a cool, dry place. Keep away from direct sunlight and moisture.",
   },
   {
-    question: "What is the shelf life?",
-    answer:
-      "Please check the product label for the final shelf life, manufacturing date and best-before date.",
-  },
-  {
-    question: "Is shipping free?",
-    answer:
-      "Yes, DiteUp offers free shipping on Energy Bite orders, unless mentioned otherwise at checkout.",
-  },
-  {
-    question: "What is the price of DiteUp Energy Bite?",
+    question: "What is the price?",
     answer: "The MRP is ₹1099 and the current selling price is ₹799.",
   },
   {
-    question: "Can I return the product?",
+    question: "Is shipping free?",
+    answer: "Yes, free shipping is available unless mentioned otherwise at checkout.",
+  },
+  {
+    question: "Can I return it?",
     answer:
       "Since this is a food product, returns are not accepted once the product is opened, used or consumed.",
   },
   {
-    question: "What should I do if I receive a damaged product?",
-    answer:
-      "Please contact us within 48 hours of delivery with your order ID, product photos, packaging photos and unboxing video if available.",
-  },
-  {
-    question: "Is DiteUp Energy Bite FSSAI certified?",
-    answer: `Yes, DiteUp Energy Bite is FSSAI licensed. FSSAI Lic. No.: ${FSSAI_LICENSE_NO}`,
+    question: "What is the FSSAI number?",
+    answer: `FSSAI Lic. No.: ${FSSAI_LICENSE_NO}`,
   },
 ];
 
 const MAIN_HOME_FAQ_QUESTIONS = [
   "What is DiteUp Energy Bite?",
-  "How do I use DiteUp Energy Bite?",
-  "How long should I soak it?",
-  "How many sachets are inside one DiteUp Energy Bite pack?",
-  "Is DiteUp Energy Bite vegetarian?",
+  "How do I use it?",
+  "How many sachets are inside one pack?",
+  "Is it vegetarian?",
   "Does it contain added sugar?",
   "Does it contain preservatives?",
   "Is bowl and spoon included?",
   "How should I store it?",
-  "Can I return the product?",
+  "Is shipping free?",
+  "Can I return it?",
 ] as const;
 
 /** Number of FAQs shown on the home page preview. */
 export const HOME_FAQ_PREVIEW_COUNT = 3;
 
 /**
- * Curated homepage FAQ subset labeled "Main FAQ" in DITEUP _ POLICIES.docx.
+ * Curated homepage FAQ subset labeled "Main FAQ".
  */
 export function getMainHomeFaqItems(): EnergyBiteFaqItem[] {
   const byQuestion = new Map(ENERGY_BITE_FAQ_ITEMS.map((item) => [item.question, item]));
