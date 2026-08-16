@@ -67,7 +67,7 @@ export async function fetchProductBySlug(
   if (!tryGetServerApiBase()) return null;
   try {
     const enc = encodeURIComponent(slug);
-    const res = await serverApiFetch(`/v1/products/${enc}`, { forwardCookies: false, revalidate: 60 });
+    const res = await serverApiFetch(`/v1/products/${enc}`, { forwardCookies: false });
     if (res.status === 404) return null;
     if (!res.ok) return null;
     const data = (await res.json()) as { product?: PublicProduct; siteMode?: PublicSiteMode };

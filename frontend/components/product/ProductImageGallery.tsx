@@ -7,6 +7,13 @@ import type { PublicProduct, PublicProductMedia } from "@/lib/types/catalog";
 const PACKAGING_FALLBACK_SRC = "/assets/Images/product_.webp";
 const SWIPE_THRESHOLD_PX = 40;
 
+/**
+ * True for seed/dev placeholder URLs that must not appear in the PDP gallery.
+ */
+function isPlaceholderMediaUrl(url: string): boolean {
+  return /placehold\.co/i.test(url);
+}
+
 export type GallerySlide = {
   src: string;
   alt: string;
@@ -23,6 +30,7 @@ export function resolveGallerySlides(product: PublicProduct): GallerySlide[] {
   const rows = (product.media ?? [])
     .filter((m): m is PublicProductMedia => Boolean(m?.url))
     .filter((m) => (m.type ?? "IMAGE").toUpperCase() !== "VIDEO")
+    .filter((m) => !isPlaceholderMediaUrl(m.url))
     .slice()
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
@@ -49,9 +57,7 @@ function wrapIndex(next: number, length: number): number {
  */
 export function ProductImageGallery({ product }: ProductImageGalleryProps) {
   const slides = useMemo(() => resolveGallerySlides(product), [product]);
-  const fromCms = (product.media ?? []).some(
-    (m) => Boolean(m?.url) && (m.type ?? "IMAGE").toUpperCase() !== "VIDEO",
-  );
+  const fromCms = slides.some((s) => s.src !== PACKAGING_FALLBACK_SRC);
   const showThumbs = fromCms && slides.length > 1;
   const [index, setIndex] = useState(0);
   const active = slides[wrapIndex(index, slides.length)] ?? slides[0];

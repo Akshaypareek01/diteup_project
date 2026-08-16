@@ -12,6 +12,10 @@ import type { PublicProductFaq } from "@/lib/types/catalog";
 
 type Props = { params: { slug: string } };
 
+/** Always hit the API for media — admin uploads must show without a stale 60s cache. */
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 /**
  * PDP metadata from admin SEO JSON with product fallbacks.
  */

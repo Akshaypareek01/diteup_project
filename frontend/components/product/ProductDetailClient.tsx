@@ -41,6 +41,7 @@ export type ProductDetailClientProps = {
 function resolveCartLineImage(product: PublicProduct): { imageSrc: string; imageAlt: string } {
   const first = (product.media ?? [])
     .filter((m) => Boolean(m?.url) && (m.type ?? "IMAGE").toUpperCase() !== "VIDEO")
+    .filter((m) => !/placehold\.co/i.test(m.url))
     .slice()
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0];
   if (first?.url) {
