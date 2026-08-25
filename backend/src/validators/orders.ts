@@ -7,6 +7,15 @@ import { AddressBaseSchema } from "./me.js";
 
 const ShippingForOrderSchema = AddressBaseSchema.omit({ label: true, isDefault: true });
 
+/**
+ * Optional Meta ad-attribution signal.
+ *
+ * `.catch` is deliberate: these come from browser cookies we do not control, and an
+ * oversized or malformed value must degrade to "no attribution" rather than reject the
+ * order. Analytics must never block a sale.
+ */
+const MetaSignalSchema = z.string().max(256).optional().catch(undefined);
+
 export const CreateOrderBodySchema = z
   .object({
     items: z
@@ -25,6 +34,10 @@ export const CreateOrderBodySchema = z
     shippingAddress: ShippingForOrderSchema.optional(),
     billingAddress: ShippingForOrderSchema.optional(),
     addressId: z.string().optional(),
+    /** Meta `_fbp` cookie — replayed by the Conversions API at confirmation. */
+    fbp: MetaSignalSchema,
+    /** Meta `_fbc` click cookie, or one derived from an `fbclid` URL parameter. */
+    fbc: MetaSignalSchema,
   })
   .superRefine((data, ctx) => {
     if (!data.addressId && !data.shippingAddress) {

@@ -73,17 +73,21 @@
 
 ## 2.2 Meta (Facebook) Pixel
 
+Go-live steps, verification and rollback: **`docs/META-PIXEL-CUTOVER.md`**.
+
 | Proposal item | Status | Notes |
 |---------------|--------|-------|
-| PageView | ⚠️ Partial | Fires on initial load only (`MetaPixel.tsx`). **No** PageView on Next.js client route changes |
-| ViewContent | ✅ Done | Home hero + PDP |
+| PageView | ✅ Done | Initial load via `MetaPixel.tsx`, plus App Router client route changes via `MetaPixelRouteEvents` |
+| ViewContent | ✅ Done | Home hero + PDP (once per product, not per variant switch) |
 | AddToCart | ✅ Done | PDP add / buy now |
 | InitiateCheckout | ✅ Done | Checkout mount |
-| AddPaymentInfo | ✅ Done | Payment method change |
-| Purchase | ✅ Done | Order tracking page (once confirmed) |
+| AddPaymentInfo | ✅ Done | Once per checkout (total also moves on coupon/PIN/qty changes) |
+| Purchase | ✅ Done | Order tracking page (once confirmed), deduped against CAPI via `eventID` = order number |
 | Lead / CompleteRegistration | ⚠️ Partial | Uses `CompleteRegistration` on signup verify — not separate `Lead` event |
+| Browser ↔ CAPI deduplication | ✅ Done | Browser passes `{ eventID: orderNumber }` as `fbq`'s 4th arg; CAPI sends the same value as `event_id`. Without this every order counts twice |
+| Event Match Quality signals | ✅ Done | `_fbp` / `_fbc` / IP / user-agent captured at order placement (`META_ATTRIBUTION` order event) and replayed by CAPI — Razorpay confirms via webhook with no browser context. `fbclid` from the landing URL is kept in `sessionStorage` as a `_fbc` fallback |
 | Pixel ID configurable from admin (no code change) | ✅ Done | `MetaPixelGate` reads `GET /v1/site/integrations` (300s cache). Precedence: `Setting` key `metaAds` (Admin → Settings → Meta ads) → API `META_PIXEL_ID` → `NEXT_PUBLIC_META_PIXEL_ID` → `DEFAULT_META_PIXEL_ID` in `frontend/lib/meta-pixel-config.ts` |
-| Server-side CAPI (optional add-on) | ✅ Done | `sendPurchaseEventForOrder` — exceeds proposal minimum |
+| Server-side CAPI (optional add-on) | ⚠️ Needs token | Code complete (`sendPurchaseEventForOrder`, fires once per order behind a `META_CAPI_PURCHASE` marker). **Blocked on `META_CAPI_ACCESS_TOKEN`** — generate in Events Manager → Conversions API and set in the API `.env` or Admin → Settings → Meta ads (`capiAccessToken`). Never commit it |
 
 ---
 
@@ -226,7 +230,8 @@ These are in the codebase but were **not** in the client proposal. Safe to menti
 |---------|----------------|
 | Storefront home | `frontend/app/page.tsx`, `frontend/components/home/*` |
 | Checkout / Razorpay | `frontend/components/checkout/CheckoutClient.tsx` |
-| Meta Pixel events | `frontend/lib/meta-pixel-events.ts`, `frontend/components/analytics/MetaPixel.tsx`, `frontend/lib/meta-pixel-config.ts` |
+| Meta Pixel events | `frontend/lib/meta-pixel-events.ts`, `frontend/components/analytics/MetaPixel*.tsx`, `frontend/lib/meta-pixel-config.ts` |
+| Meta CAPI + attribution | `backend/src/services/metaPixel.ts`, `backend/src/services/metaAttribution.ts`, `frontend/lib/meta-attribution.ts` |
 | Admin dashboard | `frontend/app/admin/(shell)/page.tsx` |
 | Admin orders (read-only) | `frontend/app/admin/(shell)/orders/*` |
 | Admin settings / Meta | `frontend/app/admin/(shell)/settings/[section]/page.tsx` |

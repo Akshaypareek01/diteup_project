@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FlowHeader } from "@/components/layout/FlowHeader";
 import { SiteModeStrip } from "@/components/site-mode/SiteModeStrip";
 import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
@@ -96,11 +96,20 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
     };
   }, []);
 
-  const selectedId = selected?.id;
+  // Once per product: switching variant is not a new content view, and refiring
+  // would inflate ViewContent against the same PDP visit.
+  const viewContentFired = useRef(false);
+  const defaultVariantId = defaultVariant?.id;
+  const defaultVariantPrice = defaultVariant ? moneyNumber(defaultVariant.priceSale) : 0;
   useEffect(() => {
-    if (!selectedId) return;
-    pixelViewContent({ content_ids: [selectedId], value: sale, currency: "INR" });
-  }, [selectedId, sale]);
+    if (!defaultVariantId || viewContentFired.current) return;
+    viewContentFired.current = true;
+    pixelViewContent({
+      content_ids: [defaultVariantId],
+      value: defaultVariantPrice,
+      currency: "INR",
+    });
+  }, [defaultVariantId, defaultVariantPrice]);
 
   /**
    * Puts the selected variant in the cart as a single Buy-now line and fires Pixel add-to-cart.

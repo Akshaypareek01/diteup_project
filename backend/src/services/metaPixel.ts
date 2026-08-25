@@ -9,6 +9,19 @@ import { createHash } from "node:crypto";
 import { logger } from "../utils/logger.js";
 import { getMetaAdsIntegration } from "./settings.js";
 
+/**
+ * Graph API `user_data` keys. Snake_case is required — Meta silently ignores unknown
+ * keys, so a camelCase typo costs Event Match Quality with no error response.
+ */
+export type MetaUserData = {
+  em?: string[];
+  ph?: string[];
+  client_ip_address?: string;
+  client_user_agent?: string;
+  fbp?: string;
+  fbc?: string;
+};
+
 export type PurchaseCapiPayload = {
   eventId?: string | null;
   value: number;
@@ -16,14 +29,7 @@ export type PurchaseCapiPayload = {
   pixelId: string;
   accessToken: string;
   /** Hashed externally per Meta rules — pass already-normalized if available. */
-  userData?: {
-    em?: string[];
-    ph?: string[];
-    clientIpAddress?: string;
-    clientUserAgent?: string;
-    fbp?: string;
-    fbc?: string;
-  };
+  userData?: MetaUserData;
 };
 
 /**
@@ -75,6 +81,10 @@ export async function sendPurchaseEvent(input: PurchaseCapiPayload): Promise<boo
 
 /**
  * Loads integration + fires Purchase for a confirmed order (`event_id` = `orderNumber` for Pixel dedupe).
+ *
+ * `fbp`/`fbc`/`requestIp`/`userAgent` come from the browser at order placement (see
+ * `META_ATTRIBUTION` order event) — Razorpay confirms via webhook, where no browser
+ * context exists. They carry most of the Event Match Quality weight.
  */
 export async function sendPurchaseEventForOrder(input: {
   orderNumber: string;
@@ -84,6 +94,8 @@ export async function sendPurchaseEventForOrder(input: {
   phone?: string | null;
   requestIp?: string | null;
   userAgent?: string | null;
+  fbp?: string | null;
+  fbc?: string | null;
 }): Promise<boolean> {
   const creds = await getMetaAdsIntegration();
   if (!creds) {
@@ -104,8 +116,10 @@ export async function sendPurchaseEventForOrder(input: {
     userData: {
       em,
       ph,
-      clientIpAddress: input.requestIp ?? undefined,
-      clientUserAgent: input.userAgent ?? undefined,
+      client_ip_address: input.requestIp ?? undefined,
+      client_user_agent: input.userAgent ?? undefined,
+      fbp: input.fbp ?? undefined,
+      fbc: input.fbc ?? undefined,
     },
   });
 }

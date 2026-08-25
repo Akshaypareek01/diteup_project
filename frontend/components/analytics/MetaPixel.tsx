@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { MetaPixelRouteEvents } from "@/components/analytics/MetaPixelRouteEvents";
 import { COOKIE_CONSENT_STORAGE_KEY } from "@/lib/cookie-consent";
 import { resolveMetaPixelId } from "@/lib/meta-pixel-config";
 
@@ -39,6 +40,7 @@ export function MetaPixel({ pixelId }: MetaPixelProps) {
   return (
     <>
       <Script id="meta-pixel" strategy="afterInteractive" dangerouslySetInnerHTML={{ __html: bootstrap }} />
+      <MetaPixelRouteEvents />
       {/* Renders only when JS is disabled, so consent mode cannot gate it (matches Meta's official snippet). */}
       <noscript>
         <img

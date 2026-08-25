@@ -10,13 +10,23 @@ declare global {
   }
 }
 
+/** Meta dedupes browser + Conversions API events matching on `event_name` + `eventID`. */
+export type PixelTrackOptions = { eventID?: string };
+
 /**
  * Tracks optional Pixel commerce parameters (safely skips when adblock/disabled).
+ *
+ * @param options Passed as `fbq`'s fourth argument — the only place `eventID` is read
+ *   from. An `event_id` inside `payload` is ignored by Meta for deduplication.
  */
-export function pixelTrack(event: string, payload?: Record<string, unknown>): void {
+export function pixelTrack(
+  event: string,
+  payload?: Record<string, unknown>,
+  options?: PixelTrackOptions,
+): void {
   if (typeof window === "undefined") return;
   try {
-    window.fbq?.("track", event, payload);
+    window.fbq?.("track", event, payload, options);
   } catch {
     /* noop */
   }
@@ -48,6 +58,7 @@ export function pixelAddToCart(args: {
   num_items: number;
 }): void {
   pixelTrack("AddToCart", {
+    content_type: "product",
     content_ids: args.content_ids,
     value: args.value,
     currency: args.currency ?? "INR",
@@ -65,6 +76,7 @@ export function pixelInitiateCheckout(args: {
   num_items: number;
 }): void {
   pixelTrack("InitiateCheckout", {
+    content_type: "product",
     content_ids: args.content_ids,
     value: args.value,
     currency: args.currency ?? "INR",
@@ -84,6 +96,11 @@ export function pixelAddPaymentInfo(args: { value: number; currency?: string }):
 
 /**
  * Purchase — order confirmed tracking page.
+ *
+ * `transaction_id` is the order number, which the backend also sends as the CAPI
+ * `event_id` (see `sendPurchaseEventForOrder`). Passing it as `eventID` lets Meta
+ * collapse the browser and server events into one conversion; without it every
+ * order is counted twice. It also makes tracking-page reloads idempotent.
  */
 export function pixelPurchase(args: {
   content_ids: string[];
@@ -91,12 +108,17 @@ export function pixelPurchase(args: {
   currency?: string;
   transaction_id: string;
 }): void {
-  pixelTrack("Purchase", {
-    content_ids: args.content_ids,
-    value: args.value,
-    currency: args.currency ?? "INR",
-    transaction_id: args.transaction_id,
-  });
+  pixelTrack(
+    "Purchase",
+    {
+      content_type: "product",
+      content_ids: args.content_ids,
+      value: args.value,
+      currency: args.currency ?? "INR",
+      transaction_id: args.transaction_id,
+    },
+    { eventID: args.transaction_id },
+  );
 }
 
 /** CompleteRegistration — successful email verification after signup */

@@ -9,6 +9,7 @@ import { sendEmail } from "./email.js";
 import { enqueueEmailSendJob } from "./jobQueue.js";
 import { ensureOrderInvoice, generateOrderInvoicePdf } from "./invoice.js";
 import { sendPurchaseEventForOrder } from "./metaPixel.js";
+import { META_ATTRIBUTION_EVENT, parseMetaAttribution } from "./metaAttribution.js";
 import { buildOrderTrackingUrl } from "../utils/orderAccess.js";
 import { moneyNumber } from "../utils/money.js";
 import { prisma } from "../utils/prisma.js";
@@ -152,12 +153,21 @@ export async function fireOrderConfirmedSuite(orderNumber: string): Promise<void
     where: { orderId: order.id, type: "META_CAPI_PURCHASE" },
   });
   if (!capiMarker) {
+    const attributionRow = await prisma.orderEvent.findFirst({
+      where: { orderId: order.id, type: META_ATTRIBUTION_EVENT },
+      orderBy: { createdAt: "desc" },
+    });
+    const attribution = parseMetaAttribution(attributionRow?.payload);
     const ok = await sendPurchaseEventForOrder({
       orderNumber: order.orderNumber,
       value: moneyNumber(order.total),
       currency: order.currency,
       email: order.user?.email ?? order.guestEmail,
       phone: order.user?.phone ?? order.guestPhone,
+      requestIp: attribution.ip,
+      userAgent: attribution.ua,
+      fbp: attribution.fbp,
+      fbc: attribution.fbc,
     });
     if (ok) {
       await prisma.orderEvent.create({

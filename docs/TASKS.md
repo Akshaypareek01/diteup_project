@@ -158,7 +158,7 @@ All under `/v1/admin/*` with `roleRequired('ADMIN')`.
 - [x] **9.2** Resend client + transactional templates (`services/email.ts`, `emails/templates.ts`; react-email deferred)
 - [x] **9.3** R2/S3 client + signed URL generation (`services/storage.ts`)
 - [x] **9.4** Sharp image processor (`services/imageProcessor.ts`)
-- [x] **9.5** Meta Pixel CAPI client — wired via `services/metaPixel.ts` + `Setting` `metaAds` (**Phase 11.6**)
+- [x] **9.5** Meta Pixel CAPI client — `services/metaPixel.ts` + `Setting` `metaAds` (**Phase 11.6**); browser dedupe via `eventID` + `_fbp`/`_fbc`/IP/UA replay (`services/metaAttribution.ts`). Needs `META_CAPI_ACCESS_TOKEN` to go live
 - [x] **9.6** Sentry error monitoring (`@sentry/node` init in `index.ts`, capture on 500s in `errorHandler`)
 - [x] **9.7** GST invoice PDF in `services/invoice.ts` (**Phase 11.2**)
 
@@ -251,7 +251,7 @@ Closes gaps between the API/workers and `PRD.md` §6–§13 (backend-owned). **S
 - [ ] **15.1** Unit tests: coupon validator, stock reservation, order state machine
 - [ ] **15.2** E2E test: full checkout flow (Playwright)
 - [ ] **15.3** Razorpay test-mode end-to-end
-- [ ] **15.4** Meta Pixel verification with Pixel Helper
+- [ ] **15.4** Meta Pixel verification with Pixel Helper — follow `docs/META-PIXEL-CUTOVER.md`
 - [ ] **15.5** Lighthouse audit (mobile ≥90 perf, 100 SEO)
 - [x] **15.5a** SEO production infrastructure — metadata, robots, sitemap, JSON-LD, admin `siteSeo` (`docs/SEO-PRODUCTION-HANDOVER.md`)
 - [ ] **15.5b** Marketing GSC verification + sitemap submit + final meta copy (see SEO handover doc §3–6)

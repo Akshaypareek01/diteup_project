@@ -12,6 +12,7 @@ import { useCartState } from "@/components/cart/CartStateProvider";
 import { ApiError, clientApiJson } from "@/lib/client-api";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
 import type { PincodeCheckPayload } from "@/lib/types/pincode";
+import { readMetaAttribution } from "@/lib/meta-attribution";
 import { pixelAddPaymentInfo, pixelInitiateCheckout } from "@/lib/meta-pixel-events";
 import { CheckoutErrorDialog, CheckoutOrderErrorBanner } from "@/components/checkout/CheckoutErrorDialog";
 import { CheckoutFormSections } from "@/components/checkout/CheckoutFormSections";
@@ -74,6 +75,7 @@ export function CheckoutClient() {
   const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string | null>(null);
 
   const initiateOnce = useRef(false);
+  const paymentInfoOnce = useRef(false);
 
   /** Tracks contact phone last mirrored into shipping — avoids overwriting a manual ship-phone edit. */
   const lastSyncedContactPhone = useRef("");
@@ -173,8 +175,11 @@ export function CheckoutClient() {
   const previewTotal = preview?.total;
   const checkoutProductId = preview?.lines?.[0]?.productId ?? null;
 
+  // Once per checkout: the total also moves on coupon, PIN and quantity changes,
+  // which would otherwise report several AddPaymentInfo events per session.
   useEffect(() => {
-    if (previewTotal == null) return;
+    if (previewTotal == null || paymentInfoOnce.current) return;
+    paymentInfoOnce.current = true;
     pixelAddPaymentInfo({ value: previewTotal, currency: "INR" });
   }, [previewTotal]);
 
@@ -397,6 +402,9 @@ export function CheckoutClient() {
         guestEmail: userEmail ? undefined : email,
         guestPhone: guestPhone.trim() || undefined,
         idempotencyKey,
+        // Razorpay confirms via webhook, so the Conversions API has no browser
+        // context later — hand these over now for event matching.
+        ...readMetaAttribution(),
       };
 
       const body =

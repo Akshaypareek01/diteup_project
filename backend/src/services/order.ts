@@ -23,6 +23,7 @@ import {
   type CartLineRequest,
 } from "./cart.js";
 import { createRazorpayOrder, isRazorpayConfigured } from "./razorpay.js";
+import { META_ATTRIBUTION_EVENT, type MetaAttribution } from "./metaAttribution.js";
 import { maybeEnqueueShiprocketPushForOrder } from "./jobQueue.js";
 import { currentOrderYearKolkata, formatOrderNumber, nextOrderSequenceNo } from "./orderNumber.js";
 import {
@@ -70,6 +71,8 @@ export type PlaceOrderInput = {
   guestEmail?: string | null;
   guestPhone?: string | null;
   idempotencyKey?: string | null;
+  /** Browser-captured Meta signals, replayed by the Conversions API at confirmation. */
+  metaAttribution?: MetaAttribution | null;
 };
 
 /**
@@ -258,6 +261,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<PlacedOrderRes
       },
       include: { items: true, payments: true },
     });
+
+    if (input.metaAttribution) {
+      await tx.orderEvent.create({
+        data: {
+          orderId: created.id,
+          type: META_ATTRIBUTION_EVENT,
+          payload: input.metaAttribution as Prisma.InputJsonValue,
+          actorId: input.userId ?? null,
+        },
+      });
+    }
 
     if (couponRow && couponResult?.eligible) {
       await tx.coupon.update({

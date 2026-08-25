@@ -89,6 +89,8 @@ API_PROXY_TARGET=http://127.0.0.1:4000      # Next rewrite to API
 NEXT_PUBLIC_META_PIXEL_ID=1408377107972075
 ```
 
+Full Meta go-live steps (CAPI token, verification, rollback): `docs/META-PIXEL-CUTOVER.md`.
+
 Set the same ID as `META_PIXEL_ID` in the API `.env` so `GET /v1/site/integrations` serves it.
 If all three sources are blank the storefront still falls back to `DEFAULT_META_PIXEL_ID` in
 `frontend/lib/meta-pixel-config.ts`. Precedence: admin `metaAds` → API `META_PIXEL_ID` →

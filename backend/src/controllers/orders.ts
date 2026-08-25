@@ -6,6 +6,7 @@ import type { Request, Response, NextFunction } from "express";
 import { prisma } from "../utils/prisma.js";
 import { Forbidden, NotFound } from "../utils/errors.js";
 import * as orderService from "../services/order.js";
+import { buildMetaAttribution } from "../services/metaAttribution.js";
 import {
   cancelOrderForViewer,
   getOrderForViewer,
@@ -51,6 +52,12 @@ export async function postCreateOrder(req: Request, res: Response, next: NextFun
       guestEmail: req.body.guestEmail ?? null,
       guestPhone: req.body.guestPhone ?? null,
       idempotencyKey: req.body.idempotencyKey ?? null,
+      metaAttribution: buildMetaAttribution({
+        fbp: req.body.fbp,
+        fbc: req.body.fbc,
+        ip: req.ip ?? req.socket.remoteAddress,
+        ua: req.get("user-agent"),
+      }),
     });
     res.status(201).json(result);
   } catch (err) {
