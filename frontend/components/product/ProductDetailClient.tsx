@@ -13,7 +13,7 @@ import { clientApiJson } from "@/lib/client-api";
 import { formatInr, moneyNumber } from "@/lib/format-money";
 import type { PublicProduct } from "@/lib/types/catalog";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
-import { pixelAddToCart } from "@/lib/meta-pixel-events";
+import { pixelAddToCart, pixelViewContent } from "@/lib/meta-pixel-events";
 import { ProductImageGallery } from "@/components/product/ProductImageGallery";
 import { NotifyMeForm } from "@/components/product/NotifyMeForm";
 import { ProductPdpAccordions } from "@/components/product/ProductPdpAccordions";
@@ -95,6 +95,12 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
       cancelled = true;
     };
   }, []);
+
+  const selectedId = selected?.id;
+  useEffect(() => {
+    if (!selectedId) return;
+    pixelViewContent({ content_ids: [selectedId], value: sale, currency: "INR" });
+  }, [selectedId, sale]);
 
   /**
    * Puts the selected variant in the cart as a single Buy-now line and fires Pixel add-to-cart.

@@ -213,7 +213,7 @@ Closes gaps between the API/workers and `PRD.md` §6–§13 (backend-owned). **S
 - [x] **12.16** Cookie consent banner — dismissible session stub (`components/legal/CookieBanner.tsx`)
 - [x] **12.17** 404 + maintenance page
 - [~] **12.18** Razorpay — `RazorpayCheckoutScript` + env `NEXT_PUBLIC_RAZORPAY_KEY_ID`; **Checkout open + verify** not wired
-- [~] **12.19** Meta Pixel — `MetaPixel` + `NEXT_PUBLIC_META_PIXEL_ID`; **event helpers** (AddToCart, etc.) not wired
+- [x] **12.19** Meta Pixel — `MetaPixelGate` (admin `metaAds` → env → `DEFAULT_META_PIXEL_ID`) + `noscript` fallback; event helpers wired (ViewContent, AddToCart, InitiateCheckout, AddPaymentInfo, Purchase, CompleteRegistration)
 
 ---
 

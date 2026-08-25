@@ -14,7 +14,7 @@
 | Cart, checkout, Razorpay, COD | ✅ | ✅ | — | ✅ Yes (needs live Razorpay keys + E2E test) |
 | Order tracking + emails | ✅ | ✅ | — | ✅ Yes |
 | Landing page (core sections) | ✅ | ✅ mostly | — | ⚠️ Missing carousel + product video |
-| Meta Pixel (browser) | — | ⚠️ Partial | ⚠️ Partial | ❌ Pixel ID not fully admin-driven on storefront |
+| Meta Pixel (browser) | — | ✅ | ✅ (JSON settings) | ✅ Yes (live ID `1408377107972075`; verify with Pixel Helper) |
 | Meta CAPI (server) | ✅ | — | ✅ (JSON settings) | ✅ Yes (optional add-on in proposal — already built) |
 | Admin — read-only lists | ✅ | — | ✅ | ✅ Yes |
 | Admin — operational actions | ✅ | — | ⚠️ Gaps | ❌ Several proposal items have API but no UI |
@@ -82,7 +82,7 @@
 | AddPaymentInfo | ✅ Done | Payment method change |
 | Purchase | ✅ Done | Order tracking page (once confirmed) |
 | Lead / CompleteRegistration | ⚠️ Partial | Uses `CompleteRegistration` on signup verify — not separate `Lead` event |
-| Pixel ID configurable from admin (no code change) | ⚠️ Partial | **Backend CAPI:** `Setting` key `metaAds` in Admin → Settings → Meta ads. **Browser Pixel:** still reads `NEXT_PUBLIC_META_PIXEL_ID` env — **not** synced from admin DB at runtime. Changing pixel in admin alone does **not** update storefront tracking without redeploy/env update |
+| Pixel ID configurable from admin (no code change) | ✅ Done | `MetaPixelGate` reads `GET /v1/site/integrations` (300s cache). Precedence: `Setting` key `metaAds` (Admin → Settings → Meta ads) → API `META_PIXEL_ID` → `NEXT_PUBLIC_META_PIXEL_ID` → `DEFAULT_META_PIXEL_ID` in `frontend/lib/meta-pixel-config.ts` |
 | Server-side CAPI (optional add-on) | ✅ Done | `sendPurchaseEventForOrder` — exceeds proposal minimum |
 
 ---
@@ -226,7 +226,7 @@ These are in the codebase but were **not** in the client proposal. Safe to menti
 |---------|----------------|
 | Storefront home | `frontend/app/page.tsx`, `frontend/components/home/*` |
 | Checkout / Razorpay | `frontend/components/checkout/CheckoutClient.tsx` |
-| Meta Pixel events | `frontend/lib/meta-pixel-events.ts`, `frontend/components/analytics/MetaPixel.tsx` |
+| Meta Pixel events | `frontend/lib/meta-pixel-events.ts`, `frontend/components/analytics/MetaPixel.tsx`, `frontend/lib/meta-pixel-config.ts` |
 | Admin dashboard | `frontend/app/admin/(shell)/page.tsx` |
 | Admin orders (read-only) | `frontend/app/admin/(shell)/orders/*` |
 | Admin settings / Meta | `frontend/app/admin/(shell)/settings/[section]/page.tsx` |

@@ -1,3 +1,4 @@
+import { resolveMetaPixelId } from "@/lib/meta-pixel-config";
 import { serverApiFetch, tryGetServerApiBase } from "@/lib/server-api";
 import type { PublicProduct } from "@/lib/types/catalog";
 import type { HomepageBannerSlide, HomepageBannersPayload } from "@/lib/types/homepage-banners";
@@ -19,27 +20,18 @@ export async function fetchSiteMode(): Promise<PublicSiteMode> {
 }
 
 /**
- * Resolves Meta Pixel ID from admin settings (`metaAds`) with env fallback.
+ * Resolves Meta Pixel ID from admin settings (`metaAds`), then env, then the shipped default.
  */
-export async function fetchMetaPixelId(): Promise<string | null> {
-  if (!tryGetServerApiBase()) {
-    const envId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
-    return envId || null;
-  }
+export async function fetchMetaPixelId(): Promise<string> {
+  const envId = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  if (!tryGetServerApiBase()) return resolveMetaPixelId(envId);
   try {
     const res = await serverApiFetch("/v1/site/integrations", { forwardCookies: false, revalidate: 300 });
-    if (!res.ok) {
-      const envId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
-      return envId || null;
-    }
+    if (!res.ok) return resolveMetaPixelId(envId);
     const data = (await res.json()) as { metaPixelId?: string | null };
-    const fromApi = data.metaPixelId?.trim();
-    if (fromApi) return fromApi;
-    const envId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
-    return envId || null;
+    return resolveMetaPixelId(data.metaPixelId, envId);
   } catch {
-    const envId = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim();
-    return envId || null;
+    return resolveMetaPixelId(envId);
   }
 }
 
