@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import {
   readCookieConsent,
   syncMetaPixelConsent,
@@ -16,11 +17,19 @@ type BannerPhase = "pending" | "visible" | "hidden";
  */
 export function CookieBanner() {
   const [phase, setPhase] = useState<BannerPhase>("pending");
+  /** Drives the slide-in; set a frame after mount so the transition has a start state. */
+  const [entered, setEntered] = useState(false);
 
   useEffect(() => {
     const stored = readCookieConsent();
     setPhase(stored === null ? "visible" : "hidden");
   }, []);
+
+  useEffect(() => {
+    if (phase !== "visible") return;
+    const frame = window.requestAnimationFrame(() => setEntered(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, [phase]);
 
   const choose = useCallback((value: CookieConsentValue) => {
     writeCookieConsent(value);
@@ -47,38 +56,49 @@ export function CookieBanner() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[60] border-t border-line-dark/25 bg-paper p-4 text-ink shadow-lg md:bottom-4 md:left-4 md:right-auto md:max-w-md md:rounded-xl md:border md:border-line-dark/20 md:shadow-xl"
-      role="dialog"
-      aria-modal="false"
+      className={`fixed inset-x-0 bottom-0 z-[60] border-t border-line-dark/25 bg-paper p-4 text-ink shadow-lg transition duration-300 ease-out md:bottom-4 md:left-4 md:right-auto md:max-w-md md:rounded-xl md:border md:border-line-dark/20 md:shadow-xl ${
+        entered ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0"
+      }`}
+      role="region"
       aria-labelledby="cookie-banner-title"
       aria-describedby="cookie-banner-desc"
     >
-      <h2 id="cookie-banner-title" className="sr-only">
-        Cookie preferences
+      <h2 id="cookie-banner-title" className="font-display text-body-lg font-semibold text-forest">
+        Get the good stuff
       </h2>
-      <p id="cookie-banner-desc" className="text-body text-ink">
-        We use essential cookies for security, cart, and checkout. With your permission we also use
-        analytics cookies (including Meta Pixel) to understand how our site is used. See our{" "}
-        <Link href="/privacy-policy" className="font-medium text-gold-deep underline underline-offset-2">
-          Privacy
-        </Link>{" "}
-        policy for details.
+      <p id="cookie-banner-desc" className="mt-2 text-body text-ink">
+        Essential cookies keep your cart and checkout working. With your permission, we also use
+        analytics and advertising cookies (including Meta Pixel) to show you offers worth seeing and
+        to measure whether our ads are working.
       </p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          className="inline-flex h-10 min-h-[44px] items-center justify-center rounded-lg bg-forest px-4 font-medium text-cream shadow-sm transition hover:bg-sage focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+      <p className="mt-2 text-body-sm text-ink-muted">
+        Completing an order also shares purchase details with Meta so we can measure advertising,
+        regardless of your choice here. More in our{" "}
+        <Link
+          href="/privacy-policy#privacy-cookies"
+          className="font-medium text-gold-deep underline underline-offset-2"
+        >
+          Privacy policy
+        </Link>
+        .
+      </p>
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Button
+          variant="primaryForest"
+          size="md"
+          className="w-full sm:w-auto"
           onClick={() => choose("analytics_accepted")}
         >
           Accept analytics
-        </button>
-        <button
-          type="button"
-          className="inline-flex h-10 min-h-[44px] items-center justify-center rounded-lg border-2 border-line-dark/35 bg-cream px-4 font-medium text-ink shadow-sm transition hover:border-forest/40 hover:bg-paper focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest"
+        </Button>
+        <Button
+          variant="secondary"
+          size="md"
+          className="w-full sm:w-auto"
           onClick={() => choose("essential_only")}
         >
           Essential only
-        </button>
+        </Button>
       </div>
     </div>
   );

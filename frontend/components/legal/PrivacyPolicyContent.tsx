@@ -102,6 +102,12 @@ export function PrivacyPolicyContent() {
                 <li>Customer support tools</li>
                 <li>Legal, tax or regulatory authorities when required</li>
                 <li>Marketing or communication tools, only when needed</li>
+                <li>
+                  Advertising measurement platforms, currently Meta — see{" "}
+                  <a href="#privacy-cookies" className="underline underline-offset-2">
+                    Cookies and Tracking
+                  </a>
+                </li>
               </ul>
               <p>We do not sell your personal information to advertisers.</p>
             </>
@@ -114,12 +120,32 @@ export function PrivacyPolicyContent() {
           body={
             <>
               <p>
-                Our website may use cookies or similar technologies to improve your browsing
-                experience, remember preferences, analyze traffic and improve our marketing.
+                We use two kinds of cookies and similar technologies. Essential ones keep your
+                cart, checkout and sign-in working, and cannot be switched off. Analytics and
+                advertising ones — including the Meta (Facebook) Pixel — help us understand how the
+                site is used and measure whether our advertising is working.
               </p>
               <p>
-                You can control or disable cookies through your browser settings. However, some
-                website features may not work properly without cookies.
+                Analytics and advertising cookies only load after you accept them in the cookie
+                banner shown on your first visit. If you choose “Essential only”, the Meta Pixel
+                stays switched off in your browser.
+              </p>
+              <p>
+                Separately, when you complete an order we send details of that order to Meta
+                through its Conversions API, so we can measure which advertising leads to sales.
+                This happens for every completed order, whatever you chose in the cookie banner,
+                because it relates to a transaction you asked us to carry out. What we send is the
+                order number and value, your email address and phone number in hashed (one-way
+                encrypted) form, your IP address, your browser’s user-agent string, and any Meta
+                advertising identifiers already present in your browser. Hashing means we never
+                send your raw email address or phone number; Meta compares the hashed values
+                against its own records to match the order to an advert.
+              </p>
+              <p>
+                Your cookie choice is stored in your browser for this site. To change it, clear the
+                site data for diteup.com in your browser settings and the banner will appear
+                again on your next visit. You can also block cookies entirely through your browser,
+                though some parts of the site may then stop working.
               </p>
             </>
           }
