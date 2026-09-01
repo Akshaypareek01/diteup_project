@@ -55,7 +55,7 @@ export async function enqueueEmailSendJob(
 
 /**
  * Enqueues a Shiprocket order push with retries (idempotent — the handler
- * no-ops when the order was already pushed).
+ * no-ops when the remote order is still live).
  */
 export async function enqueueShiprocketPushJob(
   orderId: string,

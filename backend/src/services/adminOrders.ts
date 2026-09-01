@@ -62,6 +62,7 @@ export async function getOrderAdminById(orderId: string) {
       shippingCarrier: order.shippingCarrier,
       shiprocketOrderId: order.shiprocketOrderId,
       shiprocketShipmentId: order.shiprocketShipmentId,
+      shiprocketChannelOrderId: order.shiprocketChannelOrderId,
       shiprocketPushStatus: order.shiprocketPushStatus,
       shiprocketPushError: order.shiprocketPushError,
       shiprocketLastStatus: order.shiprocketLastStatus,

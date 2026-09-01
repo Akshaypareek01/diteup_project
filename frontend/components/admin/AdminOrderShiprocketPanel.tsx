@@ -11,8 +11,10 @@ export type ShiprocketPushStatus = "PENDING" | "PUSHED" | "FAILED";
 
 export type AdminOrderShiprocketPanelProps = {
   orderId: string;
+  orderNumber: string;
   shiprocketOrderId: string | null;
   shiprocketShipmentId: string | null;
+  shiprocketChannelOrderId: string | null;
   shiprocketPushStatus: ShiprocketPushStatus | null;
   shiprocketPushError: string | null;
   shiprocketLastStatus: string | null;
@@ -21,7 +23,28 @@ export type AdminOrderShiprocketPanelProps = {
   shippingCarrier: string | null;
 };
 
-function PushStatusBadge({ status }: { status: ShiprocketPushStatus | null }) {
+/**
+ * True when the last known Shiprocket status is a canceled shipment.
+ *
+ * @param status raw webhook or API status text
+ */
+function isCanceledShiprocketStatus(status: string | null): boolean {
+  const normalized = String(status ?? "")
+    .trim()
+    .toUpperCase();
+  return normalized === "CANCELED" || normalized === "CANCELLED";
+}
+
+function PushStatusBadge({
+  status,
+  lastStatus,
+}: {
+  status: ShiprocketPushStatus | null;
+  lastStatus: string | null;
+}) {
+  if (status === "PUSHED" && isCanceledShiprocketStatus(lastStatus)) {
+    return <Badge variant="warning">Pushed but canceled</Badge>;
+  }
   if (status === "PUSHED") return <Badge variant="success">Pushed</Badge>;
   if (status === "PENDING") return <Badge variant="warning">Pending</Badge>;
   if (status === "FAILED") {
@@ -39,8 +62,10 @@ function PushStatusBadge({ status }: { status: ShiprocketPushStatus | null }) {
  */
 export function AdminOrderShiprocketPanel({
   orderId,
+  orderNumber,
   shiprocketOrderId,
   shiprocketShipmentId,
+  shiprocketChannelOrderId,
   shiprocketPushStatus,
   shiprocketPushError,
   shiprocketLastStatus,
@@ -71,7 +96,11 @@ export function AdminOrderShiprocketPanel({
     }
   }
 
+  const searchId = shiprocketChannelOrderId?.trim() || orderNumber;
+  const alreadyPushed = shiprocketPushStatus === "PUSHED";
+
   const rows: Array<{ label: string; value: string }> = [];
+  rows.push({ label: "Search in Shiprocket", value: searchId });
   if (shiprocketOrderId) rows.push({ label: "Shiprocket order ID", value: shiprocketOrderId });
   if (shiprocketShipmentId) rows.push({ label: "Shipment ID", value: shiprocketShipmentId });
   if (awbNumber) {
@@ -90,7 +119,7 @@ export function AdminOrderShiprocketPanel({
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <span className="text-body-sm text-ink-muted">Push status</span>
-        <PushStatusBadge status={shiprocketPushStatus} />
+        <PushStatusBadge status={shiprocketPushStatus} lastStatus={shiprocketLastStatus} />
       </div>
 
       {rows.length > 0 ? (
@@ -110,13 +139,22 @@ export function AdminOrderShiprocketPanel({
         </p>
       ) : null}
 
-      {shiprocketPushStatus === "PUSHED" ? (
-        <p className="text-body-sm text-ink-muted">Already pushed to Shiprocket — updates arrive via webhook.</p>
-      ) : (
-        <Button variant="primaryGold" size="md" type="button" disabled={busy} onClick={() => void push()}>
-          {busy ? "Pushing…" : shiprocketPushStatus === "FAILED" ? "Retry push" : "Push to Shiprocket"}
-        </Button>
-      )}
+      {alreadyPushed && !isCanceledShiprocketStatus(shiprocketLastStatus) ? (
+        <p className="text-body-sm text-ink-muted">
+          Already pushed to Shiprocket — updates arrive via webhook. Recreate only if the order is
+          missing or canceled on their side.
+        </p>
+      ) : null}
+
+      <Button variant="primaryGold" size="md" type="button" disabled={busy} onClick={() => void push()}>
+        {busy
+          ? "Pushing…"
+          : alreadyPushed
+            ? "Push / recreate in Shiprocket"
+            : shiprocketPushStatus === "FAILED"
+              ? "Retry push"
+              : "Push to Shiprocket"}
+      </Button>
 
       {ok ? <p className="text-body-sm text-success">Pushed to Shiprocket.</p> : null}
       {err ? <p className="text-body-sm text-error">{err}</p> : null}

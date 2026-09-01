@@ -12,6 +12,12 @@ import {
   mapShiprocketStatus,
   type ShiprocketPushableOrder,
 } from "./shiprocket.js";
+import {
+  baseOrderNumberFromChannelId,
+  isCanceledShiprocketStatus,
+  nextAttemptFromChannelId,
+  nextShiprocketChannelOrderId,
+} from "./shiprocketChannel.js";
 import type { ShiprocketConfig } from "./settings.js";
 import { AppError } from "../utils/errors.js";
 
@@ -234,5 +240,39 @@ describe("mapShiprocketStatus", () => {
 
   it("returns null for an empty string", () => {
     assert.equal(mapShiprocketStatus(""), null);
+  });
+});
+
+describe("shiprocketChannel", () => {
+  it("keeps the base order number on attempt 0", () => {
+    assert.equal(nextShiprocketChannelOrderId("DU-2026-00009", 0), "DU-2026-00009");
+  });
+
+  it("suffixes -R1 / -R2 on later attempts", () => {
+    assert.equal(nextShiprocketChannelOrderId("DU-2026-00009", 1), "DU-2026-00009-R1");
+    assert.equal(nextShiprocketChannelOrderId("DU-2026-00009", 2), "DU-2026-00009-R2");
+  });
+
+  it("strips the retry suffix for webhook matching", () => {
+    assert.equal(baseOrderNumberFromChannelId("DU-2026-00009-R1"), "DU-2026-00009");
+    assert.equal(baseOrderNumberFromChannelId("DU-2026-00009"), "DU-2026-00009");
+  });
+
+  it("treats status_code 5 and CANCELED text as canceled", () => {
+    assert.equal(isCanceledShiprocketStatus("NEW", 1), false);
+    assert.equal(isCanceledShiprocketStatus("CANCELED", 1), true);
+    assert.equal(isCanceledShiprocketStatus("NEW", 5), true);
+  });
+
+  it("starts at -R1 when the stored channel id is the base order number", () => {
+    assert.equal(nextAttemptFromChannelId("DU-2026-00009"), 1);
+    assert.equal(nextAttemptFromChannelId(null), 1);
+    assert.equal(nextAttemptFromChannelId(""), 1);
+  });
+
+  it("increments the retry suffix for the next create attempt", () => {
+    assert.equal(nextAttemptFromChannelId("DU-2026-00009-R1"), 2);
+    assert.equal(nextAttemptFromChannelId("DU-2026-00009-R2"), 3);
+    assert.equal(nextAttemptFromChannelId("DU-2026-00009-R3"), 4);
   });
 });

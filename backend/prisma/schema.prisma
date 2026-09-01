@@ -388,6 +388,8 @@ model Order {
   /** Shiprocket order/shipment ids returned by the adhoc create API. */
   shiprocketOrderId    String?
   shiprocketShipmentId String?
+  /** Channel `order_id` we actually sent (`DU-…` or `DU-…-R1`). */
+  shiprocketChannelOrderId String?
   /** PENDING | PUSHED | FAILED — null when never enqueued. */
   shiprocketPushStatus String?
   shiprocketPushError  String?

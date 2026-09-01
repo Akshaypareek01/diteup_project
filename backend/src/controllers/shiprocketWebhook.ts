@@ -9,6 +9,7 @@ import { prisma } from "../utils/prisma.js";
 import { logger } from "../utils/logger.js";
 import { getShiprocketWebhookToken } from "../services/settings.js";
 import { mapShiprocketStatus, SHIPROCKET_WEBHOOK_HEADER } from "../services/shiprocket.js";
+import { baseOrderNumberFromChannelId } from "../services/shiprocketChannel.js";
 import { applyOrderStatusTransition } from "../services/adminOrders.js";
 
 type ShiprocketWebhookBody = {
@@ -69,6 +70,12 @@ export async function postShiprocketWebhook(req: Request, res: Response, next: N
     }
 
     let order = await prisma.order.findUnique({ where: { orderNumber } });
+    if (!order) {
+      const base = baseOrderNumberFromChannelId(orderNumber);
+      if (base !== orderNumber) {
+        order = await prisma.order.findUnique({ where: { orderNumber: base } });
+      }
+    }
     if (!order && body.sr_order_id !== undefined) {
       order = await prisma.order.findFirst({
         where: { shiprocketOrderId: String(body.sr_order_id) },

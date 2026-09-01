@@ -27,7 +27,6 @@ async function sampleInvoicePdf(): Promise<Buffer> {
     doc.moveDown();
     doc.fontSize(11).text(env.INVOICE_SELLER_NAME ?? "DiteUp");
     doc.text(`GSTIN: ${env.INVOICE_SELLER_GSTIN ?? "—"}`);
-    doc.text(`State: ${env.INVOICE_SELLER_STATE ?? "—"}`);
     doc.text("Invoice No: DU/TEST/0001");
     doc.text("Order: TEST-EMAIL-SUITE");
     doc.moveDown();

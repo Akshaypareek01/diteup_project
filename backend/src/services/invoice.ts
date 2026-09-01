@@ -28,9 +28,9 @@ type ShipAddr = {
 };
 
 const SELLER_DEFAULT = {
-  name: "NVHO Tech Pvt. Ltd.",
-  gstin: "08AAJCN8501H1ZC",
-  state: "Rajasthan",
+  name: "SS DYNAMIC VENTURES",
+  gstin: "22EEFPS5220P1Z7",
+  state: "Chhattisgarh",
   address: "India",
 };
 

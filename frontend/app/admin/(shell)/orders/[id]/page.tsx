@@ -48,6 +48,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
       shippingCarrier: string | null;
       shiprocketOrderId: string | null;
       shiprocketShipmentId: string | null;
+      shiprocketChannelOrderId: string | null;
       shiprocketPushStatus: "PENDING" | "PUSHED" | "FAILED" | null;
       shiprocketPushError: string | null;
       shiprocketLastStatus: string | null;
@@ -91,8 +92,10 @@ export default async function AdminOrderDetailPage({ params }: Props) {
           <div className="mt-4">
             <AdminOrderShiprocketPanel
               orderId={id}
+              orderNumber={order.orderNumber}
               shiprocketOrderId={order.shiprocketOrderId ?? null}
               shiprocketShipmentId={order.shiprocketShipmentId ?? null}
+              shiprocketChannelOrderId={order.shiprocketChannelOrderId ?? null}
               shiprocketPushStatus={order.shiprocketPushStatus ?? null}
               shiprocketPushError={order.shiprocketPushError ?? null}
               shiprocketLastStatus={order.shiprocketLastStatus ?? null}

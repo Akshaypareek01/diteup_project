@@ -12,8 +12,8 @@ import { env } from "../config/env.js";
  * Seller line in the transactional email footer (env overrides).
  */
 function sellerFooterLine(): string {
-  const name = env.INVOICE_SELLER_NAME?.trim() || "NVHO Tech Pvt. Ltd.";
-  const gstin = env.INVOICE_SELLER_GSTIN?.trim() || "08AAJCN8501H1ZC";
+  const name = env.INVOICE_SELLER_NAME?.trim() || "SS DYNAMIC VENTURES";
+  const gstin = env.INVOICE_SELLER_GSTIN?.trim() || "22EEFPS5220P1Z7";
   return `${name} · GSTIN ${gstin}`;
 }
 

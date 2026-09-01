@@ -9,6 +9,11 @@
 import { Prisma } from "@prisma/client";
 
 import { getShiprocketConfig, type ShiprocketConfig } from "./settings.js";
+import {
+  isCanceledShiprocketStatus,
+  nextAttemptFromChannelId,
+  nextShiprocketChannelOrderId,
+} from "./shiprocketChannel.js";
 import { prisma } from "../utils/prisma.js";
 import { logger } from "../utils/logger.js";
 import { AppError, NotFound, ServiceUnavailable, ValidationError } from "../utils/errors.js";
@@ -356,6 +361,7 @@ async function markPushed(
   orderId: string,
   shiprocketOrderId: string | null,
   shipmentId: string | null,
+  channelOrderId?: string | null,
 ): Promise<void> {
   await prisma.$transaction([
     prisma.order.update({
@@ -363,6 +369,7 @@ async function markPushed(
       data: {
         ...(shiprocketOrderId ? { shiprocketOrderId } : {}),
         ...(shipmentId ? { shiprocketShipmentId: shipmentId } : {}),
+        ...(channelOrderId ? { shiprocketChannelOrderId: channelOrderId } : {}),
         shiprocketPushStatus: "PUSHED",
         shiprocketPushError: null,
       },
@@ -371,27 +378,158 @@ async function markPushed(
       data: {
         orderId,
         type: "SHIPROCKET_PUSHED",
-        payload: { shiprocketOrderId, shipmentId },
+        payload: { shiprocketOrderId, shipmentId, channelOrderId: channelOrderId ?? null },
         actorId: null,
       },
     }),
   ]);
 }
 
+export type RemoteOrderSummary = {
+  id: string;
+  shipmentId: string | null;
+  status: string;
+  statusCode: number | null;
+};
+
+export type RemoteOrderLookup =
+  | { kind: "found"; summary: RemoteOrderSummary }
+  | { kind: "missing" }
+  | { kind: "unavailable"; reason: string };
+
+/**
+ * Loads a Shiprocket order by numeric id. Distinguishes 404/empty from HTTP errors
+ * so a transient 5xx does not trigger a duplicate `-Rn` create.
+ *
+ * @param shiprocketOrderId remote order id from a previous create
+ * @param config authenticated Shiprocket config
+ */
+export async function lookupRemoteShiprocketOrder(
+  shiprocketOrderId: string,
+  config: ShiprocketConfig,
+): Promise<RemoteOrderLookup> {
+  let res: Response;
+  try {
+    res = await shiprocketFetch(
+      `/v1/external/orders/show/${encodeURIComponent(shiprocketOrderId)}`,
+      { method: "GET" },
+      config,
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return { kind: "unavailable", reason: message };
+  }
+  if (res.status === 404) return { kind: "missing" };
+  if (!res.ok) return { kind: "unavailable", reason: `HTTP ${res.status}` };
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(await res.text());
+  } catch {
+    return { kind: "unavailable", reason: "invalid JSON" };
+  }
+  const data =
+    parsed && typeof parsed === "object" && "data" in parsed
+      ? (parsed as { data: unknown }).data
+      : parsed;
+  if (!data || typeof data !== "object") return { kind: "missing" };
+  const row = data as Record<string, unknown>;
+  if (row.id === undefined || row.id === null || row.id === "") return { kind: "missing" };
+  const shipments = row.shipments;
+  let shipmentId: string | null = null;
+  if (shipments && typeof shipments === "object" && !Array.isArray(shipments) && "id" in shipments) {
+    const sid = (shipments as { id: unknown }).id;
+    if (sid !== undefined && sid !== null && sid !== "") shipmentId = String(sid);
+  }
+  const statusCode = Number(row.status_code);
+  return {
+    kind: "found",
+    summary: {
+      id: String(row.id),
+      shipmentId,
+      status: String(row.status ?? ""),
+      statusCode: Number.isFinite(statusCode) ? statusCode : null,
+    },
+  };
+}
+
+/**
+ * Loads a Shiprocket order by numeric id. Returns null on HTTP/parse failure.
+ *
+ * @param shiprocketOrderId remote order id from a previous create
+ * @param config authenticated Shiprocket config
+ */
+async function fetchRemoteOrderSummary(
+  shiprocketOrderId: string,
+  config: ShiprocketConfig,
+): Promise<RemoteOrderSummary | null> {
+  const lookup = await lookupRemoteShiprocketOrder(shiprocketOrderId, config);
+  return lookup.kind === "found" ? lookup.summary : null;
+}
+
+type AdhocCreateResult =
+  | { kind: "created"; orderId: string; shipmentId: string | null }
+  | { kind: "collision" }
+  | { kind: "failed"; status: number; bodyText: string };
+
+/**
+ * POSTs one adhoc create. "Already exists" is a channel-id collision, not success.
+ *
+ * @param payload Shiprocket adhoc body including `order_id`
+ * @param config authenticated Shiprocket config
+ */
+async function postAdhocCreate(
+  payload: Record<string, unknown>,
+  config: ShiprocketConfig,
+): Promise<AdhocCreateResult> {
+  const res = await shiprocketFetch(
+    "/v1/external/orders/create/adhoc",
+    { method: "POST", body: JSON.stringify(payload) },
+    config,
+  );
+  const bodyText = await res.text();
+  let body: Record<string, unknown> = {};
+  try {
+    const parsed = JSON.parse(bodyText) as unknown;
+    if (parsed && typeof parsed === "object") body = parsed as Record<string, unknown>;
+  } catch {
+    // Non-JSON — handled below.
+  }
+  const respOrderId =
+    body.order_id !== undefined && body.order_id !== null && body.order_id !== ""
+      ? String(body.order_id)
+      : null;
+  const respShipmentId =
+    body.shipment_id !== undefined && body.shipment_id !== null && body.shipment_id !== ""
+      ? String(body.shipment_id)
+      : null;
+  if (/already exists?/i.test(bodyText)) return { kind: "collision" };
+  if (res.ok && respOrderId) return { kind: "created", orderId: respOrderId, shipmentId: respShipmentId };
+  return { kind: "failed", status: res.status, bodyText };
+}
+
+export type PushOrderToShiprocketOptions = {
+  /** Kept for admin callers; live remotes still no-op. Dead remotes always recreate. */
+  force?: boolean;
+};
+
 /**
  * Pushes an order to Shiprocket via the adhoc create API. Idempotent: no-ops
- * when already pushed. Records FAILED + reason without throwing for permanent
- * conditions (cancelled order, integration unconfigured); throws for anything
- * retryable so the job queue can back off and retry.
+ * when already pushed to a non-canceled remote order. Recreates with `-Rn`
+ * when the stored remote is canceled or missing. Records FAILED without
+ * throwing for permanent conditions; throws for retryable failures.
+ *
+ * @param orderId DiteUp order id
+ * @param options unused for heal (job and admin share the same path)
  */
-export async function pushOrderToShiprocket(orderId: string): Promise<void> {
+export async function pushOrderToShiprocket(
+  orderId: string,
+  _options?: PushOrderToShiprocketOptions,
+): Promise<void> {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: { items: { include: { variant: true } }, user: true },
   });
   if (!order) throw NotFound(`Order ${orderId} not found`);
-
-  if (order.shiprocketOrderId) return; // Already pushed — idempotent no-op.
 
   if (order.status === "CANCELLED" || order.status === "RETURNED") {
     await markPushFailed(order.id, `Order is ${order.status} — not pushed to Shiprocket`);
@@ -412,26 +550,50 @@ export async function pushOrderToShiprocket(orderId: string): Promise<void> {
     return;
   }
 
+  let startAttempt = 0;
+  if (order.shiprocketOrderId) {
+    const lookup = await lookupRemoteShiprocketOrder(order.shiprocketOrderId, config);
+    if (lookup.kind === "unavailable") {
+      throw ServiceUnavailable(`Shiprocket order show failed: ${lookup.reason}`);
+    }
+    const live =
+      lookup.kind === "found" &&
+      !isCanceledShiprocketStatus(lookup.summary.status, lookup.summary.statusCode);
+    if (live) return;
+    startAttempt = nextAttemptFromChannelId(order.shiprocketChannelOrderId);
+  }
+
   let payload: Record<string, unknown>;
   try {
     payload = buildAdhocOrderPayload(order, config);
   } catch (err) {
-    // Deterministic data problem — retrying can't fix it. Record for the admin
-    // panel and complete the job; admins re-push after fixing the order data.
     const message = err instanceof Error ? err.message : String(err);
     await markPushFailed(order.id, message);
     return;
   }
 
-  let res: Response;
-  let bodyText: string;
+  const maxAttempt = 3;
+  let lastFail: { status: number; bodyText: string } | null = null;
   try {
-    res = await shiprocketFetch(
-      "/v1/external/orders/create/adhoc",
-      { method: "POST", body: JSON.stringify(payload) },
-      config,
-    );
-    bodyText = await res.text();
+    for (let attempt = startAttempt; attempt <= maxAttempt; attempt++) {
+      payload.order_id = nextShiprocketChannelOrderId(order.orderNumber, attempt);
+      const result = await postAdhocCreate(payload, config);
+      if (result.kind === "collision") continue;
+      if (result.kind === "failed") {
+        lastFail = { status: result.status, bodyText: result.bodyText };
+        break;
+      }
+      const remote = await fetchRemoteOrderSummary(result.orderId, config);
+      if (remote && isCanceledShiprocketStatus(remote.status, remote.statusCode)) continue;
+      await markPushed(
+        order.id,
+        result.orderId,
+        result.shipmentId ?? remote?.shipmentId ?? null,
+        String(payload.order_id),
+      );
+      await cancelIfOrderCancelledMeanwhile(order.id);
+      return;
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     logger.error({ err, orderId, orderNumber: order.orderNumber }, "shiprocket: order push request failed");
@@ -439,49 +601,23 @@ export async function pushOrderToShiprocket(orderId: string): Promise<void> {
     throw err instanceof AppError ? err : ServiceUnavailable(`Shiprocket request failed: ${message}`);
   }
 
-  let body: Record<string, unknown> = {};
-  try {
-    const parsed = JSON.parse(bodyText) as unknown;
-    if (parsed && typeof parsed === "object") body = parsed as Record<string, unknown>;
-  } catch {
-    // Non-JSON body — handled by the failure path below.
+  if (lastFail) {
+    const message = `${lastFail.status}: ${truncate(lastFail.bodyText, PUSH_ERROR_MAX_LEN)}`;
+    logger.error(
+      { orderId, orderNumber: order.orderNumber, status: lastFail.status },
+      "shiprocket: order push rejected",
+    );
+    await markPushFailed(order.id, message);
+    const permanent =
+      lastFail.status >= 400 && lastFail.status < 500 && ![401, 408, 429].includes(lastFail.status);
+    if (permanent) return;
+    throw ServiceUnavailable(`Shiprocket order push failed — ${message}`);
   }
 
-  const respOrderId =
-    body.order_id !== undefined && body.order_id !== null && body.order_id !== ""
-      ? String(body.order_id)
-      : null;
-  const respShipmentId =
-    body.shipment_id !== undefined && body.shipment_id !== null && body.shipment_id !== ""
-      ? String(body.shipment_id)
-      : null;
-
-  if (res.ok && respOrderId) {
-    await markPushed(order.id, respOrderId, respShipmentId);
-    await cancelIfOrderCancelledMeanwhile(order.id);
-    return;
-  }
-
-  // Shiprocket rejects duplicate channel order ids — that means a previous
-  // push already succeeded, so treat it as success rather than retrying.
-  if (/already exists?/i.test(bodyText)) {
-    await markPushed(order.id, respOrderId, respShipmentId);
-    await cancelIfOrderCancelledMeanwhile(order.id);
-    return;
-  }
-
-  const message = `${res.status}: ${truncate(bodyText, PUSH_ERROR_MAX_LEN)}`;
-  logger.error(
-    { orderId, orderNumber: order.orderNumber, status: res.status },
-    "shiprocket: order push rejected",
+  await markPushFailed(
+    order.id,
+    "Shiprocket channel order id retries exhausted (up to -R3) — admin re-push after checking Shiprocket",
   );
-  await markPushFailed(order.id, message);
-
-  // 4xx rejections (bad pickup location, payload rejected, …) are permanent —
-  // retrying the same payload can't succeed. 401/408/429 and 5xx are retryable.
-  const permanent = res.status >= 400 && res.status < 500 && ![401, 408, 429].includes(res.status);
-  if (permanent) return;
-  throw ServiceUnavailable(`Shiprocket order push failed — ${message}`);
 }
 
 /**

@@ -108,7 +108,7 @@ export async function postAdminOrderShiprocketPush(
   try {
     if (!req.auth) throw Unauthorized();
     const orderId = String(req.params.id);
-    await pushOrderToShiprocket(orderId);
+    await pushOrderToShiprocket(orderId, { force: true });
     await recordAudit({
       actorId: req.auth.userId,
       action: "order.shiprocket_push",

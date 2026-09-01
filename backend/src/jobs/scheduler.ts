@@ -13,6 +13,7 @@ import { runStaleOrderCancellationOnce } from "./cancelStaleOrders.js";
 import { runLowStockAlertOnce } from "./lowStockAlert.js";
 import { runProductVisibilityScheduleOnce } from "./productVisibility.js";
 import { runRazorpayReconcileIfDue } from "./razorpayReconcile.js";
+import { runShiprocketReconcileIfDue } from "./shiprocketReconcile.js";
 
 const FIFTEEN_MIN = 15 * 60 * 1000;
 const FIVE_MIN = 5 * 60 * 1000;
@@ -43,6 +44,8 @@ export function startBackgroundSchedulers(): void {
   setInterval(safe("low_stock_digest", () => runLowStockAlertOnce(24)), SIX_HOURS);
 
   setInterval(safe("razorpay_reconcile", runRazorpayReconcileIfDue), ONE_HOUR);
+
+  setInterval(safe("shiprocket_reconcile", runShiprocketReconcileIfDue), ONE_HOUR);
 
   setInterval(safe("backup_verify", runBackupVerifyIfDue), ONE_HOUR);
 
