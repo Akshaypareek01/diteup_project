@@ -3,7 +3,7 @@
  */
 import { env } from "../config/env.js";
 
-const FALLBACK_ADMIN_EMAIL = "helloditeup@gmail.com";
+const FALLBACK_ADMIN_EMAIL = "order.diteup@gmail.com";
 
 /**
  * Parses `ADMIN_ALERT_EMAILS` (comma-separated). Falls back to the DiteUp ops inbox

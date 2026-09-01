@@ -246,7 +246,7 @@ model Product {
 
   requiresAgeVerification Boolean @default(false)
   hsnCode                 String?
-  gstRate                 Decimal @default(0) @db.Decimal(5, 2)
+  gstRate                 Decimal @default(5) @db.Decimal(5, 2)
 
   seo       Json?
   createdAt DateTime @default(now())

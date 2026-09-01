@@ -296,7 +296,12 @@ export function ProductEditorClient({ productId, initialProduct }: ProductEditor
           {tab === "shipping" ? (
             <div className="mt-6 space-y-4">
               <label className="flex items-center gap-2 text-body-sm">
-                <input type="checkbox" checked={codEnabled} onChange={(e) => setCodEnabled(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={codEnabled}
+                  onChange={(e) => setCodEnabled(e.target.checked)}
+                  aria-label="Enable cash on delivery for this product"
+                />
                 COD enabled
               </label>
               <label className="flex items-center gap-2 text-body-sm">
@@ -304,6 +309,7 @@ export function ProductEditorClient({ productId, initialProduct }: ProductEditor
                   type="checkbox"
                   checked={onlinePaymentEnabled}
                   onChange={(e) => setOnlinePaymentEnabled(e.target.checked)}
+                  aria-label="Enable online payment for this product"
                 />
                 Online payment enabled
               </label>

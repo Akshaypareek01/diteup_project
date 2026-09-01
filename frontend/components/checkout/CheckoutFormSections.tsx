@@ -11,6 +11,10 @@ import {
 } from "@/lib/india-locations";
 import type { CartPricingBreakdown } from "@/lib/types/catalog";
 import type { ReactNode } from "react";
+import {
+  CheckoutPaymentMethod,
+  type CheckoutPaymentMethodValue,
+} from "@/components/checkout/CheckoutPaymentMethod";
 
 export type CheckoutFormSectionsProps = {
   guestEmail: string;
@@ -46,6 +50,10 @@ export type CheckoutFormSectionsProps = {
   couponCode: string;
   onCouponCodeChange: (v: string) => void;
   preview: CartPricingBreakdown | null;
+  paymentMethod: CheckoutPaymentMethodValue;
+  onPaymentMethodChange: (method: CheckoutPaymentMethodValue) => void;
+  codDisabled: boolean;
+  codDisabledReason: string | null;
 };
 
 /**
@@ -85,6 +93,10 @@ export function CheckoutFormSections({
   couponCode,
   onCouponCodeChange,
   preview,
+  paymentMethod,
+  onPaymentMethodChange,
+  codDisabled,
+  codDisabledReason,
 }: CheckoutFormSectionsProps) {
   const formRef = useRef<HTMLFormElement>(null);
   useFormAutofillSync(formRef, {
@@ -167,9 +179,12 @@ export function CheckoutFormSections({
         <h2 id="co-pay" className="font-semibold text-forest">
           Payment
         </h2>
-        <p className="mt-4 text-body-sm text-ink-soft">
-          Pay online via Razorpay — UPI, cards, and netbanking.
-        </p>
+        <CheckoutPaymentMethod
+          value={paymentMethod}
+          onChange={onPaymentMethodChange}
+          codDisabled={codDisabled}
+          codDisabledReason={codDisabledReason}
+        />
         <div className="mt-4">
           <Input
             label="Coupon (optional)"

@@ -118,8 +118,14 @@ export function CheckoutOrderSummary({
               <dt>Shipping</dt>
               <dd>{formatInr(preview.shippingAfterCoupon)}</dd>
             </div>
+            {preview.codCharge > 0 ? (
+              <div className="flex justify-between gap-4">
+                <dt>COD charge</dt>
+                <dd>{formatInr(preview.codCharge)}</dd>
+              </div>
+            ) : null}
             <div className="flex justify-between gap-4 border-t border-line pt-2 text-base font-semibold lg:text-lg">
-              <dt>Pay now</dt>
+              <dt>Total</dt>
               <dd>{formatInr(preview.total)}</dd>
             </div>
           </dl>

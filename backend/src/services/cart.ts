@@ -39,6 +39,8 @@ export type CartPricingBreakdown = {
   /** GST portion inside inclusive `priceSale` lines (non-additive to `total`). */
   estimatedGstIncluded: number;
   total: number;
+  /** False when any cart product has `codEnabled` off. */
+  codEligible: boolean;
 };
 
 /** Resolves DB lines + pre-coupon shipping (no coupon). */
@@ -311,6 +313,7 @@ export async function previewCart(input: {
     lines: resolved.lines,
     coupon: couponResult,
     ...totals,
+    codEligible: resolved.uniqueProducts.every((p) => p.codEnabled),
   };
 }
 

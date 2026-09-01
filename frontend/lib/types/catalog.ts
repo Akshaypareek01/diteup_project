@@ -77,5 +77,7 @@ export type CartPricingBreakdown = {
   shippingAfterCoupon: number;
   codCharge: number;
   total: number;
+  /** False when any cart product has COD turned off. */
+  codEligible?: boolean;
   coupon: { eligible?: boolean; message?: string; code?: string | null } | null;
 };

@@ -66,6 +66,28 @@ function indianStateFromGstin(gstin: string): string | undefined {
 }
 
 /**
+ * Formats GST % for invoice tax lines (single rate or mixed).
+ *
+ * @param rates per-line GST percents from `Product.gstRate`
+ */
+function invoiceGstRateLabel(rates: number[]): string {
+  const uniq = [...new Set(rates.map((r) => roundMoney(r)))];
+  if (uniq.length === 0) return "";
+  return uniq.map((r) => `${r}%`).join(" / ");
+}
+
+/**
+ * CGST/SGST share of a single GST slab (half). Empty when rates are mixed.
+ *
+ * @param rates per-line GST percents
+ */
+function invoiceCgstSgstRateLabel(rates: number[]): string {
+  const uniq = [...new Set(rates.map((r) => roundMoney(r)))];
+  if (uniq.length !== 1) return invoiceGstRateLabel(rates);
+  return `${roundMoney(uniq[0]! / 2)}%`;
+}
+
+/**
  * Builds PDF bytes for a confirmed order; does not persist.
  */
 export async function generateOrderInvoicePdf(orderId: string): Promise<Buffer> {
@@ -257,10 +279,12 @@ async function renderInvoicePdf(
     let cgst = 0;
     let sgst = 0;
     let igst = 0;
+    const gstRates: number[] = [];
 
     for (const line of order.items) {
       const p = line.variant.product;
       const rate = roundMoney(Number(p.gstRate));
+      gstRates.push(rate);
       const lineTotal = roundMoney(Number(line.lineTotal));
       const taxable = roundMoney(lineTotal / (1 + rate / 100));
       const tax = roundMoney(lineTotal - taxable);
@@ -278,7 +302,10 @@ async function renderInvoicePdf(
       doc.text(String(line.quantity), colQty, y);
       doc.text(`₹${Number(line.unitPrice).toFixed(2)}`, colRate, y);
       doc.text(`₹${lineTotal.toFixed(2)}`, colAmt, y, { width: 100, align: "right" });
-      y += 42;
+      y += 14;
+      doc.fontSize(8).fillColor("#666").text(`GST ${rate}%`, colDesc, y, { width: 170 });
+      doc.fontSize(9).fillColor("#333");
+      y += 28;
       if (y > 700) {
         doc.addPage();
         y = 50;
@@ -287,15 +314,19 @@ async function renderInvoicePdf(
 
     doc.moveTo(48, y).lineTo(548, y).stroke();
     y += 10;
+    const gstRateLabel = invoiceGstRateLabel(gstRates);
     doc.font("Helvetica-Bold");
     doc.text(`Taxable value: ₹${taxableTotal.toFixed(2)}`, colDesc, y);
     y += 14;
     if (intraState) {
-      doc.text(`CGST: ₹${cgst.toFixed(2)}`, colDesc, y);
+      const half = invoiceCgstSgstRateLabel(gstRates);
+      const halfSuffix = half ? ` @ ${half}` : "";
+      doc.text(`CGST${halfSuffix}: ₹${cgst.toFixed(2)}`, colDesc, y);
       y += 14;
-      doc.text(`SGST: ₹${sgst.toFixed(2)}`, colDesc, y);
+      doc.text(`SGST${halfSuffix}: ₹${sgst.toFixed(2)}`, colDesc, y);
     } else {
-      doc.text(`IGST: ₹${igst.toFixed(2)}`, colDesc, y);
+      const igstSuffix = gstRateLabel ? ` @ ${gstRateLabel}` : "";
+      doc.text(`IGST${igstSuffix}: ₹${igst.toFixed(2)}`, colDesc, y);
     }
     y += 20;
     doc.text(`Grand total: ₹${roundMoney(Number(order.total)).toFixed(2)}`, colDesc, y);

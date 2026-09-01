@@ -115,7 +115,7 @@ const EnvSchema = z.object({
   JOB_EMAIL_QUEUE_POLL_MS: z.coerce.number().int().positive().default(15_000),
 
   /** Comma-separated — new-order + low-stock alerts. Defaults to ops inbox. */
-  ADMIN_ALERT_EMAILS: z.string().optional().default("helloditeup@gmail.com"),
+  ADMIN_ALERT_EMAILS: z.string().optional().default("order.diteup@gmail.com"),
   /** Optional HTTP URL ping for backup verification (PRD §10.8). */
   BACKUP_VERIFY_URL: z.string().optional(),
 

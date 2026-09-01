@@ -18,6 +18,7 @@ import { CheckoutErrorDialog, CheckoutOrderErrorBanner } from "@/components/chec
 import { CheckoutFormSections } from "@/components/checkout/CheckoutFormSections";
 import { CheckoutOrderSummary } from "@/components/checkout/CheckoutOrderSummary";
 import type { CheckoutAddressRow } from "@/components/checkout/CheckoutShippingPanel";
+import type { CheckoutPaymentMethodValue } from "@/components/checkout/CheckoutPaymentMethod";
 import { sanitizePincode } from "@/lib/india-locations";
 
 type MeResponse = { user?: { id: string; email: string } };
@@ -48,6 +49,7 @@ export function CheckoutClient() {
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [couponCode, setCouponCode] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<CheckoutPaymentMethodValue>("RAZORPAY");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [errDialogOpen, setErrDialogOpen] = useState(false);
@@ -144,7 +146,7 @@ export function CheckoutClient() {
         method: "POST",
         json: {
           items,
-          paymentMethod: "RAZORPAY",
+          paymentMethod,
           couponCode: couponCode.trim() || null,
           guestEmail: userEmail ? undefined : emailForPricing || undefined,
         },
@@ -154,7 +156,7 @@ export function CheckoutClient() {
       setPreview(null);
       setPreviewErr(e instanceof Error ? e.message : "Could not load totals.");
     }
-  }, [previewPayload, couponCode, userEmail, emailForPricing]);
+  }, [previewPayload, couponCode, userEmail, emailForPricing, paymentMethod]);
 
   useEffect(() => {
     void refreshPreview();
@@ -337,7 +339,9 @@ export function CheckoutClient() {
       ? "co-ship"
       : /email|cart/i.test(err)
         ? "co-contact"
-        : null;
+        : /COD|payment/i.test(err)
+          ? "co-pay"
+          : null;
     if (!sectionId) return;
     window.requestAnimationFrame(() => {
       document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -386,6 +390,18 @@ export function CheckoutClient() {
         reportCheckoutError("Validate your PIN for delivery — scroll to Shipping.");
         return;
       }
+      if (paymentMethod === "COD" && !checked.codAvailable) {
+        reportCheckoutError("COD is not available for this delivery PIN.");
+        return;
+      }
+    } else if (paymentMethod === "COD" && !pinStatus.codAvailable) {
+      reportCheckoutError("COD is not available for this delivery PIN.");
+      return;
+    }
+
+    if (paymentMethod === "COD" && preview?.codEligible === false) {
+      reportCheckoutError("COD is not available for an item in your cart.");
+      return;
     }
 
     setBusy(true);
@@ -397,7 +413,7 @@ export function CheckoutClient() {
 
       const shared = {
         items,
-        paymentMethod: "RAZORPAY" as const,
+        paymentMethod,
         couponCode: couponCode.trim() || undefined,
         guestEmail: userEmail ? undefined : email,
         guestPhone: guestPhone.trim() || undefined,
@@ -428,6 +444,12 @@ export function CheckoutClient() {
         method: "POST",
         json: body,
       });
+
+      if (placed.order.paymentMethod === "COD") {
+        clear();
+        redirectAfterOrder(placed.order.orderNumber, placed.guestToken, true);
+        return;
+      }
 
       const { razorpayOrderId, razorpayKeyId, amountPaise } = placed.payment;
       if (!razorpayOrderId || !razorpayKeyId || !amountPaise) {
@@ -533,6 +555,8 @@ export function CheckoutClient() {
     pincode,
     country,
     pinStatus,
+    paymentMethod,
+    preview,
     clear,
     redirectAfterOrder,
     selectedSavedAddressId,
@@ -550,6 +574,21 @@ export function CheckoutClient() {
     );
   }, [pinStatus]);
 
+  const cartCodEligible = preview?.codEligible !== false;
+  const pinBlocksCod = pinStatus != null && !pinStatus.codAvailable;
+  const codDisabled = !cartCodEligible || pinBlocksCod;
+  const codDisabledReason = !cartCodEligible
+    ? "COD is not available for an item in your cart."
+    : pinBlocksCod
+      ? "COD is not available for this delivery PIN."
+      : null;
+
+  useEffect(() => {
+    if (paymentMethod === "COD" && codDisabled) {
+      setPaymentMethod("RAZORPAY");
+    }
+  }, [paymentMethod, codDisabled]);
+
   if (lines.length === 0) {
     return (
       <div className="min-h-screen bg-cream px-4 py-16 text-center lg:px-8">
@@ -563,6 +602,7 @@ export function CheckoutClient() {
   }
 
   const checkoutBlocked = siteMode.active && siteMode.blocksCheckout;
+  const placeOrderLabel = busy ? "Processing…" : paymentMethod === "COD" ? "Place COD order" : "Place order";
 
   const checkoutHeading = (
     <>
@@ -628,6 +668,10 @@ export function CheckoutClient() {
       couponCode={couponCode}
       onCouponCodeChange={(v) => setCouponCode(v.toUpperCase())}
       preview={preview}
+      paymentMethod={paymentMethod}
+      onPaymentMethodChange={setPaymentMethod}
+      codDisabled={codDisabled}
+      codDisabledReason={codDisabledReason}
     />
   );
 
@@ -693,7 +737,7 @@ export function CheckoutClient() {
               disabled={busy || !preview || checkoutBlocked}
               onClick={() => void placeOrder()}
             >
-              {busy ? "Processing…" : "Place order"}
+              {placeOrderLabel}
             </button>
           </aside>
 
@@ -708,7 +752,7 @@ export function CheckoutClient() {
               disabled={busy || !preview || checkoutBlocked}
               onClick={() => void placeOrder()}
             >
-              {busy ? "Processing…" : "Place order"}
+              {placeOrderLabel}
             </button>
           </div>
         </div>
