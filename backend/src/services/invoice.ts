@@ -12,6 +12,11 @@ import { prisma } from "../utils/prisma.js";
 import { uploadPublicBuffer } from "./storage.js";
 import type { OrderTx } from "./orderInventory.js";
 import {
+  buildInvoiceGst,
+  invoiceCgstSgstRateLabel,
+  invoiceGstRateLabel,
+} from "./invoiceGst.js";
+import {
   currentIndiaFiscalYearLabel,
   formatInvoiceNumber,
   nextInvoiceSequenceNo,
@@ -63,28 +68,6 @@ const GSTIN_STATE: Record<string, string> = {
  */
 function indianStateFromGstin(gstin: string): string | undefined {
   return GSTIN_STATE[gstin.trim().slice(0, 2)];
-}
-
-/**
- * Formats GST % for invoice tax lines (single rate or mixed).
- *
- * @param rates per-line GST percents from `Product.gstRate`
- */
-function invoiceGstRateLabel(rates: number[]): string {
-  const uniq = [...new Set(rates.map((r) => roundMoney(r)))];
-  if (uniq.length === 0) return "";
-  return uniq.map((r) => `${r}%`).join(" / ");
-}
-
-/**
- * CGST/SGST share of a single GST slab (half). Empty when rates are mixed.
- *
- * @param rates per-line GST percents
- */
-function invoiceCgstSgstRateLabel(rates: number[]): string {
-  const uniq = [...new Set(rates.map((r) => roundMoney(r)))];
-  if (uniq.length !== 1) return invoiceGstRateLabel(rates);
-  return `${roundMoney(uniq[0]! / 2)}%`;
 }
 
 /**
@@ -275,27 +258,21 @@ async function renderInvoicePdf(
     y += 6;
     doc.font("Helvetica");
 
-    let taxableTotal = 0;
-    let cgst = 0;
-    let sgst = 0;
-    let igst = 0;
-    const gstRates: number[] = [];
+    const itemLines = order.items.map((line) => ({
+      inclusiveAmount: roundMoney(Number(line.lineTotal)),
+      gstRate: roundMoney(Number(line.variant.product.gstRate)),
+    }));
+    const grandTotal = roundMoney(Number(order.total));
+    const { taxableTotal, cgst, sgst, igst, gstRates } = buildInvoiceGst({
+      itemLines,
+      grandTotal,
+      intraState,
+    });
 
     for (const line of order.items) {
       const p = line.variant.product;
       const rate = roundMoney(Number(p.gstRate));
-      gstRates.push(rate);
       const lineTotal = roundMoney(Number(line.lineTotal));
-      const taxable = roundMoney(lineTotal / (1 + rate / 100));
-      const tax = roundMoney(lineTotal - taxable);
-      taxableTotal += taxable;
-      if (intraState) {
-        cgst += tax / 2;
-        sgst += tax / 2;
-      } else {
-        igst += tax;
-      }
-
       const hsn = p.hsnCode ?? "—";
       doc.text(`${p.name} / ${line.variantName}`.slice(0, 55), colDesc, y, { width: 170 });
       doc.text(hsn, colHsn, y);
@@ -303,13 +280,30 @@ async function renderInvoicePdf(
       doc.text(`₹${Number(line.unitPrice).toFixed(2)}`, colRate, y);
       doc.text(`₹${lineTotal.toFixed(2)}`, colAmt, y, { width: 100, align: "right" });
       y += 14;
-      doc.fontSize(8).fillColor("#666").text(`GST ${rate}%`, colDesc, y, { width: 170 });
+      doc.fontSize(8).fillColor("#666").text(`GST ${rate}% (incl.)`, colDesc, y, { width: 170 });
       doc.fontSize(9).fillColor("#333");
       y += 28;
       if (y > 700) {
         doc.addPage();
         y = 50;
       }
+    }
+
+    const shippingAmount = roundMoney(Number(order.shippingAmount));
+    const codCharge = roundMoney(Number(order.codCharge));
+    const discountAmount = roundMoney(Number(order.discountAmount));
+    const extraRows: { label: string; amount: number }[] = [];
+    if (shippingAmount > 0) extraRows.push({ label: "Shipping", amount: shippingAmount });
+    if (codCharge > 0) extraRows.push({ label: "COD charge", amount: codCharge });
+    if (discountAmount > 0) extraRows.push({ label: "Discount", amount: -discountAmount });
+
+    for (const row of extraRows) {
+      doc.text(row.label, colDesc, y, { width: 170 });
+      doc.text("—", colHsn, y);
+      doc.text("—", colQty, y);
+      doc.text("—", colRate, y);
+      doc.text(`₹${row.amount.toFixed(2)}`, colAmt, y, { width: 100, align: "right" });
+      y += 16;
     }
 
     doc.moveTo(48, y).lineTo(548, y).stroke();
@@ -329,11 +323,11 @@ async function renderInvoicePdf(
       doc.text(`IGST${igstSuffix}: ₹${igst.toFixed(2)}`, colDesc, y);
     }
     y += 20;
-    doc.text(`Grand total: ₹${roundMoney(Number(order.total)).toFixed(2)}`, colDesc, y);
+    doc.text(`Grand total: ₹${grandTotal.toFixed(2)}`, colDesc, y);
     doc.font("Helvetica");
     y += 28;
     doc.fontSize(8).fillColor("#666").text(
-      "Amount includes GST as applicable. Electronic generated invoice — signature not required.",
+      "Rate and amount are GST-inclusive. Taxable value and GST are reverse-calculated from the amount paid. Electronic generated invoice — signature not required.",
       colDesc,
       y,
       { width: 500 },

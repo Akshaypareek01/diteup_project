@@ -143,17 +143,12 @@ export function AccountOrdersOverview({ orders }: AccountOrdersOverviewProps) {
                           <dd className="font-mono">{formatInr(o.codCharge)}</dd>
                         </div>
                       ) : null}
-                      {o.taxAmount > 0 ? (
-                        <div className="flex justify-between gap-4">
-                          <dt>Tax / GST</dt>
-                          <dd className="font-mono">{formatInr(o.taxAmount)}</dd>
-                        </div>
-                      ) : null}
                       <div className="flex justify-between gap-4 border-t border-line pt-2 font-semibold">
                         <dt>Total paid / due</dt>
                         <dd className="font-mono">{formatInr(o.total)}</dd>
                       </div>
                     </dl>
+                    <p className="mt-2 text-body-sm text-ink-muted">Prices include GST.</p>
                     {o.couponCode ? (
                       <p className="mt-2 text-body-sm text-ink-muted">
                         Coupon: <span className="font-mono font-medium text-forest">{o.couponCode}</span>
