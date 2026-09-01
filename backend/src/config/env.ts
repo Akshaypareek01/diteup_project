@@ -114,8 +114,8 @@ const EnvSchema = z.object({
   /** How often to drain `BackgroundJob` email rows (PRD §10.4). */
   JOB_EMAIL_QUEUE_POLL_MS: z.coerce.number().int().positive().default(15_000),
 
-  /** Comma-separated — receives low-stock digest (PRD §10.6). */
-  ADMIN_ALERT_EMAILS: z.string().optional(),
+  /** Comma-separated — new-order + low-stock alerts. Defaults to ops inbox. */
+  ADMIN_ALERT_EMAILS: z.string().optional().default("helloditeup@gmail.com"),
   /** Optional HTTP URL ping for backup verification (PRD §10.8). */
   BACKUP_VERIFY_URL: z.string().optional(),
 

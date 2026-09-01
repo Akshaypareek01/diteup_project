@@ -3,7 +3,7 @@
  */
 import { Prisma } from "@prisma/client";
 
-import { env } from "../config/env.js";
+import { parseAdminAlertEmails } from "../utils/adminAlerts.js";
 import { prisma } from "../utils/prisma.js";
 import { logger } from "../utils/logger.js";
 import { sendEmail } from "../services/email.js";
@@ -18,7 +18,7 @@ type LowStockDigestState = {
  * Sends at most one digest per `minHoursBetween` when low-stock SKUs exist.
  */
 export async function runLowStockAlertOnce(minHoursBetween = 24): Promise<void> {
-  const recipients = parseAdminEmails();
+  const recipients = parseAdminAlertEmails();
   if (recipients.length === 0) {
     logger.debug("Low-stock digest skipped — ADMIN_ALERT_EMAILS empty");
     return;
@@ -72,13 +72,4 @@ export async function runLowStockAlertOnce(minHoursBetween = 24): Promise<void> 
   });
 
   logger.info({ count: lines.length, recipients: recipients.length }, "low-stock digest sent");
-}
-
-function parseAdminEmails(): string[] {
-  const raw = env.ADMIN_ALERT_EMAILS?.trim();
-  if (!raw) return [];
-  return raw
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter((e) => e.includes("@"));
 }

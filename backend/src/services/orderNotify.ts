@@ -11,6 +11,7 @@ import { ensureOrderInvoice, generateOrderInvoicePdf } from "./invoice.js";
 import { sendPurchaseEventForOrder } from "./metaPixel.js";
 import { META_ATTRIBUTION_EVENT, parseMetaAttribution } from "./metaAttribution.js";
 import { buildOrderTrackingUrl } from "../utils/orderAccess.js";
+import { parseAdminAlertEmails } from "../utils/adminAlerts.js";
 import { moneyNumber } from "../utils/money.js";
 import { prisma } from "../utils/prisma.js";
 import { logger } from "../utils/logger.js";
@@ -18,6 +19,7 @@ import { logger } from "../utils/logger.js";
 const DEDUPE = {
   CONFIRMED: "EMAIL_ORDER_CONFIRMED",
   ADMIN_NEW: "EMAIL_ADMIN_NEW_ORDER",
+  ADMIN_PAID: "EMAIL_ADMIN_ORDER_PAID",
   SHIPPED: "EMAIL_ORDER_SHIPPED",
   DELIVERED: "EMAIL_ORDER_DELIVERED",
   CANCELLED: "EMAIL_ORDER_CANCELLED",
@@ -27,7 +29,10 @@ const DEDUPE = {
 async function loadOrderLite(orderNumber: string) {
   return prisma.order.findUnique({
     where: { orderNumber },
-    include: { user: { select: { email: true, name: true, phone: true } } },
+    include: {
+      user: { select: { email: true, name: true, phone: true } },
+      payments: { orderBy: { createdAt: "desc" }, take: 1, select: { status: true } },
+    },
   });
 }
 
@@ -60,36 +65,67 @@ async function withEmailDedupe(orderId: string, dedupeType: string, fn: () => Pr
 }
 
 /**
- * Razorpay `PLACED` — admin heads-up only (customer email fires after payment capture).
+ * Razorpay `PLACED` — admin heads-up (customer email fires after payment capture).
  */
 export async function fireOrderPlacedPendingAndAdmin(orderNumber: string): Promise<void> {
   const order = await loadOrderLite(orderNumber);
   if (!order || order.paymentMethod !== "RAZORPAY") return;
+  await notifyAdminNewOrder(order, DEDUPE.ADMIN_NEW);
+}
 
-  const raw = env.ADMIN_ALERT_EMAILS?.trim();
-  if (raw) {
-    await withEmailDedupe(order.id, DEDUPE.ADMIN_NEW, async () => {
-      const tpl = templates.adminNewOrderEmail({
-        orderNumber: order.orderNumber,
-        total: `₹${moneyNumber(order.total).toFixed(2)}`,
-        paymentMethod: order.paymentMethod,
-      });
-      for (const addr of raw
-        .split(",")
-        .map((s) => s.trim().toLowerCase())
-        .filter((e) => e.includes("@"))) {
-        await enqueueEmailSendJob({
-          to: addr,
-          subject: tpl.subject,
-          html: tpl.html,
-          text: tpl.text,
-          template: "admin_new_order",
-          refType: "ORDER",
-          refId: order.id,
-        });
-      }
+/**
+ * Emails ops that a new order exists, including payment method + status.
+ *
+ * @param order loaded order with optional user + latest payment
+ * @param dedupeType `EMAIL_ADMIN_NEW_ORDER` or `EMAIL_ADMIN_ORDER_PAID`
+ */
+async function notifyAdminNewOrder(
+  order: NonNullable<Awaited<ReturnType<typeof loadOrderLite>>>,
+  dedupeType: string,
+): Promise<void> {
+  const recipients = parseAdminAlertEmails();
+  if (recipients.length === 0) return;
+
+  const ship = order.shippingAddress as { name?: string } | null;
+  const paymentStatus =
+    order.payments[0]?.status ??
+    (order.status === "CONFIRMED" || order.status === "SHIPPED" || order.status === "DELIVERED"
+      ? "CAPTURED"
+      : "PENDING");
+  const site = env.PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "";
+  const adminUrl = site ? `${site}/admin/orders/${order.id}` : null;
+
+  await withEmailDedupe(order.id, dedupeType, async () => {
+    const tpl = templates.adminNewOrderEmail({
+      orderNumber: order.orderNumber,
+      total: `₹${moneyNumber(order.total).toFixed(2)}`,
+      paymentMethod: order.paymentMethod,
+      paymentStatus,
+      orderStatus: order.status,
+      customerName: order.user?.name ?? ship?.name ?? null,
+      customerEmail: recipientEmail(order),
+      adminUrl,
     });
-  }
+    for (const addr of recipients) {
+      const sendArgs = {
+        to: addr,
+        subject: tpl.subject,
+        html: tpl.html,
+        text: tpl.text,
+        template: "admin_new_order",
+        refType: "ORDER" as const,
+        refId: order.id,
+      };
+      const sent = await sendEmail(sendArgs);
+      if (!sent.ok && !sent.suppressed) {
+        await enqueueEmailSendJob(sendArgs);
+        logger.error(
+          { to: addr, orderId: order.id, error: sent.error },
+          "admin new-order email failed — queued retry",
+        );
+      }
+    }
+  });
 }
 
 /**
@@ -103,6 +139,10 @@ export async function fireOrderConfirmedSuite(orderNumber: string): Promise<void
     await ensureOrderInvoice(order.id);
   } catch (err) {
     logger.error({ err, orderId: order.id }, "ensureOrderInvoice failed");
+  }
+
+  if (order.paymentMethod === "RAZORPAY") {
+    await notifyAdminNewOrder(order, DEDUPE.ADMIN_PAID);
   }
 
   const to = recipientEmail(order);
@@ -186,29 +226,7 @@ export async function fireOrderConfirmedSuite(orderNumber: string): Promise<void
 export async function fireAdminNewOrderOnly(orderNumber: string): Promise<void> {
   const order = await loadOrderLite(orderNumber);
   if (!order) return;
-  const raw = env.ADMIN_ALERT_EMAILS?.trim();
-  if (!raw) return;
-  await withEmailDedupe(order.id, DEDUPE.ADMIN_NEW, async () => {
-    const tpl = templates.adminNewOrderEmail({
-      orderNumber: order.orderNumber,
-      total: `₹${moneyNumber(order.total).toFixed(2)}`,
-      paymentMethod: order.paymentMethod,
-    });
-    for (const addr of raw
-      .split(",")
-      .map((s) => s.trim().toLowerCase())
-      .filter((e) => e.includes("@"))) {
-      await enqueueEmailSendJob({
-        to: addr,
-        subject: tpl.subject,
-        html: tpl.html,
-        text: tpl.text,
-        template: "admin_new_order",
-        refType: "ORDER",
-        refId: order.id,
-      });
-    }
-  });
+  await notifyAdminNewOrder(order, DEDUPE.ADMIN_NEW);
 }
 
 export async function fireOrderShipped(orderNumber: string): Promise<void> {

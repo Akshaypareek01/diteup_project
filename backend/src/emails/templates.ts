@@ -324,13 +324,47 @@ export function refundProcessedEmail(args: {
   return { subject, html, text };
 }
 
-export function adminNewOrderEmail(args: { orderNumber: string; total: string; paymentMethod: string }): EmailTemplate {
-  const subject = `🛒 New order #${args.orderNumber}`;
-  const text = `New order ${args.orderNumber}\nTotal: ${args.total}\nPayment: ${args.paymentMethod}\n\n— DiteUp`;
+/**
+ * Ops ping when a customer places or pays for an order.
+ *
+ * @param args order identity, money, payment/order status, customer, admin deep-link
+ */
+export function adminNewOrderEmail(args: {
+  orderNumber: string;
+  total: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  orderStatus: string;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  adminUrl?: string | null;
+}): EmailTemplate {
+  const pay = `${args.paymentMethod} · ${args.paymentStatus}`;
+  const who = [args.customerName, args.customerEmail].filter(Boolean).join(" · ") || "—";
+  const subject = `New order #${args.orderNumber} · ${args.paymentStatus}`;
+  const text = [
+    `New DiteUp order ${args.orderNumber}`,
+    `Status: ${args.orderStatus}`,
+    `Total: ${args.total}`,
+    `Payment: ${pay}`,
+    `Customer: ${who}`,
+    args.adminUrl ? `Admin: ${args.adminUrl}` : "",
+    "",
+    "— DiteUp",
+  ]
+    .filter((line) => line !== "")
+    .join("\n");
+  const adminHtml = args.adminUrl
+    ? `<p style="margin:16px 0 0;"><a href="${escapeHtml(args.adminUrl)}" style="background:#C8A24A;color:#1F3D2E;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;display:inline-block;">Open in admin</a></p>`
+    : "";
   const html = wrap(
     `
-    <p style="font-size:16px;line-height:1.6;margin:0 0 8px;"><strong>New order</strong> <strong>#${args.orderNumber}</strong></p>
-    <p style="font-size:14px;color:#3A4A41;margin:0;">Total: <strong>${args.total}</strong> · Payment: ${args.paymentMethod}</p>
+    <p style="font-size:16px;line-height:1.6;margin:0 0 8px;"><strong>New order</strong> <strong>#${escapeHtml(args.orderNumber)}</strong></p>
+    <p style="font-size:14px;color:#3A4A41;margin:0 0 8px;">Order status: <strong>${escapeHtml(args.orderStatus)}</strong></p>
+    <p style="font-size:14px;color:#3A4A41;margin:0 0 8px;">Total: <strong>${escapeHtml(args.total)}</strong></p>
+    <p style="font-size:14px;color:#3A4A41;margin:0 0 8px;">Payment: <strong>${escapeHtml(pay)}</strong></p>
+    <p style="font-size:14px;color:#3A4A41;margin:0;">Customer: ${escapeHtml(who)}</p>
+    ${adminHtml}
     `,
     subject,
   );
