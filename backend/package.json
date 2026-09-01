@@ -16,7 +16,8 @@
     "lint": "tsc --noEmit",
     "test": "node --import tsx --test src/**/*.test.ts",
     "db:seed": "prisma db seed",
-    "email:test": "tsx scripts/send-test-emails.ts"
+    "email:test": "tsx scripts/send-test-emails.ts",
+    "reviews:seed": "tsx scripts/seed-product-reviews.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
