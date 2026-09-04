@@ -76,6 +76,77 @@ function StarRow({ rating }: StarRowProps) {
   );
 }
 
+const DOT_PAGER_MAX = 7;
+
+type ReviewSlidePagerProps = {
+  count: number;
+  index: number;
+  onGoTo: (next: number) => void;
+};
+
+/** Left chevron for the review carousel pager. */
+function PagerChevronLeft() {
+  return (
+    <svg className="size-4" viewBox="0 0 24 24" fill="none" aria-hidden stroke="currentColor" strokeWidth="2">
+      <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Right chevron for the review carousel pager. */
+function PagerChevronRight() {
+  return (
+    <svg className="size-4" viewBox="0 0 24 24" fill="none" aria-hidden stroke="currentColor" strokeWidth="2">
+      <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+const pagerBtnClass =
+  "inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-line bg-paper text-forest transition hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest";
+
+/**
+ * Review carousel controls: dots when there are few slides, arrows + counter when there are many.
+ */
+function ReviewSlidePager({ count, index, onGoTo }: ReviewSlidePagerProps) {
+  if (count <= 1) return null;
+
+  if (count <= DOT_PAGER_MAX) {
+    return (
+      <div className="mt-4 flex justify-center gap-2" role="tablist" aria-label="Review slides">
+        {Array.from({ length: count }, (_, slideIndex) => (
+          <button
+            key={slideIndex}
+            type="button"
+            role="tab"
+            aria-selected={slideIndex === index}
+            aria-label={`Show review ${slideIndex + 1} of ${count}`}
+            onClick={() => onGoTo(slideIndex)}
+            className={cn(
+              "size-2 rounded-full transition",
+              slideIndex === index ? "bg-forest" : "bg-line hover:bg-ink-muted",
+            )}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 flex items-center justify-center gap-4">
+      <button type="button" onClick={() => onGoTo(index - 1)} aria-label="Previous review" className={pagerBtnClass}>
+        <PagerChevronLeft />
+      </button>
+      <p className="min-w-[4.75rem] text-center font-sans text-body-sm tabular-nums text-ink-muted" aria-hidden>
+        {index + 1} / {count}
+      </p>
+      <button type="button" onClick={() => onGoTo(index + 1)} aria-label="Next review" className={pagerBtnClass}>
+        <PagerChevronRight />
+      </button>
+    </div>
+  );
+}
+
 export type ProductPdpReviewSlidesProps = {
   /** Real, moderated reviews from the API. When empty, the carousel renders nothing. */
   reviews: PublicReviewItem[];
@@ -92,7 +163,7 @@ export function ProductPdpReviewSlides({ reviews, className }: ProductPdpReviewS
 
   const count = reviews.length;
 
-  /** Wraps slide index for dot navigation. */
+  /** Wraps slide index for pager navigation. */
   const goTo = useCallback(
     (next: number) => {
       if (count === 0) return;
@@ -178,24 +249,7 @@ export function ProductPdpReviewSlides({ reviews, className }: ProductPdpReviewS
         </AnimatePresence>
       </div>
 
-      {count > 1 ? (
-        <div className="mt-4 flex justify-center gap-2" role="tablist" aria-label="Review slides">
-          {reviews.map((review, slideIndex) => (
-            <button
-              key={review.id}
-              type="button"
-              role="tab"
-              aria-selected={slideIndex === safeIndex}
-              aria-label={`Show review by ${review.authorName}`}
-              onClick={() => goTo(slideIndex)}
-              className={cn(
-                "size-2 rounded-full transition",
-                slideIndex === safeIndex ? "bg-forest" : "bg-line hover:bg-ink-muted",
-              )}
-            />
-          ))}
-        </div>
-      ) : null}
+      <ReviewSlidePager count={count} index={safeIndex} onGoTo={goTo} />
     </div>
   );
 }

@@ -1,22 +1,22 @@
+import { ProductPdpReviewList } from "@/components/product/ProductPdpReviewList";
 import { ProductPdpReviewSlides } from "@/components/product/ProductPdpReviewSlides";
-import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { Button } from "@/components/ui/Button";
-import { parseReviewPhotos } from "@/lib/review-images";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
 import { cn } from "@/lib/utils";
 
 type ProductPdpReviewsProps = {
   productName: string;
+  productSlug: string;
   reviewsEnabled?: boolean;
   payload: ProductReviewsPayload | null;
   className?: string;
 };
 
 /** Five-star row for review summary. */
-function StarRow({ rating, size = "md" }: { rating: number; size?: "sm" | "md" }) {
+function StarRow({ rating }: { rating: number }) {
   const full = Math.round(Math.min(5, Math.max(0, rating)));
   const empty = Math.max(0, 5 - full);
-  const starCls = size === "sm" ? "size-3.5" : "size-5";
+  const starCls = "size-5";
   const starPath =
     "M12 2.75 14.74 9.14h6.93l-5.61 4.06 2.13 6.59L12 16.93l-5.18 3.87 2.13-6.59L3.34 9.14h6.93L12 2.75z";
 
@@ -64,7 +64,13 @@ function DistributionBar({ stars, count, maxCount }: DistributionBarProps) {
 /**
  * Full ratings & reviews section with distribution, review carousel, and write-review CTA.
  */
-export function ProductPdpReviews({ productName, reviewsEnabled = true, payload, className }: ProductPdpReviewsProps) {
+export function ProductPdpReviews({
+  productName,
+  productSlug,
+  reviewsEnabled = true,
+  payload,
+  className,
+}: ProductPdpReviewsProps) {
   if (!reviewsEnabled) return null;
 
   const hasLiveData = Boolean(payload && payload.summary.totalCount > 0);
@@ -123,53 +129,17 @@ export function ProductPdpReviews({ productName, reviewsEnabled = true, payload,
       <ProductPdpReviewSlides reviews={reviewItems} className="mt-8" />
 
       {reviewItems.length > 0 ? (
-        <ul className="mt-8 space-y-4" aria-label="Customer reviews">
-          {reviewItems.map((review) => (
-            <li key={review.id} className="rounded-lg border border-line bg-cream/60 p-4">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold text-forest">{review.authorName}</p>
-                  {review.isVerified ? (
-                    <span className="rounded-full bg-olive/20 px-2 py-0.5 font-mono text-eyebrow text-forest">
-                      Verified
-                    </span>
-                  ) : null}
-                </div>
-                <time className="text-body-sm text-ink-muted" dateTime={review.createdAt}>
-                  {new Date(review.createdAt).toLocaleDateString()}
-                </time>
-              </div>
-              <div className="mt-2">
-                <StarRow rating={review.rating} size="sm" />
-              </div>
-              {review.title ? <p className="mt-2 font-medium text-forest">{review.title}</p> : null}
-              <p className="mt-1 text-body text-ink-soft">{review.body}</p>
-              <ReviewPhotoStrip
-                photos={parseReviewPhotos(review.images)}
-                authorName={review.authorName}
-                layout="row"
-                className="mt-3"
-              />
-              {review.adminReply ? (
-                <p className="mt-3 rounded-md border border-line bg-paper p-3 text-body-sm text-ink-muted">
-                  <span className="font-semibold text-forest">DiteUp: </span>
-                  {review.adminReply}
-                </p>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <ProductPdpReviewList
+          productSlug={productSlug}
+          initialReviews={reviewItems}
+          initialPage={payload?.page ?? 1}
+          total={payload?.total ?? reviewItems.length}
+        />
       ) : (
         <p className="mt-8 text-center text-body-sm text-ink-muted">
           Buyer reviews for {productName} will appear here once moderated and published.
         </p>
       )}
-
-      {payload && payload.total > payload.reviews.length ? (
-        <p className="mt-4 text-center text-body-sm text-ink-muted">
-          Showing {payload.reviews.length} of {payload.total} reviews.
-        </p>
-      ) : null}
     </section>
   );
 }

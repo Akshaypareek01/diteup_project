@@ -314,16 +314,17 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
         </div>
 
         <div className="mx-auto mt-10 max-w-lg space-y-10 lg:mt-16 lg:max-w-none lg:space-y-12">
-          <ProductPdpAplusContent className="lg:mx-auto lg:max-w-4xl xl:max-w-5xl" />
-
-          <ProductPdpAccordions product={product} className="lg:mx-auto lg:max-w-3xl xl:max-w-[42rem]" />
-
           <ProductPdpReviews
             productName={product.name}
+            productSlug={product.slug}
             reviewsEnabled={product.reviewsEnabled}
             payload={reviews}
             className="lg:mx-auto lg:max-w-4xl xl:max-w-5xl"
           />
+
+          <ProductPdpAplusContent className="lg:mx-auto lg:max-w-4xl xl:max-w-5xl" />
+
+          <ProductPdpAccordions product={product} className="lg:mx-auto lg:max-w-3xl xl:max-w-[42rem]" />
 
           {showNotifyMe && selected ? (
             <div className="lg:mx-auto lg:max-w-3xl">

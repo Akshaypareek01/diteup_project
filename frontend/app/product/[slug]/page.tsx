@@ -8,6 +8,7 @@ import { ProductJsonLd } from "@/components/seo/ProductJsonLd";
 import { buildProductMetadata } from "@/lib/seo/product-metadata";
 import { fetchProductBySlug } from "@/lib/storefront-api";
 import { fetchProductReviewsBySlug } from "@/lib/storefront-reviews";
+import { PDP_REVIEW_PAGE_SIZE } from "@/lib/types/reviews";
 import type { PublicProductFaq } from "@/lib/types/catalog";
 
 type Props = { params: { slug: string } };
@@ -44,7 +45,7 @@ export default async function ProductPage({ params }: Props) {
   }
   const reviews = await fetchProductReviewsBySlug(params.slug, {
     page: "1",
-    pageSize: "30",
+    pageSize: String(PDP_REVIEW_PAGE_SIZE),
     sort: "recent",
   });
   const faqItems = mapProductFaqs(pageData.product.faqs);

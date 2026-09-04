@@ -31,3 +31,6 @@ export type ProductReviewsPayload = {
   pageSize: number;
   total: number;
 };
+
+/** Page size for PDP review list + load-more fetches. */
+export const PDP_REVIEW_PAGE_SIZE = 5;
