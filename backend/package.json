@@ -18,7 +18,8 @@
     "db:seed": "prisma db seed",
     "email:test": "tsx scripts/send-test-emails.ts",
     "reviews:seed": "tsx scripts/seed-product-reviews.ts",
-    "reviews:seed-photos": "tsx scripts/seed-review-photos.ts"
+    "reviews:seed-photos": "tsx scripts/seed-review-photos.ts",
+    "razorpay:webhook-probe": "tsx scripts/probe-razorpay-webhook.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
