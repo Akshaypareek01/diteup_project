@@ -25,7 +25,11 @@ export default async function HomePage() {
   const [featured, banners] = await Promise.all([fetchFeaturedProduct(), fetchHomepageBanners()]);
   const reviewsPayload =
     featured?.slug != null && featured.slug.length > 0
-      ? await fetchProductReviewsBySlug(featured.slug)
+      ? await fetchProductReviewsBySlug(featured.slug, {
+          page: "1",
+          pageSize: "16",
+          sort: "recent",
+        })
       : null;
 
   return (
@@ -37,7 +41,10 @@ export default async function HomePage() {
       <PerfectForEveryYouSection />
       {/* <RegulatoryTrustStripSection /> */}
       <IngredientsSection />
-      <TestimonialsSection reviewsPayload={reviewsPayload} />
+      <TestimonialsSection
+        reviewsPayload={reviewsPayload}
+        productName={featured?.name?.trim() || "Energy Bite"}
+      />
       <FaqSection />
     </SiteShell>
   );

@@ -16,7 +16,6 @@ export async function fetchProductReviewsBySlug(
   try {
     const res = await serverApiFetch(`/v1/products/${enc}/reviews?${qp.toString()}`, {
       forwardCookies: false,
-      revalidate: 60,
     });
     if (!res.ok) return null;
     return (await res.json()) as ProductReviewsPayload;

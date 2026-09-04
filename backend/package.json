@@ -17,7 +17,8 @@
     "test": "node --import tsx --test src/**/*.test.ts",
     "db:seed": "prisma db seed",
     "email:test": "tsx scripts/send-test-emails.ts",
-    "reviews:seed": "tsx scripts/seed-product-reviews.ts"
+    "reviews:seed": "tsx scripts/seed-product-reviews.ts",
+    "reviews:seed-photos": "tsx scripts/seed-review-photos.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

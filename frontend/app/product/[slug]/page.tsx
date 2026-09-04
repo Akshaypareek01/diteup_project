@@ -45,7 +45,7 @@ export default async function ProductPage({ params }: Props) {
   const reviews = await fetchProductReviewsBySlug(params.slug, {
     page: "1",
     pageSize: "30",
-    sort: "helpful",
+    sort: "recent",
   });
   const faqItems = mapProductFaqs(pageData.product.faqs);
 

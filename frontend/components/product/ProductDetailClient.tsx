@@ -9,7 +9,6 @@ import { useSiteMode } from "@/components/site-mode/SiteModeProvider";
 import { CountdownTimer } from "@/components/site-mode/CountdownTimer";
 import { Button } from "@/components/ui/Button";
 import { useCartState } from "@/components/cart/CartStateProvider";
-import { clientApiJson } from "@/lib/client-api";
 import { formatInr, moneyNumber } from "@/lib/format-money";
 import type { PublicProduct } from "@/lib/types/catalog";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
@@ -23,7 +22,6 @@ import { ProductPdpFeatureStrip } from "@/components/product/ProductPdpFeatureSt
 import { ProductPdpRatingsRow } from "@/components/product/ProductPdpRatingsRow";
 import { ProductPdpReviews } from "@/components/product/ProductPdpReviews";
 import { ProductPdpUspHighlight } from "@/components/product/ProductPdpUspHighlight";
-import { BuyNowAuthDialog } from "@/components/product/BuyNowAuthDialog";
 import {
   computeVariantPricesPerKg,
   findBestValueVariantId,
@@ -59,9 +57,6 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
   const router = useRouter();
   const { siteMode, refreshSiteMode } = useSiteMode();
   const { addLine, replaceWithLine } = useCartState();
-  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
-  const [authDialogOpen, setAuthDialogOpen] = useState(false);
-  const [buyNowBusy, setBuyNowBusy] = useState(false);
 
   const siteBlocksPurchase = siteMode.active && siteMode.blocksCheckout;
 
@@ -80,21 +75,6 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
   const sale = selected ? moneyNumber(selected.priceSale) : 0;
   const mrp = selected ? moneyNumber(selected.priceMrp) : 0;
   const off = mrp > sale ? Math.round(((mrp - sale) / mrp) * 100) : 0;
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const me = await clientApiJson<{ user?: { id: string } }>("/v1/auth/me");
-        if (!cancelled) setLoggedIn(Boolean(me.user?.id));
-      } catch {
-        if (!cancelled) setLoggedIn(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // Once per product: switching variant is not a new content view, and refiring
   // would inflate ViewContent against the same PDP visit.
@@ -155,42 +135,11 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
   }
 
   /**
-   * Logged-in shoppers go straight to checkout; guests pick login, signup, or guest checkout.
+   * Commits the selected variant as the cart line and opens checkout immediately.
    */
-  async function handleBuyNow() {
-    if (!selected || !product.buyable || siteBlocksPurchase) return;
-
-    let isLoggedIn = loggedIn;
-    if (isLoggedIn == null) {
-      setBuyNowBusy(true);
-      try {
-        const me = await clientApiJson<{ user?: { id: string } }>("/v1/auth/me");
-        isLoggedIn = Boolean(me.user?.id);
-        setLoggedIn(isLoggedIn);
-      } catch {
-        isLoggedIn = false;
-        setLoggedIn(false);
-      } finally {
-        setBuyNowBusy(false);
-      }
-    }
-
-    if (isLoggedIn) {
-      if (!commitBuyNowLine()) return;
-      router.push("/checkout");
-      return;
-    }
-
-    setAuthDialogOpen(true);
-  }
-
-  /**
-   * Guest chose an auth path — commit the Buy-now line, then navigate.
-   */
-  function continueBuyNow(href: "/checkout" | "/login?next=/checkout" | "/signup?next=/checkout") {
+  function handleBuyNow() {
     if (!commitBuyNowLine()) return;
-    setAuthDialogOpen(false);
-    router.push(href);
+    router.push("/checkout");
   }
 
   const canPurchase =
@@ -343,10 +292,10 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
                 variant="primaryForest"
                 size="lg"
                 className="w-full rounded-xl shadow-md sm:shadow-lg"
-                disabled={!canPurchase || buyNowBusy}
-                onClick={() => void handleBuyNow()}
+                disabled={!canPurchase}
+                onClick={handleBuyNow}
               >
-                {buyNowBusy ? "Checking…" : "Buy now"}
+                Buy now
               </Button>
               <Button
                 type="button"
@@ -390,13 +339,6 @@ export function ProductDetailClient({ product, reviews }: ProductDetailClientPro
           </p>
         </div>
       </div>
-      <BuyNowAuthDialog
-        open={authDialogOpen}
-        onClose={() => setAuthDialogOpen(false)}
-        onLogin={() => continueBuyNow("/login?next=/checkout")}
-        onGuestCheckout={() => continueBuyNow("/checkout")}
-        onCreateAccount={() => continueBuyNow("/signup?next=/checkout")}
-      />
     </div>
   );
 }

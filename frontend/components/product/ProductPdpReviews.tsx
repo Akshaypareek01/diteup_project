@@ -1,5 +1,7 @@
 import { ProductPdpReviewSlides } from "@/components/product/ProductPdpReviewSlides";
+import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
 import { Button } from "@/components/ui/Button";
+import { parseReviewPhotos } from "@/lib/review-images";
 import type { ProductReviewsPayload } from "@/lib/types/reviews";
 import { cn } from "@/lib/utils";
 
@@ -142,6 +144,12 @@ export function ProductPdpReviews({ productName, reviewsEnabled = true, payload,
               </div>
               {review.title ? <p className="mt-2 font-medium text-forest">{review.title}</p> : null}
               <p className="mt-1 text-body text-ink-soft">{review.body}</p>
+              <ReviewPhotoStrip
+                photos={parseReviewPhotos(review.images)}
+                authorName={review.authorName}
+                layout="row"
+                className="mt-3"
+              />
               {review.adminReply ? (
                 <p className="mt-3 rounded-md border border-line bg-paper p-3 text-body-sm text-ink-muted">
                   <span className="font-semibold text-forest">DiteUp: </span>

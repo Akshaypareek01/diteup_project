@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { CheckoutShippingPanel, type CheckoutAddressRow } from "@/components/checkout/CheckoutShippingPanel";
 import { useFormAutofillSync } from "@/hooks/useFormAutofillSync";
@@ -121,9 +122,20 @@ export function CheckoutFormSections({
       onSubmit={(e) => e.preventDefault()}
     >
       <section className="rounded-lg border border-line bg-paper p-5 lg:rounded-2xl lg:p-6" aria-labelledby="co-contact">
-        <h2 id="co-contact" className="font-semibold text-forest">
-          Contact
-        </h2>
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="co-contact" className="font-semibold text-forest">
+            Contact
+          </h2>
+          {!userEmail ? (
+            <Link
+              href="/login?next=/checkout"
+              className="shrink-0 text-body-sm font-semibold text-gold-deep underline decoration-gold-deep/40 underline-offset-2 hover:text-forest"
+              aria-label="Sign in to use saved addresses"
+            >
+              Sign in
+            </Link>
+          ) : null}
+        </div>
         <div className="mt-4 space-y-3">
           <Input
             label="Email"

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { ReviewPhotoStrip } from "@/components/reviews/ReviewPhotoStrip";
+import { parseReviewPhotos } from "@/lib/review-images";
 import type { PublicReviewItem } from "@/lib/types/reviews";
 import { dur, ease } from "@/lib/motion";
 import { cn, getReviewAvatarInitial } from "@/lib/utils";
@@ -116,6 +118,7 @@ export function ProductPdpReviewSlides({ reviews, className }: ProductPdpReviewS
 
   const safeIndex = index % count;
   const active = reviews[safeIndex];
+  const activePhotos = parseReviewPhotos(active.images);
 
   return (
     <div
@@ -136,7 +139,7 @@ export function ProductPdpReviewSlides({ reviews, className }: ProductPdpReviewS
         Review {safeIndex + 1} of {count} by {active.authorName}
       </p>
 
-      <div className="relative mt-3 min-h-[11.5rem] overflow-hidden sm:min-h-[10.5rem]">
+      <div className="relative mt-3 min-h-[16rem] overflow-hidden sm:min-h-[18rem]">
         <AnimatePresence initial={false}>
           <motion.article
             key={active.id}
@@ -144,7 +147,7 @@ export function ProductPdpReviewSlides({ reviews, className }: ProductPdpReviewS
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: dur.base, ease: ease.out }}
-            className="absolute inset-0 rounded-xl border border-line bg-cream/70 p-4 sm:p-5"
+            className="absolute inset-0 overflow-y-auto rounded-xl border border-line bg-cream/70 p-4 sm:p-5"
           >
             <div className="flex items-start gap-3">
               <ReviewAvatar name={active.authorName} toneIndex={safeIndex} />
@@ -160,7 +163,15 @@ export function ProductPdpReviewSlides({ reviews, className }: ProductPdpReviewS
                 <div className="mt-1.5">
                   <StarRow rating={active.rating} />
                 </div>
-                <p className="mt-3 text-body text-ink-soft">&ldquo;{active.body}&rdquo;</p>
+                <p className="mt-3 line-clamp-4 text-body text-ink-soft">&ldquo;{active.body}&rdquo;</p>
+                {activePhotos.length > 0 ? (
+                  <ReviewPhotoStrip
+                    photos={activePhotos}
+                    authorName={active.authorName}
+                    layout="row"
+                    className="mt-3"
+                  />
+                ) : null}
               </div>
             </div>
           </motion.article>
